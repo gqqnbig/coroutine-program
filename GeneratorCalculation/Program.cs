@@ -21,8 +21,12 @@ namespace GeneratorCalculation
 			PaperType fr2 = new GeneratorType(new ListType((ConcreteType)"S", new PaperVariable("m")), ConcreteType.Void);
 			Console.WriteLine("fr2: " + fr2);
 
-			PaperType interleave = new GeneratorType(new ListType(new AndType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")),
-				new AndType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
+			GeneratorType interleave = new GeneratorType(new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")),
+				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
+
+
+			Console.WriteLine(interleave.Check());
+
 			Console.WriteLine("interleave: " + interleave);
 
 
