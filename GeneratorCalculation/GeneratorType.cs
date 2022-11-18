@@ -89,9 +89,9 @@ namespace GeneratorCalculation
 	//	public string Name { get; set; }
 	//}
 
-	public class GeneratorType : PaperType
+	public class GeneratorType : FunctionType
 	{
-		public GeneratorType(PaperType @yield, PaperType receive)
+		public GeneratorType(PaperType @yield, PaperType receive) : base("G", yield, receive)
 		{
 			Yield = yield;
 			Receive = receive;
@@ -131,13 +131,6 @@ namespace GeneratorCalculation
 			return $"G {Yield} {Receive}";
 		}
 
-		public List<PaperVariable> GetVariables()
-		{
-			var l = new List<PaperVariable>();
-			l.AddRange(Yield.GetVariables());
-			l.AddRange(Receive.GetVariables());
-			return l;
-		}
 	}
 
 	//class OrType : PaperType
