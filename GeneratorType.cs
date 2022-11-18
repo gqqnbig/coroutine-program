@@ -121,6 +121,21 @@ namespace GeneratorCalculation
 		}
 	}
 
+	class SequenceType : PaperType
+	{
+		public List<PaperWord> Types { get; }
+
+		public SequenceType(params PaperType[] types)
+		{
+			Types = new List<PaperWord>(types);
+		}
+
+		public override string ToString()
+		{
+			return "(" + string.Join(", ", Types) + ")";
+		}
+	}
+
 	class FunctionType : PaperType
 	{
 		public FunctionType(string functionName, params PaperWord[] words)
