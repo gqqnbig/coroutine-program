@@ -12,7 +12,10 @@ namespace GeneratorCalculation
 
 	public interface PaperType : PaperWord
 	{
-		List<PaperVariable> GetVariables();
+		List<PaperVariable> GetVariables(List<string> constants);
+		bool GetYield(ref PaperType yielded, ref PaperType remaining);
+
+		void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants);
 	}
 
 
@@ -38,10 +41,21 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		public List<PaperVariable> GetVariables()
+		public List<PaperVariable> GetVariables(List<string> constants)
 		{
-			return new List<PaperVariable>(new[] { this });
+			if (constants.Contains(Name))
+				return new List<PaperVariable>();
+			else
+				return new List<PaperVariable>(new[] { this });
 		}
+
+		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		{
+			return false;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{ }
 	}
 
 	class PaperInt : PaperWord
@@ -52,6 +66,22 @@ namespace GeneratorCalculation
 		{
 			return new PaperInt { Value = n };
 		}
+	}
+
+	class PaperStar : PaperWord
+	{
+		public static readonly PaperStar Instance = new PaperStar();
+
+		private PaperStar()
+		{
+
+		}
+
+		public override string ToString()
+		{
+			return "*";
+		}
+
 	}
 
 	class ConcreteType : PaperType
@@ -78,10 +108,23 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		public List<PaperVariable> GetVariables()
+		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			return new List<PaperVariable>();
 		}
+
+		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		{
+			if (this == Void)
+				return false;
+
+			yielded = this;
+			remaining = ConcreteType.Void;
+			return true;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{ }
 	}
 
 	//class VariableType : PaperType
@@ -101,13 +144,14 @@ namespace GeneratorCalculation
 
 		public PaperType Receive { get; set; }
 
-		public bool Check()
+		public void Check()
 		{
 			//Receive is like input, yield is like output.
 			//Yield cannot have variables that are unbound from Receive.
 
-			var inputVariables = Receive.GetVariables().Select(v => v.Name).ToList();
-			var outputVariables = Yield.GetVariables().Select(v => v.Name).ToList();
+			List<string> constants = new List<string>();
+			var inputVariables = Receive.GetVariables(constants).Select(v => v.Name).ToList();
+			var outputVariables = Yield.GetVariables(constants).Select(v => v.Name).ToList();
 
 			if (outputVariables.Any(v => inputVariables.Contains(v) == false))
 			{
@@ -119,8 +163,22 @@ namespace GeneratorCalculation
 			//Console.WriteLine("Yield variables: " + string.Join(", ", ));
 
 			//Console.WriteLine("Receive variables: " + string.Join(", ", ));
-			return true;
+		}
 
+		public bool Next(List<string> constants, ref GeneratorType g, ref PaperType yieldedType)
+		{
+			if (Yield.GetVariables(constants).Count == 0)
+			{
+				PaperType remaining = null;
+				if (Yield.GetYield(ref yieldedType, ref remaining))
+				{
+					Yield = remaining;
+					g = this;
+					return true;
+				}
+			}
+			else
+				return false;
 
 			throw new NotImplementedException();
 		}
@@ -131,6 +189,13 @@ namespace GeneratorCalculation
 			return $"G {Yield} {Receive}";
 		}
 
+		//public List<PaperVariable> GetVariables()
+		//{
+		//	var l = new List<PaperVariable>();
+		//	l.AddRange(Yield.GetVariables());
+		//	l.AddRange(Receive.GetVariables());
+		//	return l;
+		//}
 	}
 
 	//class OrType : PaperType
@@ -159,6 +224,9 @@ namespace GeneratorCalculation
 
 		public SequenceType(params PaperType[] types)
 		{
+			if (types.Length == 0)
+				throw new ArgumentException();
+
 			Types = new List<PaperType>(types);
 		}
 
@@ -167,9 +235,38 @@ namespace GeneratorCalculation
 			return "(" + string.Join(", ", Types) + ")";
 		}
 
-		public List<PaperVariable> GetVariables()
+		public List<PaperVariable> GetVariables(List<string> constants)
 		{
-			return Types.SelectMany(t => t.GetVariables()).ToList();
+			return Types.SelectMany(t => t.GetVariables(constants)).ToList();
+		}
+
+		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		{
+			if (Types.Count == 1)
+			{
+				yielded = Types[0];
+				remaining = ConcreteType.Void;
+				return true;
+			}
+			else if (Types.Count == 0)
+				throw new ArgumentException();
+			else
+			{
+				yielded = Types[0];
+				Types.RemoveAt(0);
+				remaining = new SequenceType(Types.ToArray());
+				return true;
+
+			}
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{
+			foreach (var t in Types)
+			{
+				t.ReplaceWithConstant(availableConstants, usedConstants);
+			}
+
 		}
 	}
 
@@ -191,15 +288,29 @@ namespace GeneratorCalculation
 			return FunctionName + "(" + string.Join(", ", Arguments) + ")";
 		}
 
-		public List<PaperVariable> GetVariables()
+		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			var r = from a in Arguments
 					where a is PaperType
-					from v in ((PaperType)a).GetVariables()
+					from v in ((PaperType)a).GetVariables(constants)
 					select v;
 
 			return r.ToList();
 
+		}
+
+		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		{
+			return false;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{
+			foreach (var w in Arguments)
+			{
+				if (w is PaperType word)
+					word.ReplaceWithConstant(availableConstants, usedConstants);
+			}
 		}
 	}
 
@@ -219,13 +330,35 @@ namespace GeneratorCalculation
 			return Type.ToString() + Size.ToString();
 		}
 
-		public List<PaperVariable> GetVariables()
+		public List<PaperVariable> GetVariables(List<string> constants)
 		{
-			var l = Type.GetVariables();
+			var l = Type.GetVariables(constants);
 			if (Size is PaperType)
-				l.AddRange(((PaperType)Size).GetVariables());
+				l.AddRange(((PaperType)Size).GetVariables(constants));
 
 			return l;
+		}
+
+		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		{
+			if (Size is PaperStar)
+				throw new Exception("Star should have been replaced in the ReplaceWithConstant step.");
+
+			yielded = this;
+			remaining = ConcreteType.Void;
+			return true;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{
+			if (Size is PaperStar)
+			{
+				string c = availableConstants[0];
+				availableConstants.RemoveAt(0);
+				usedConstants.Add(c);
+
+				Size = new PaperVariable(c);
+			}
 		}
 	}
 }
