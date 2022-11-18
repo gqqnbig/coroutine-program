@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30523.141
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratorCalculation", "GeneratorCalculation.csproj", "{86E57EBF-19EE-47EA-B60E-1B54CCC6768C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86E57EBF-19EE-47EA-B60E-1B54CCC6768C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86E57EBF-19EE-47EA-B60E-1B54CCC6768C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86E57EBF-19EE-47EA-B60E-1B54CCC6768C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86E57EBF-19EE-47EA-B60E-1B54CCC6768C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {616A6825-07C2-4CB7-A94E-B335553C1725}
+	EndGlobalSection
+EndGlobal
