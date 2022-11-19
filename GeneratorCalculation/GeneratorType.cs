@@ -66,6 +66,11 @@ namespace GeneratorCalculation
 		{
 			return new PaperInt { Value = n };
 		}
+
+		public override string ToString()
+		{
+			return Value.ToString();
+		}
 	}
 
 	class PaperStar : PaperWord
