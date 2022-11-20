@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace GeneratorCalculation
@@ -59,34 +60,94 @@ namespace GeneratorCalculation
 		static void Solve(List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
 		{
 			//find a generator type where the next type is not void.
-
-			for (int i = 0; i < pairs.Count; i++)
+			int i = 0;
+			while (i < pairs.Count)
 			{
+				Console.WriteLine();
+				foreach (var p in pairs)
+					Console.WriteLine($"{p.Key}:\t{p.Value}");
+
+
 				var coroutine = pairs[i].Value;
 
 				GeneratorType g = null;
 				PaperType yieldedType = null;
 
-				Console.Write($"{coroutine} ");
-				if (coroutine.Next(constants, ref g, ref yieldedType))
+				Console.Write($"{pairs[i].Key}:\t{coroutine} ");
+				if (coroutine.RunYield(constants, ref g, ref yieldedType))
 				{
+					Debug.Assert(coroutine.Receive == ConcreteType.Void);
+
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
+					if (g.Yield == ConcreteType.Void)
+					{
+						Console.WriteLine($"{pairs[i].Key} reached the simplest form. Remove from the list.");
+
+						pairs.RemoveAt(i);
+						//what if nowhere to receive?
+						if (Receive(yieldedType, -1, pairs, constants))
+						{
+							i = 0;
+							continue;
+						}
+						else
+							throw new Exception("Deadlock?");
+					}
+
+
 				}
 				else
 					Console.WriteLine(" --X");
+
+				i++;
 			}
 
 		}
 
-		static void RunNext(GeneratorType coroutine)
+		static bool Receive(PaperType yieldedType, int fromIndex, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
 		{
-			if (coroutine.Yield == null)
-				throw new Exception();
+			var range = new List<int>();
+			for (int i = fromIndex + 1; i < pairs.Count; i++)
+				range.Add(i);
+			for (int i = 0; i < fromIndex; i++)
+				range.Add(i);
 
-			if (coroutine.Yield == ConcreteType.Void)
-				return;
+			foreach (var i in range)
+			{
+				var coroutine = pairs[i].Value;
+				GeneratorType newGenerator;
+				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
+				if (conditions != null)
+				{
+					Console.Write($"{coroutine} can receive {yieldedType} and will pop the receive part");
+					if (conditions.Count == 0)
+						Console.WriteLine(".");
+					else
+					{
+						Console.Write(" on the conditions that ");
+						Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
 
+						var result = newGenerator.ApplyEquation(conditions.ToList());
+						if (result is GeneratorType resultGenerator)
+						{
+							Console.WriteLine($"Therefore it becomes {result}.");
+							pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, resultGenerator);
+						}
+						else
+						{
+							Console.WriteLine("But the result doesn't fit the type.");
+							pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, newGenerator);
+						}
+					}
 
+					return true;
+
+					//Solve(pairs, constants);
+					//return;
+				}
+			}
+
+			return false;
 		}
 	}
 }

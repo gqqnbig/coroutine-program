@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Linq;
 
@@ -8,14 +9,39 @@ namespace GeneratorCalculation
 	/// <summary>
 	/// include int, variable, type.
 	/// </summary>
-	public interface PaperWord { }
+	public interface PaperWord
+	{
+		/// <summary>
+		/// Not compatible, return null. Always compatible, return dict of size 0.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <returns></returns>
+		Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t);
+
+		/// <summary>
+		/// Even if the equations do not apply to this word, this method should return itself.
+		/// </summary>
+		/// <param name="equations">this parameter should not be modified</param>
+		/// <returns></returns>
+		PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations);// { return this; }
+	}
 
 	public interface PaperType : PaperWord
 	{
 		List<PaperVariable> GetVariables(List<string> constants);
-		bool GetYield(ref PaperType yielded, ref PaperType remaining);
+
+		/// <summary>
+		/// Pop the head element from the type.
+		/// </summary>
+		/// <param name="yielded"></param>
+		/// <param name="remaining"></param>
+		/// <returns></returns>
+		bool Pop(ref PaperType yielded, ref PaperType remaining);
 
 		void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants);
+
+
+		PaperType Normalize();
 	}
 
 
@@ -29,7 +55,7 @@ namespace GeneratorCalculation
 			Name = name;
 		}
 
-		public string Name { get; set; }
+		public string Name { get; }
 
 		public static implicit operator PaperVariable(string n)
 		{
@@ -41,6 +67,18 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			return obj is PaperVariable objVariable && objVariable.Name == Name;
+		}
+
+		// override object.GetHashCode
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode();
+		}
+
 		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			if (constants.Contains(Name))
@@ -49,13 +87,38 @@ namespace GeneratorCalculation
 				return new List<PaperVariable>(new[] { this });
 		}
 
-		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
 			return false;
 		}
 
 		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
 		{ }
+
+		public PaperType Normalize()
+		{
+			return this;
+		}
+
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			var d = new Dictionary<PaperVariable, PaperWord>();
+			d.Add(this, t);
+			return d;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			var keys = equations.Select(p => p.Key).ToList();
+			if (keys.Count != keys.Distinct().Count())
+				throw new NotSupportedException("Duplicate keys are not supported.");
+
+			var eq = equations.FirstOrDefault(p => p.Key.Equals(this));
+			if (eq.Key == null)
+				return this;
+			else
+				return eq.Value;
+		}
 	}
 
 	class PaperInt : PaperWord
@@ -65,6 +128,16 @@ namespace GeneratorCalculation
 		public static implicit operator PaperInt(int n)
 		{
 			return new PaperInt { Value = n };
+		}
+
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			return this;
 		}
 
 		public override string ToString()
@@ -87,6 +160,15 @@ namespace GeneratorCalculation
 			return "*";
 		}
 
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	class ConcreteType : PaperType
@@ -118,7 +200,7 @@ namespace GeneratorCalculation
 			return new List<PaperVariable>();
 		}
 
-		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
 			if (this == Void)
 				return false;
@@ -130,6 +212,38 @@ namespace GeneratorCalculation
 
 		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
 		{ }
+
+		public PaperType Normalize()
+		{
+			return this;
+		}
+
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			if (t is ConcreteType t2 && t2.Name == this.Name)
+				return new Dictionary<PaperVariable, PaperWord>();
+
+			if (t is ListType tList)
+			{
+				var condition1 = tList.Size.IsCompatibleTo((PaperInt)1);
+				if (condition1 == null)
+					return null;
+
+				var condition2 = tList.Type.IsCompatibleTo(t);
+				if (condition2 == null)
+					return null;
+
+				var c = Solver.JoinConditions(condition1, condition2);
+				return c;
+			}
+
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			return this;
+		}
 	}
 
 	//class VariableType : PaperType
@@ -170,12 +284,12 @@ namespace GeneratorCalculation
 			//Console.WriteLine("Receive variables: " + string.Join(", ", ));
 		}
 
-		public bool Next(List<string> constants, ref GeneratorType g, ref PaperType yieldedType)
+		public bool RunYield(List<string> constants, ref GeneratorType g, ref PaperType yieldedType)
 		{
 			if (Yield.GetVariables(constants).Count == 0)
 			{
 				PaperType remaining = null;
-				if (Yield.GetYield(ref yieldedType, ref remaining))
+				if (Yield.Pop(ref yieldedType, ref remaining))
 				{
 					Yield = remaining;
 					g = this;
@@ -186,6 +300,37 @@ namespace GeneratorCalculation
 				return false;
 
 			throw new NotImplementedException();
+		}
+
+		/// <summary>
+		/// Check whether this generator can receive the given type.
+		/// </summary>
+		/// <param name="providedType"></param>
+		/// <param name="conditions"></param>
+		/// <returns></returns>
+		public Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
+		{
+			newGenerator = null;
+			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+			if (Receive == ConcreteType.Void)
+				return null;
+
+			PaperType head = null;
+			PaperType remaining = null;
+			if (Receive.Pop(ref head, ref remaining))
+			{
+				var c = head.IsCompatibleTo(providedType);
+				if (c == null)
+					return null;
+
+				conditions = Solver.JoinConditions(conditions, c);
+
+				newGenerator = new GeneratorType(Yield, remaining);
+				return conditions;
+			}
+
+			Debug.Assert(Receive == ConcreteType.Void);
+			return null;
 		}
 
 
@@ -201,6 +346,16 @@ namespace GeneratorCalculation
 		//	l.AddRange(Receive.GetVariables());
 		//	return l;
 		//}
+
+		public new PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			var newYield = Yield.ApplyEquation(equations);
+			var newReceive = Receive.ApplyEquation(equations);
+			if (newYield is PaperType newYieldType && newReceive is PaperType newReceiveType)
+				return new GeneratorType(newYieldType, newReceiveType);
+			else
+				return this;
+		}
 	}
 
 	//class OrType : PaperType
@@ -227,11 +382,14 @@ namespace GeneratorCalculation
 	{
 		public List<PaperType> Types { get; }
 
-		public SequenceType(params PaperType[] types)
+		public SequenceType(params PaperType[] types) : this((IEnumerable<PaperType>)types)
 		{
 			if (types.Length == 0)
 				throw new ArgumentException();
+		}
 
+		public SequenceType(IEnumerable<PaperType> types)
+		{
 			Types = new List<PaperType>(types);
 		}
 
@@ -240,12 +398,38 @@ namespace GeneratorCalculation
 			return "(" + string.Join(", ", Types) + ")";
 		}
 
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			if (Types.Count <= 1)
+				throw new ArgumentException();
+
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			PaperType[] newTypes = new PaperType[Types.Count];
+			for (int i = 0; i < Types.Count; i++)
+			{
+				var t = Types[i].ApplyEquation(equations);
+				if (t is PaperType tType)
+					newTypes[i] = tType;
+				else
+				{
+					Console.WriteLine($"Application is ignored because it produces an illegal type for {nameof(SequenceType)}.");
+					newTypes[i] = Types[i];
+				}
+			}
+
+			return new SequenceType(newTypes);
+		}
+
 		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			return Types.SelectMany(t => t.GetVariables(constants)).ToList();
 		}
 
-		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
 			if (Types.Count == 1)
 			{
@@ -258,8 +442,7 @@ namespace GeneratorCalculation
 			else
 			{
 				yielded = Types[0];
-				Types.RemoveAt(0);
-				remaining = new SequenceType(Types.ToArray());
+				remaining = new SequenceType(Types.Skip(1).ToArray());
 				return true;
 
 			}
@@ -273,11 +456,22 @@ namespace GeneratorCalculation
 			}
 
 		}
+
+		public PaperType Normalize()
+		{
+			if (Types.Count == 1)
+				return Types[0].Normalize();
+			else
+				return this;
+		}
 	}
 
 	public class FunctionType : PaperType
 	{
-		public FunctionType(string functionName, params PaperWord[] words)
+		public FunctionType(string functionName, params PaperWord[] words) : this(functionName, (IEnumerable<PaperWord>)words)
+		{ }
+
+		public FunctionType(string functionName, IEnumerable<PaperWord> words)
 		{
 			FunctionName = functionName;
 
@@ -293,6 +487,16 @@ namespace GeneratorCalculation
 			return FunctionName + "(" + string.Join(", ", Arguments) + ")";
 		}
 
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations)));
+		}
+
 		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			var r = from a in Arguments
@@ -304,7 +508,7 @@ namespace GeneratorCalculation
 
 		}
 
-		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
 			return false;
 		}
@@ -316,6 +520,11 @@ namespace GeneratorCalculation
 				if (w is PaperType word)
 					word.ReplaceWithConstant(availableConstants, usedConstants);
 			}
+		}
+
+		public PaperType Normalize()
+		{
+			return this;
 		}
 	}
 
@@ -335,6 +544,43 @@ namespace GeneratorCalculation
 			return Type.ToString() + Size.ToString();
 		}
 
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord other)
+		{
+			var conditions = new Dictionary<PaperVariable, PaperWord>();
+
+			if (other is ListType otherList)
+			{
+				var c1 = Type.IsCompatibleTo(otherList.Type);
+				var c2 = Size.IsCompatibleTo(otherList.Size);
+				return Solver.JoinConditions(c1, c2);
+			}
+
+			if (Size is PaperVariable sizeVariable)
+				conditions.Add(sizeVariable, (PaperInt)1);
+			else if (Size is PaperInt sizeInt && sizeInt.Value == 1)
+			{
+			}
+			else
+				return null;
+
+
+			if (Type is PaperVariable typeVariable)
+				conditions.Add(typeVariable, other);
+			else
+				return null;
+
+			return conditions;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			var newType = Type.ApplyEquation(equations);
+			if (newType is PaperType newTypeType)
+				return new ListType(newTypeType, Size.ApplyEquation(equations));
+			else
+				return this;
+		}
+
 		public List<PaperVariable> GetVariables(List<string> constants)
 		{
 			var l = Type.GetVariables(constants);
@@ -344,7 +590,7 @@ namespace GeneratorCalculation
 			return l;
 		}
 
-		public bool GetYield(ref PaperType yielded, ref PaperType remaining)
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
 			if (Size is PaperStar)
 				throw new Exception("Star should have been replaced in the ReplaceWithConstant step.");
@@ -364,6 +610,14 @@ namespace GeneratorCalculation
 
 				Size = new PaperVariable(c);
 			}
+		}
+
+		public PaperType Normalize()
+		{
+			if (Size is PaperInt i && i.Value == 1)
+				return Type.Normalize();
+			else
+				return this;
 		}
 	}
 }
