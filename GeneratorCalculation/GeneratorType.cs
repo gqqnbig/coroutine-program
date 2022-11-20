@@ -171,7 +171,7 @@ namespace GeneratorCalculation
 		}
 	}
 
-	class ConcreteType : PaperType
+	public class ConcreteType : PaperType
 	{
 		public static readonly ConcreteType Void = new ConcreteType("Void");
 
@@ -259,9 +259,9 @@ namespace GeneratorCalculation
 			Receive = receive;
 		}
 
-		public PaperType Yield { get; set; }
+		public PaperType Yield { get; }
 
-		public PaperType Receive { get; set; }
+		public PaperType Receive { get; }
 
 		public void Check()
 		{
@@ -284,22 +284,24 @@ namespace GeneratorCalculation
 			//Console.WriteLine("Receive variables: " + string.Join(", ", ));
 		}
 
-		public bool RunYield(List<string> constants, ref GeneratorType g, ref PaperType yieldedType)
+		/// <summary>
+		/// If it can yield, return the new type. Otherwise return null.
+		/// </summary>
+		/// <param name="constants"></param>
+		/// <param name="g"></param>
+		/// <param name="yieldedType"></param>
+		/// <returns></returns>
+		public GeneratorType RunYield(List<string> constants, ref PaperType yieldedType)
 		{
 			if (Yield.GetVariables(constants).Count == 0)
 			{
 				PaperType remaining = null;
 				if (Yield.Pop(ref yieldedType, ref remaining))
-				{
-					Yield = remaining;
-					g = this;
-					return true;
-				}
-			}
-			else
-				return false;
+					return new GeneratorType(remaining, Receive);
 
-			throw new NotImplementedException();
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -355,6 +357,24 @@ namespace GeneratorCalculation
 				return new GeneratorType(newYieldType, newReceiveType);
 			else
 				return this;
+		}
+
+
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			if (obj is GeneratorType objGenerator)
+			{
+				return Receive.Equals(objGenerator.Receive) && Yield.Equals(objGenerator.Yield);
+			}
+
+			return false;
+		}
+
+		// override object.GetHashCode
+		public override int GetHashCode()
+		{
+			return Receive.GetHashCode() ^ Yield.GetHashCode();
 		}
 	}
 
