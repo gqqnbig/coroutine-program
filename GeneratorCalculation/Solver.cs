@@ -215,4 +215,19 @@ namespace GeneratorCalculation
 		}
 
 	}
+
+	public class DeadLockException : Exception
+	{
+		private readonly List<KeyValuePair<string, GeneratorType>> lockedGenerators;
+
+		public DeadLockException(List<KeyValuePair<string, GeneratorType>> lockedGenerators) :
+			base("The following generators are locked:\n" + string.Join("\n", lockedGenerators.Select(p => $"{p.Key}: {p.Value}")))
+		{
+			this.lockedGenerators = new List<KeyValuePair<string, GeneratorType>>(lockedGenerators);
+		}
+
+
+	}
+
+
 }
