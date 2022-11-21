@@ -244,6 +244,23 @@ namespace GeneratorCalculation
 		{
 			return this;
 		}
+
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			if (obj is ConcreteType objConcrete)
+			{
+				return Name.Equals(objConcrete.Name);
+			}
+
+			return false;
+		}
+
+		// override object.GetHashCode
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode();
+		}
 	}
 
 	//class VariableType : PaperType
@@ -483,6 +500,37 @@ namespace GeneratorCalculation
 				return Types[0].Normalize();
 			else
 				return this;
+		}
+
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			if (obj is SequenceType objSequence)
+			{
+				if (Types.Count != objSequence.Types.Count)
+					return false;
+				for (int i = 0; i < Types.Count; i++)
+				{
+					if (Types[i].Equals(objSequence.Types[i]) == false)
+						return false;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		// override object.GetHashCode
+		public override int GetHashCode()
+		{
+			int hashcode = 0;
+			for (int i = 0; i < Types.Count; i++)
+			{
+				hashcode ^= (i + Types[i].GetHashCode());
+			}
+
+			return hashcode;
 		}
 	}
 
