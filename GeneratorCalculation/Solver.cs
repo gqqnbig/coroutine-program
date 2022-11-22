@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Linq;
 
 namespace GeneratorCalculation
@@ -20,6 +19,7 @@ namespace GeneratorCalculation
 					return null;
 
 			}
+
 			return c;
 		}
 
@@ -70,9 +70,8 @@ namespace GeneratorCalculation
 		public static GeneratorType Solve(List<KeyValuePair<string, GeneratorType>> coroutines)
 		{
 			foreach (var g in coroutines)
-			{
 				g.Value.Check();
-			}
+
 
 			List<string> availableConstants = new List<string>();
 			for (int i = 0; i < 26; i++)
@@ -96,28 +95,22 @@ namespace GeneratorCalculation
 				g.Value.ReplaceWithConstant(availableConstants, constants);
 			}
 
-			Console.WriteLine("== ReplaceWithConstant ==");
-			Console.WriteLine($"constants: {string.Join(", ", constants)}");
-			foreach (var g in coroutines)
+			if (constants.Count > 0)
 			{
-				Console.WriteLine($"{g.Key}:\t{g.Value}");
+				Console.WriteLine("== ReplaceWithConstant ==");
+				Console.WriteLine($"constants: {string.Join(", ", constants)}");
+				foreach (var g in coroutines)
+					Console.WriteLine($"{g.Key}:\t{g.Value}");
 			}
 
 
-			Solve(coroutines, constants, out var yieldsToOutside);
-
-			var yields = new SequenceType(yieldsToOutside).Normalize();
-
-			var result = new GeneratorType(yields, ConcreteType.Void);
-			return result;
-
-			//next(oc1) --> G void void: state transition.
+			return Solve(coroutines, constants);
 		}
 
 
-		static void Solve(List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants, out List<PaperType> yieldsToOutside)
+		static GeneratorType Solve(List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
 		{
-			yieldsToOutside = new List<PaperType>();
+			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
 			int i = 0;
 			while (i < pairs.Count)
@@ -161,6 +154,20 @@ namespace GeneratorCalculation
 				i++;
 			}
 
+
+			//allow at most one coroutine to have receive.
+			var lockedCoroutines = pairs.Where(p => p.Value.Receive != ConcreteType.Void).ToList();
+			if (lockedCoroutines.Count > 1)
+				throw new DeadLockException(lockedCoroutines);
+			else if (lockedCoroutines.Count == 1)
+				yieldsToOutside.Add(lockedCoroutines[0].Value.Yield);
+
+			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Value.Receive : ConcreteType.Void;
+
+			var yields = new SequenceType(yieldsToOutside).Normalize();
+
+			var result = new GeneratorType(yields, receive);
+			return result;
 		}
 
 		static bool Receive(PaperType yieldedType, int fromIndex, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)

@@ -146,7 +146,7 @@ namespace GeneratorCalculation
 		}
 	}
 
-	class PaperStar : PaperWord
+	public class PaperStar : PaperWord
 	{
 		public static readonly PaperStar Instance = new PaperStar();
 
@@ -310,6 +310,10 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		public GeneratorType RunYield(List<string> constants, ref PaperType yieldedType)
 		{
+			if (Receive != ConcreteType.Void)
+				return null;
+
+
 			if (Yield.GetVariables(constants).Count == 0)
 			{
 				PaperType remaining = null;
