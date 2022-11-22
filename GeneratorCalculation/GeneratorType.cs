@@ -229,7 +229,7 @@ namespace GeneratorCalculation
 				if (condition1 == null)
 					return null;
 
-				var condition2 = tList.Type.IsCompatibleTo(t);
+				var condition2 = tList.Type.IsCompatibleTo(this);
 				if (condition2 == null)
 					return null;
 
