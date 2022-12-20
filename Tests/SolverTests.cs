@@ -69,5 +69,16 @@ namespace GeneratorCalculationTests
 			Console.WriteLine(result);
 		}
 
+		[Fact]
+		public void UseVariable()
+		{
+
+			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("a", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("b", new GeneratorType(ConcreteType.Void, (PaperVariable)"a")));
+
+
+			var result = Solver.Solve(coroutines);
+		}
 	}
 }
