@@ -131,20 +131,26 @@ namespace GeneratorCalculation
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
 
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
+					int from = i;
 					if (g.Yield == ConcreteType.Void)
 					{
 						Console.WriteLine($"{pairs[i].Key} reached the simplest form. Remove from the list.");
 
 						pairs.RemoveAt(i);
-						//what if nowhere to receive?
-						if (Receive(yieldedType, -1, pairs, constants))
-						{
-							i = 0;
-							continue;
-						}
-						else
-							yieldsToOutside.Add(yieldedType);
+						from = -1;
 					}
+					else
+						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, g);
+
+					//what if nowhere to receive?
+					if (Receive(yieldedType, from, pairs, constants))
+					{
+					}
+					else
+						yieldsToOutside.Add(yieldedType);
+
+					i = 0;
+					continue;
 
 
 				}
