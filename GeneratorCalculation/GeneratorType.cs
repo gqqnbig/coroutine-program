@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Linq;
 
 namespace GeneratorCalculation
@@ -89,7 +88,10 @@ namespace GeneratorCalculation
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
 		{
-			return false;
+			//We pop first, then make the head compatible to the yielded type.
+			yielded = this;
+			remaining = ConcreteType.Void;
+			return true;
 		}
 
 		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
