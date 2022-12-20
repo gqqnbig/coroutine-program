@@ -112,12 +112,13 @@ namespace GeneratorCalculation
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
+			Console.WriteLine();
+
 			int i = 0;
 			while (i < pairs.Count)
 			{
-				Console.WriteLine();
-				foreach (var p in pairs)
-					Console.WriteLine($"{p.Key}:\t{p.Value}");
+				//foreach (var p in pairs)
+				//	Console.WriteLine($"{p.Key}:\t{p.Value}");
 
 
 				var coroutine = pairs[i].Value;
@@ -155,7 +156,7 @@ namespace GeneratorCalculation
 
 				}
 				else
-					Console.WriteLine(" --X");
+					Console.WriteLine(" -- Not ready to yield");
 
 				i++;
 			}
