@@ -83,5 +83,21 @@ namespace GeneratorCalculationTests
 			Assert.Equal((ConcreteType)"Y", result.Yield);
 			Assert.Equal(ConcreteType.Void, result.Receive);
 		}
+
+
+		[Fact]
+		public void PopReceive()
+		{
+			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("a", new GeneratorType((ConcreteType)"A", ConcreteType.Void)));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("b", new GeneratorType(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), (ConcreteType)"A")));
+
+			var result = Solver.Solve(coroutines);
+
+			Assert.Equal(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), result.Yield);
+			Assert.Equal(ConcreteType.Void, result.Receive);
+		}
+
+
 	}
 }
