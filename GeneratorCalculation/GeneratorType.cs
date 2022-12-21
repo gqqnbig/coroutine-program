@@ -446,6 +446,17 @@ namespace GeneratorCalculation
 			if (Types.Count <= 1)
 				throw new ArgumentException();
 
+			if (t is SequenceType tSequence)
+			{
+				if (tSequence.Types.Count != Types.Count)
+					return null;
+
+				List<Dictionary<PaperVariable, PaperWord>> conditions = new List<Dictionary<PaperVariable, PaperWord>>(Types.Count);
+				for (int i = 0; i < Types.Count; i++)
+					conditions.Add(Types[i].IsCompatibleTo(tSequence.Types[i]));
+
+				return Solver.JoinConditions(conditions);
+			}
 			return null;
 		}
 
