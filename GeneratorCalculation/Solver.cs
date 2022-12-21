@@ -168,7 +168,7 @@ namespace GeneratorCalculation
 			//allow at most one coroutine to have receive.
 			var lockedCoroutines = pairs.Where(p => p.Value.Receive != ConcreteType.Void).ToList();
 			if (lockedCoroutines.Count > 1)
-				throw new DeadLockException(lockedCoroutines);
+				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
 			else if (lockedCoroutines.Count == 1)
 				yieldsToOutside.Add(lockedCoroutines[0].Value.Yield);
 
@@ -241,12 +241,14 @@ namespace GeneratorCalculation
 
 	public class DeadLockException : Exception
 	{
-		private readonly List<KeyValuePair<string, GeneratorType>> lockedGenerators;
+		public List<KeyValuePair<string, GeneratorType>> LockedGenerators { get; }
+		public List<PaperType> YieldsToOutside { get; }
 
-		public DeadLockException(List<KeyValuePair<string, GeneratorType>> lockedGenerators) :
-			base("The following generators are locked:\n" + string.Join("\n", lockedGenerators.Select(p => $"{p.Key}: {p.Value}")))
+		public DeadLockException(List<PaperType> yieldsToOutside, List<KeyValuePair<string, GeneratorType>> lockedGenerators) :
+			base("After yielding " + string.Join(", ", yieldsToOutside) + ", the following generators are locked:\n" + string.Join("\n", lockedGenerators.Select(p => $"{p.Key}: {p.Value}")))
 		{
-			this.lockedGenerators = new List<KeyValuePair<string, GeneratorType>>(lockedGenerators);
+			this.LockedGenerators = new List<KeyValuePair<string, GeneratorType>>(lockedGenerators);
+			this.YieldsToOutside = yieldsToOutside;
 		}
 
 
