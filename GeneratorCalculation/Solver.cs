@@ -26,6 +26,9 @@ namespace GeneratorCalculation
 
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(Dictionary<PaperVariable, PaperWord> x, Dictionary<PaperVariable, PaperWord> y)
 		{
+			if (x == null || y == null)
+				return null;
+
 			var k1 = new List<PaperVariable>(x.Keys);
 			var k2 = new List<PaperVariable>(y.Keys);
 
