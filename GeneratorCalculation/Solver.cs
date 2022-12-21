@@ -182,6 +182,8 @@ namespace GeneratorCalculation
 
 		static bool Receive(PaperType yieldedType, int fromIndex, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
 		{
+			Console.WriteLine();
+
 			var range = new List<int>();
 			for (int i = fromIndex + 1; i < pairs.Count; i++)
 				range.Add(i);
@@ -195,7 +197,7 @@ namespace GeneratorCalculation
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{coroutine} can receive {yieldedType} and will pop the receive part");
+					Console.Write($"{pairs[i].Key}:\t{coroutine} can receive {yieldedType} and will pop the receive part");
 					if (conditions.Count == 0)
 					{
 						Console.WriteLine(".");
@@ -225,6 +227,10 @@ namespace GeneratorCalculation
 
 					//Solve(pairs, constants);
 					//return;
+				}
+				else
+				{
+					Console.WriteLine($"{pairs[i].Key}:\t{pairs[i].Value} -- Cannot receive {yieldedType}");
 				}
 			}
 
