@@ -99,5 +99,40 @@ namespace GeneratorCalculationTests
 		}
 
 
+		[Fact]
+		public void RunProlog()
+		{
+			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"John", (ConcreteType)"Sue")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"Jane", (ConcreteType)"Sue")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"Sue", (ConcreteType)"George")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child4", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"John", (ConcreteType)"Sam")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child5", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"Jane", (ConcreteType)"Sam")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("child6", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Child", (ConcreteType)"Sue", (ConcreteType)"Gina")))));
+
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("female1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Female", (ConcreteType)"Sue")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("female2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Female", (ConcreteType)"Jane")))));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("female3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType)"Female", (ConcreteType)"June")))));
+
+			coroutines.Add(
+				new KeyValuePair<string, GeneratorType>("parent", new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"Child", (PaperVariable)"x", (PaperVariable)"y")), new SequenceType(new SequenceType((ConcreteType)"Parent", (PaperVariable)"y", (PaperVariable)"x")))));
+
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("query",
+				new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new SequenceType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Yes"), (PaperVariable)"x")));
+			coroutines.Add(new KeyValuePair<string, GeneratorType>("starter", new GeneratorType((ConcreteType)"Sue", ConcreteType.Void)));
+
+
+			try
+			{
+				var result = Solver.Solve(coroutines);
+			}
+			catch (DeadLockException e)
+			{
+				Assert.Single(e.YieldsToOutside);
+				Assert.Equal((ConcreteType)"Yes", e.YieldsToOutside[0]);
+			}
+		}
+
+
 	}
 }
