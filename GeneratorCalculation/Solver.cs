@@ -146,8 +146,12 @@ namespace GeneratorCalculation
 					else
 						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, g);
 
+					if (yieldedType is GeneratorType)
+					{
+						pairs.Add(new KeyValuePair<string, GeneratorType>("", (GeneratorType)yieldedType));
+					}
 					//what if nowhere to receive?
-					if (Receive(yieldedType, from, pairs, constants))
+					else if (Receive(yieldedType, from, pairs, constants))
 					{
 					}
 					else
