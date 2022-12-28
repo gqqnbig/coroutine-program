@@ -617,6 +617,10 @@ namespace GeneratorCalculation
 	{
 		public ListType(PaperType type, PaperWord size)
 		{
+			if (size is PaperInt sInt && sInt.Value < 0)
+				throw new ArgumentException("List size must be non-negative. Your size is " + size, nameof(size));
+
+
 			Type = type;
 			Size = size;
 		}
