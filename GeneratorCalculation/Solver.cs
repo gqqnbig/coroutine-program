@@ -189,10 +189,12 @@ namespace GeneratorCalculation
 			Console.WriteLine();
 
 			var range = new List<int>();
-			for (int i = fromIndex + 1; i < pairs.Count; i++)
+			for (int i = 0; i < pairs.Count; i++)
+			{
+				if (i == fromIndex)
+					continue;
 				range.Add(i);
-			for (int i = 0; i < fromIndex; i++)
-				range.Add(i);
+			}
 
 			foreach (var i in range)
 			{
