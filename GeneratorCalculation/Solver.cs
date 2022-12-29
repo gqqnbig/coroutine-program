@@ -188,16 +188,11 @@ namespace GeneratorCalculation
 		{
 			Console.WriteLine();
 
-			var range = new List<int>();
-			for (int i = 0; i < pairs.Count; i++)
+			for (var i = 0; i < pairs.Count; i++)
 			{
 				if (i == fromIndex)
 					continue;
-				range.Add(i);
-			}
 
-			foreach (var i in range)
-			{
 				var coroutine = pairs[i].Value;
 				GeneratorType newGenerator;
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
