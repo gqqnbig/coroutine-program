@@ -609,7 +609,7 @@ namespace GeneratorCalculation
 
 		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
-			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations)));
+			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
 
 		public List<PaperVariable> GetVariables(List<string> constants)

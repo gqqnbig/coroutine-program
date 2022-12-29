@@ -220,10 +220,9 @@ namespace GeneratorCalculation
 						Console.Write(" on the conditions that ");
 						Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
 
-						var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
 						try
 						{
-							resultGenerator = (GeneratorType)resultGenerator.Normalize();
+							var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
 							Console.WriteLine($"Therefore it becomes {resultGenerator}.");
 
 							//if (resultGenerator.Yield == ConcreteType.Void)
