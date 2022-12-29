@@ -131,7 +131,7 @@ namespace GeneratorCalculation
 		}
 	}
 
-	class PaperInt : PaperWord
+	public class PaperInt : PaperWord
 	{
 		public int Value { get; set; }
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GeneratorCalculation
 {
-	class DecFunction : FunctionType
+	public class DecFunction : FunctionType
 	{
 		public DecFunction(params PaperWord[] words) : base("dec", words)
 		{
