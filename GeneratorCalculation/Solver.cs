@@ -135,13 +135,11 @@ namespace GeneratorCalculation
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
 
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
-					int from = i;
 					if (g.Yield == ConcreteType.Void)
 					{
 						Console.WriteLine($"{pairs[i].Key} reached the simplest form. Remove from the list.");
 
 						pairs.RemoveAt(i);
-						from = -1;
 					}
 					else
 						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, g);
@@ -151,7 +149,7 @@ namespace GeneratorCalculation
 						pairs.Add(new KeyValuePair<string, GeneratorType>("", (GeneratorType)yieldedType));
 					}
 					//what if nowhere to receive?
-					else if (Receive(yieldedType, from, pairs, constants))
+					else if (Receive(yieldedType, pairs, constants))
 					{
 					}
 					else
@@ -184,15 +182,12 @@ namespace GeneratorCalculation
 			return result;
 		}
 
-		static bool Receive(PaperType yieldedType, int fromIndex, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
+		static bool Receive(PaperType yieldedType, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
 		{
 			Console.WriteLine();
 
 			for (var i = 0; i < pairs.Count; i++)
 			{
-				if (i == fromIndex)
-					continue;
-
 				var coroutine = pairs[i].Value;
 				GeneratorType newGenerator;
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
