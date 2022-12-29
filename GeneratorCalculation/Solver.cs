@@ -214,19 +214,10 @@ namespace GeneratorCalculation
 						Console.Write(" on the conditions that ");
 						Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
 
-						var result = newGenerator.ApplyEquation(conditions.ToList());
-						if (result is GeneratorType resultGenerator)
-						{
-							Console.WriteLine($"Therefore it becomes {result}.");
-							pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, resultGenerator);
-						}
-						else
-						{
-							Console.WriteLine("But the result doesn't fit the type.");
-							//In that case, can we still use the popped generator?
-							throw new NotImplementedException();
-							pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, newGenerator);
-						}
+						var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
+
+						Console.WriteLine($"Therefore it becomes {resultGenerator}.");
+						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, resultGenerator);
 					}
 
 					return true;

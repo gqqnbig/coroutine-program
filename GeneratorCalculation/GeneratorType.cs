@@ -372,7 +372,12 @@ namespace GeneratorCalculation
 		//	return l;
 		//}
 
-		public new PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		/// <summary>
+		/// Never returns null
+		/// </summary>
+		/// <param name="equations"></param>
+		/// <returns></returns>
+		public new GeneratorType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);
