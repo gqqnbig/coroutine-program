@@ -104,6 +104,14 @@ namespace GeneratorCalculation
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
 		{
+			if (t is PaperType tType)
+			{
+				tType = tType.Normalize();
+
+				if (tType is ConcreteType == false)
+					return null;
+			}
+
 			var d = new Dictionary<PaperVariable, PaperWord>();
 			d.Add(this, t);
 			return d;
@@ -390,6 +398,11 @@ namespace GeneratorCalculation
 				return this;
 		}
 
+		public override PaperType Normalize()
+		{
+			return new GeneratorType(Yield.Normalize(), Receive.Normalize());
+		}
+
 
 		// override object.Equals
 		public override bool Equals(object obj)
@@ -406,6 +419,11 @@ namespace GeneratorCalculation
 		public override int GetHashCode()
 		{
 			return Receive.GetHashCode() ^ Yield.GetHashCode();
+		}
+
+		public GeneratorType Clone()
+		{
+			return new GeneratorType(Yield, Receive);
 		}
 	}
 
@@ -524,7 +542,11 @@ namespace GeneratorCalculation
 			if (Types.Count == 1)
 				return Types[0].Normalize();
 			else
-				return this;
+			{
+				var a = new SequenceType(from t in Types
+										 select t.Normalize());
+				return a;
+			}
 		}
 
 		// override object.Equals
@@ -585,7 +607,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations)));
 		}
@@ -615,7 +637,12 @@ namespace GeneratorCalculation
 			}
 		}
 
-		public PaperType Normalize()
+		public virtual PaperType Normalize()
+		{
+			return this;
+		}
+
+		public virtual PaperWord Evaluate()
 		{
 			return this;
 		}
@@ -626,7 +653,7 @@ namespace GeneratorCalculation
 		public ListType(PaperType type, PaperWord size)
 		{
 			if (size is PaperInt sInt && sInt.Value < 0)
-				throw new ArgumentException("List size must be non-negative. Your size is " + size, nameof(size));
+				throw new PaperSyntaxException("List size must be non-negative. Your size is " + size);
 
 
 			Type = type;
@@ -713,8 +740,18 @@ namespace GeneratorCalculation
 		{
 			if (Size is PaperInt i && i.Value == 1)
 				return Type.Normalize();
+			else if (Size is FunctionType sFunction)
+				return new ListType(Type, sFunction.Evaluate());
 			else
 				return this;
+		}
+	}
+
+	public class PaperSyntaxException : Exception
+	{
+		public PaperSyntaxException(string message) : base(message)
+		{
+
 		}
 	}
 }

@@ -5,39 +5,63 @@ namespace GeneratorCalculation
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static List<Generator> GetPrologKnowledgeBase()
 		{
-			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("fr1", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("fr2", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("oc1", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("oc2", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			var gNegate1 = new GeneratorType((ConcreteType)"Yes", (ConcreteType)"Negate");
+			var gNegate2 = new GeneratorType(ConcreteType.Void, (ConcreteType)"Yes");
 
+			var coroutines = new List<Generator>
+			{
+				new Generator("child1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sue")))),
+				new Generator("child2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sue")))),
+				new Generator("child3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "George")))),
+				new Generator("child4", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sam")))),
+				new Generator("child5", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sam")))),
+				new Generator("child6", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "Gina")))),
+				new Generator("female1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Sue")))),
+				new Generator("female2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Jane")))),
+				new Generator("female3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "June")))),
+				new Generator("female-other", new GeneratorType((ConcreteType)"No", new SequenceType(new SequenceType((ConcreteType) "Female", (PaperVariable) "x")))),
+				new Generator("parent", new GeneratorType(new SequenceType(new SequenceType((ConcreteType) "Child", (PaperVariable) "x", (PaperVariable) "y")), new SequenceType(new SequenceType((ConcreteType) "Parent", (PaperVariable) "y", (PaperVariable) "x")))),
 
-			GeneratorType interleave = new GeneratorType(new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")),
-				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("interleave", interleave));
-
-			var result = Solver.Solve(coroutines);
-
-			Console.WriteLine("Final result:");
-			Console.WriteLine(result);
-
+				new Generator("Negate", new GeneratorType(new SequenceType(gNegate1,gNegate2),(ConcreteType)"No")),
+			};
+			return coroutines;
 		}
 
-		public static void SolveDeadlock()
+
+		static void Main(string[] args)
 		{
-			var list = new List<KeyValuePair<string, GeneratorType>>();
-			var g1 = new GeneratorType((ConcreteType)"A", (ConcreteType)"B");
-			list.Add(new KeyValuePair<string, GeneratorType>("g1", g1));
+			var coroutines = GetPrologKnowledgeBase();
 
-			var g2 = new GeneratorType((ConcreteType)"C", ConcreteType.Void);
-			list.Add(new KeyValuePair<string, GeneratorType>("g2", g2));
+			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new SequenceType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"), (PaperVariable)"x")));
+			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sam", ConcreteType.Void)));
 
-			//var g3 = new GeneratorType((ConcreteType)"D", (ConcreteType)"E");
-			//list.Add(new KeyValuePair<string, GeneratorType>("g3", g3));
+			var result = Solver.Solve(coroutines);
+			Console.WriteLine(result);
+		}
 
-			Console.WriteLine(Solver.Solve(list));
+
+	}
+
+	public class Generator
+	{
+		public string Name { get; }
+		public bool IsInfinite { get; }
+
+		public GeneratorType OriginalType { get; }
+		public GeneratorType Type { get; set; }
+
+		public Generator(string name, GeneratorType type) : this(name, false, type)
+		{ }
+
+
+		public Generator(string name, bool isInfinite, GeneratorType type)
+		{
+			Name = name;
+			IsInfinite = isInfinite;
+			Type = type;
+			OriginalType = type.Clone();
 		}
 
 	}

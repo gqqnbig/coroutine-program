@@ -11,9 +11,9 @@ namespace GeneratorCalculationTests
 		[Fact()]
 		public void SolveSingle()
 		{
-			var list = new List<KeyValuePair<string, GeneratorType>>();
+			var list = new List<Generator>();
 			var g = new GeneratorType((ConcreteType)"Y", ConcreteType.Void);
-			list.Add(new KeyValuePair<string, GeneratorType>("x", g));
+			list.Add(new Generator("x", g));
 
 			Assert.Equal(g, Solver.Solve(list));
 		}
@@ -21,15 +21,15 @@ namespace GeneratorCalculationTests
 		[Fact]
 		public void SolveDeadlock()
 		{
-			var list = new List<KeyValuePair<string, GeneratorType>>();
+			var list = new List<Generator>();
 			var g1 = new GeneratorType((ConcreteType)"A", (ConcreteType)"B");
-			list.Add(new KeyValuePair<string, GeneratorType>("g1", g1));
+			list.Add(new Generator("g1", g1));
 
 			var g2 = new GeneratorType((ConcreteType)"C", ConcreteType.Void);
-			list.Add(new KeyValuePair<string, GeneratorType>("g2", g2));
+			list.Add(new Generator("g2", g2));
 
 			var g3 = new GeneratorType((ConcreteType)"D", (ConcreteType)"E");
-			list.Add(new KeyValuePair<string, GeneratorType>("g3", g3));
+			list.Add(new Generator("g3", g3));
 
 			Assert.Throws<DeadLockException>(() => Solver.Solve(list));
 		}
@@ -37,12 +37,12 @@ namespace GeneratorCalculationTests
 		[Fact]
 		public void SingleRemainingNoLock()
 		{
-			var list = new List<KeyValuePair<string, GeneratorType>>();
+			var list = new List<Generator>();
 			var g1 = new GeneratorType((ConcreteType)"A", (ConcreteType)"B");
-			list.Add(new KeyValuePair<string, GeneratorType>("g1", g1));
+			list.Add(new Generator("g1", g1));
 
 			var g2 = new GeneratorType((ConcreteType)"C", ConcreteType.Void);
-			list.Add(new KeyValuePair<string, GeneratorType>("g2", g2));
+			list.Add(new Generator("g2", g2));
 
 
 			var result = new GeneratorType(new SequenceType((ConcreteType)"C", (ConcreteType)"A"), (ConcreteType)"B");
@@ -52,16 +52,16 @@ namespace GeneratorCalculationTests
 		[Fact]
 		public void Interleave()
 		{
-			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("oc1", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("oc2", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("fr1", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("fr2", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("oc1", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			coroutines.Add(new Generator("oc2", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			coroutines.Add(new Generator("fr1", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
+			coroutines.Add(new Generator("fr2", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
 
 
 			GeneratorType interleave = new GeneratorType(new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")),
 				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("interleave", interleave));
+			coroutines.Add(new Generator("interleave", interleave));
 
 			var result = Solver.Solve(coroutines);
 
@@ -73,9 +73,9 @@ namespace GeneratorCalculationTests
 		public void UseVariable()
 		{
 
-			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("a", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("b", new GeneratorType((PaperVariable)"a", (PaperVariable)"a")));
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			coroutines.Add(new Generator("b", new GeneratorType((PaperVariable)"a", (PaperVariable)"a")));
 
 
 			var result = Solver.Solve(coroutines);
@@ -88,9 +88,9 @@ namespace GeneratorCalculationTests
 		[Fact]
 		public void PopReceive()
 		{
-			List<KeyValuePair<string, GeneratorType>> coroutines = new List<KeyValuePair<string, GeneratorType>>();
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("a", new GeneratorType((ConcreteType)"A", ConcreteType.Void)));
-			coroutines.Add(new KeyValuePair<string, GeneratorType>("b", new GeneratorType(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), (ConcreteType)"A")));
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"A", ConcreteType.Void)));
+			coroutines.Add(new Generator("b", new GeneratorType(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), (ConcreteType)"A")));
 
 			var result = Solver.Solve(coroutines);
 

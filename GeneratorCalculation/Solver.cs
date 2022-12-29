@@ -7,7 +7,6 @@ namespace GeneratorCalculation
 {
 	public class Solver
 	{
-
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
 		{
 			var c = new Dictionary<PaperVariable, PaperWord>();
@@ -70,10 +69,12 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
-		public static GeneratorType Solve(List<KeyValuePair<string, GeneratorType>> coroutines)
+		public static GeneratorType Solve(List<Generator> coroutines)
 		{
 			foreach (var g in coroutines)
-				g.Value.Check();
+			{
+				g.Type.Check();
+			}
 
 
 			List<string> availableConstants = new List<string>();
@@ -83,19 +84,19 @@ namespace GeneratorCalculation
 			List<string> constants = new List<string>();
 			foreach (var g in coroutines)
 			{
-				foreach (var n in g.Value.GetVariables(constants).Select(v => v.Name))
+				foreach (var n in g.Type.GetVariables(constants).Select(v => v.Name))
 					availableConstants.Remove(n);
 			}
 
 			foreach (var g in coroutines)
 			{
-				Console.WriteLine($"{g.Key}:\t{g.Value}");
+				Console.WriteLine($"{g.Name}:\t{g.Type}");
 			}
 
 
 			foreach (var g in coroutines)
 			{
-				g.Value.ReplaceWithConstant(availableConstants, constants);
+				g.Type.ReplaceWithConstant(availableConstants, constants);
 			}
 
 			if (constants.Count > 0)
@@ -103,7 +104,7 @@ namespace GeneratorCalculation
 				Console.WriteLine("== ReplaceWithConstant ==");
 				Console.WriteLine($"constants: {string.Join(", ", constants)}");
 				foreach (var g in coroutines)
-					Console.WriteLine($"{g.Key}:\t{g.Value}");
+					Console.WriteLine($"{g.Name}:\t{g.Type}");
 			}
 
 
@@ -111,7 +112,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static GeneratorType Solve(List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
+		static GeneratorType Solve(List<Generator> pairs, List<string> constants)
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
@@ -124,29 +125,44 @@ namespace GeneratorCalculation
 				//	Console.WriteLine($"{p.Key}:\t{p.Value}");
 
 
-				var coroutine = pairs[i].Value;
+				var coroutine = pairs[i].Type;
+
+				if (coroutine.Yield == ConcreteType.Void && coroutine.Receive == ConcreteType.Void)
+				{
+					Generator gx = pairs[i];
+					if (gx.IsInfinite)
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
+						gx.Type = gx.OriginalType.Clone();
+					}
+					else
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
+						pairs.RemoveAt(i);
+					}
+
+					continue;
+				}
+
+
+
 
 				PaperType yieldedType = null;
 
-				Console.Write($"{pairs[i].Key}:\t{coroutine} ");
+				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
 				GeneratorType g = coroutine.RunYield(constants, ref yieldedType);
 				if (g != null)
 				{
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
 
-					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
-					if (g.Yield == ConcreteType.Void)
-					{
-						Console.WriteLine($"{pairs[i].Key} reached the simplest form. Remove from the list.");
+					yieldedType = yieldedType.Normalize();
 
-						pairs.RemoveAt(i);
-					}
-					else
-						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, g);
+					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
+					pairs[i].Type = g;
 
 					if (yieldedType is GeneratorType)
 					{
-						pairs.Add(new KeyValuePair<string, GeneratorType>("", (GeneratorType)yieldedType));
+						pairs.Add(new Generator("", (GeneratorType)yieldedType));
 					}
 					//what if nowhere to receive?
 					else if (Receive(yieldedType, pairs, constants))
@@ -168,13 +184,13 @@ namespace GeneratorCalculation
 
 
 			//allow at most one coroutine to have receive.
-			var lockedCoroutines = pairs.Where(p => p.Value.Receive != ConcreteType.Void).ToList();
+			var lockedCoroutines = pairs.Where(p => p.Type.Receive != ConcreteType.Void).ToList();
 			if (lockedCoroutines.Count > 1)
 				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
 			else if (lockedCoroutines.Count == 1)
-				yieldsToOutside.Add(lockedCoroutines[0].Value.Yield);
+				yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
 
-			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Value.Receive : ConcreteType.Void;
+			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
 
 			var yields = new SequenceType(yieldsToOutside).Normalize();
 
@@ -182,22 +198,22 @@ namespace GeneratorCalculation
 			return result;
 		}
 
-		static bool Receive(PaperType yieldedType, List<KeyValuePair<string, GeneratorType>> pairs, List<string> constants)
+		static bool Receive(PaperType yieldedType, List<Generator> pairs, List<string> constants)
 		{
 			Console.WriteLine();
 
 			for (var i = 0; i < pairs.Count; i++)
 			{
-				var coroutine = pairs[i].Value;
+				var coroutine = pairs[i].Type;
 				GeneratorType newGenerator;
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[i].Key}:\t{coroutine} can receive {yieldedType} and will pop the receive part");
+					Console.Write($"{pairs[i].Name}:\t{coroutine} can receive {yieldedType} and will pop the receive part");
 					if (conditions.Count == 0)
 					{
 						Console.WriteLine(".");
-						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, newGenerator);
+						pairs[i].Type = newGenerator;
 					}
 					else
 					{
@@ -205,9 +221,32 @@ namespace GeneratorCalculation
 						Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
 
 						var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
+						try
+						{
+							resultGenerator = (GeneratorType)resultGenerator.Normalize();
+							Console.WriteLine($"Therefore it becomes {resultGenerator}.");
 
-						Console.WriteLine($"Therefore it becomes {resultGenerator}.");
-						pairs[i] = new KeyValuePair<string, GeneratorType>(pairs[i].Key, resultGenerator);
+							//if (resultGenerator.Yield == ConcreteType.Void)
+							//{
+							//	if (pairs[i].IsInfinite)
+							//	{
+							//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Reset to original.");
+							//		pairs[i].Type = pairs[i].OriginalType.Clone();
+							//	}
+							//	else
+							//	{
+							//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Remove from the list.");
+							//		pairs[i] = null;
+							//	}
+							//}
+							//else 
+							pairs[i].Type = resultGenerator;
+						}
+						catch (PaperSyntaxException e)
+						{
+							Console.WriteLine("But the result doesn't fit the type. " + e.Message);
+							continue;
+						}
 					}
 
 					return true;
@@ -217,7 +256,7 @@ namespace GeneratorCalculation
 				}
 				else
 				{
-					Console.WriteLine($"{pairs[i].Key}:\t{pairs[i].Value} -- Cannot receive {yieldedType}");
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
 				}
 			}
 
@@ -228,13 +267,13 @@ namespace GeneratorCalculation
 
 	public class DeadLockException : Exception
 	{
-		public List<KeyValuePair<string, GeneratorType>> LockedGenerators { get; }
+		public List<Generator> LockedGenerators { get; }
 		public List<PaperType> YieldsToOutside { get; }
 
-		public DeadLockException(List<PaperType> yieldsToOutside, List<KeyValuePair<string, GeneratorType>> lockedGenerators) :
-			base("After yielding " + string.Join(", ", yieldsToOutside) + ", the following generators are locked:\n" + string.Join("\n", lockedGenerators.Select(p => $"{p.Key}: {p.Value}")))
+		public DeadLockException(List<PaperType> yieldsToOutside, List<Generator> lockedGenerators) :
+			base("After yielding " + string.Join(", ", yieldsToOutside) + ", the following generators are locked:\n" + string.Join("\n", lockedGenerators.Select(p => $"{p.Name}: {p.Type}")))
 		{
-			this.LockedGenerators = new List<KeyValuePair<string, GeneratorType>>(lockedGenerators);
+			this.LockedGenerators = new List<Generator>(lockedGenerators);
 			this.YieldsToOutside = yieldsToOutside;
 		}
 
