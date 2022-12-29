@@ -134,6 +134,9 @@ namespace GeneratorCalculation
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
 		{
+			if (t is PaperInt tInt && tInt.Value == this.Value)
+				return new Dictionary<PaperVariable, PaperWord>();
+
 			return null;
 		}
 
