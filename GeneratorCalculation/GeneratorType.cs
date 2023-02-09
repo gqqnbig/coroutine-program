@@ -108,7 +108,9 @@ namespace GeneratorCalculation
 			{
 				tType = tType.Normalize();
 
-				if (tType is ConcreteType == false)
+				if (tType is ConcreteType || tType is PaperVariable)
+				{ }
+				else
 					return null;
 			}
 
