@@ -155,14 +155,14 @@ namespace GeneratorCalculation
 				{
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
 
-					yieldedType = yieldedType.Normalize();
+					//yieldedType = yieldedType.Normalize();
 
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
 					pairs[i].Type = g;
 
 					if (yieldedType is GeneratorType)
 					{
-						pairs.Add(new Generator("", (GeneratorType)yieldedType));
+						pairs.Insert(i + 1, new Generator("", (GeneratorType)yieldedType));
 					}
 					//what if nowhere to receive?
 					else if (Receive(yieldedType, pairs, constants))

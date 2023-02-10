@@ -4,27 +4,25 @@ using System.Text;
 using GeneratorCalculation;
 using Xunit;
 
-namespace GeneratorCalculationTests
+namespace GeneratorCalculation.Tests
 {
 	public class PatternMatchingTests
 	{
-		private List<Generator> GetRules()
+		private static List<Generator> GetRules()
 		{
 			var terminatorTrue = new ListType((ConcreteType)"T", PaperStar.Instance);
-			//new SequenceType(new SequenceType((ConcreteType)"T", (ConcreteType)"T", (ConcreteType)"T"));
 			var terminatorFalse = new ListType((ConcreteType)"F", PaperStar.Instance);
-			//new SequenceType(new SequenceType((ConcreteType)"F", (ConcreteType)"F", (ConcreteType)"F"));
 
+			var falseG = new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y")));
+			var trueG = new GeneratorType(terminatorTrue, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"x")));
+			var rec = new GeneratorType(new SequenceType(falseG, trueG, new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", new DecFunction((PaperVariable)"n")))),
+				receive: new SequenceType(new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperVariable)"n"))));
 
 			List<Generator> coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("true", new GeneratorType(terminatorTrue, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"x")))));
-			coroutines.Add(new Generator("false", true, new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y")))));
-			coroutines.Add(new Generator("recursion1", true, new GeneratorType(new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), (PaperVariable)"x", new ListType((PaperVariable)"y", new DecFunction((PaperVariable)"n"))),
-				receive: new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperVariable)"n")))));
-			coroutines.Add(new Generator("recursion2", true, new GeneratorType(new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), (PaperVariable)"x", new ListType((PaperVariable)"y", new DecFunction((PaperVariable)"n"))),
-				receive: new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperVariable)"n")))));
-			coroutines.Add(new Generator("base", new GeneratorType(terminatorFalse, new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperInt)0)))));
+			coroutines.Add(new Generator("base", new GeneratorType(terminatorFalse, new SequenceType(new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperInt)0))))));
+			coroutines.Add(new Generator("recursion1", true, rec.Clone()));
+			coroutines.Add(new Generator("recursion2", true, rec.Clone()));
 
 			return coroutines;
 		}
@@ -33,7 +31,7 @@ namespace GeneratorCalculationTests
 		public void TrueTest()
 		{
 			List<Generator> coroutines = GetRules();
-			coroutines.Add(new Generator("starter", new GeneratorType(new SequenceType((ConcreteType)"String", new ListType((ConcreteType)"String", (PaperInt)3)), ConcreteType.Void)));
+			coroutines.Add(new Generator("starter", new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"String", new ListType((ConcreteType)"String", (PaperInt)3))), ConcreteType.Void)));
 
 			try
 			{
@@ -52,7 +50,7 @@ namespace GeneratorCalculationTests
 		public void FalseTest()
 		{
 			List<Generator> coroutines = GetRules();
-			coroutines.Add(new Generator("starter", new GeneratorType(new SequenceType((ConcreteType)"Path", new ListType((ConcreteType)"String", (PaperInt)3)), ConcreteType.Void)));
+			coroutines.Add(new Generator("starter", new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"Path", new ListType((ConcreteType)"String", (PaperInt)3))), ConcreteType.Void)));
 
 			try
 			{

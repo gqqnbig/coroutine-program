@@ -283,9 +283,9 @@ namespace GeneratorCalculation
 	//	public string Name { get; set; }
 	//}
 
-	public class GeneratorType : FunctionType
+	public class GeneratorType : PaperType
 	{
-		public GeneratorType(PaperType @yield, PaperType receive) : base("G", yield, receive)
+		public GeneratorType(PaperType @yield, PaperType receive)
 		{
 			Yield = yield;
 			Receive = receive;
@@ -377,20 +377,30 @@ namespace GeneratorCalculation
 			return $"G {Yield} {Receive}";
 		}
 
-		//public List<PaperVariable> GetVariables()
-		//{
-		//	var l = new List<PaperVariable>();
-		//	l.AddRange(Yield.GetVariables());
-		//	l.AddRange(Receive.GetVariables());
-		//	return l;
-		//}
+		
+		public List<PaperVariable> GetVariables(List<string> constants)
+		{
+			var inputVariables = Receive.GetVariables(constants).ToList();
+			var outputVariables = Yield.GetVariables(constants).ToList();
+			return inputVariables.Concat(outputVariables).ToList();
+		}
 
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			throw new NotImplementedException();
+		}
+
+		PaperWord PaperWord.ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			return ApplyEquation(equations);
+		}
+		
 		/// <summary>
 		/// Never returns null
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public new GeneratorType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public GeneratorType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);
@@ -400,7 +410,18 @@ namespace GeneratorCalculation
 				return this;
 		}
 
-		public override PaperType Normalize()
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
+		{
+			return false;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{
+			Yield.ReplaceWithConstant(availableConstants, usedConstants);
+			Receive.ReplaceWithConstant(availableConstants, usedConstants);
+		}
+
+		public PaperType Normalize()
 		{
 			return new GeneratorType(Yield.Normalize(), Receive.Normalize());
 		}
