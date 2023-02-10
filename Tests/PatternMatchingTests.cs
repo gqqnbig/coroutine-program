@@ -61,7 +61,7 @@ namespace GeneratorCalculationTests
 			catch (DeadLockException e)
 			{
 				Assert.True(e.YieldsToOutside.Count > 0);
-				Assert.True(e.YieldsToOutside[0] is ListType);
+				Assert.IsType<ListType>(e.YieldsToOutside[0]);
 				Assert.Equal((ConcreteType)"F", ((ListType)e.YieldsToOutside[0]).Type);
 			}
 		}
