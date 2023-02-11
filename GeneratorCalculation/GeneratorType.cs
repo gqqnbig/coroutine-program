@@ -693,30 +693,13 @@ namespace GeneratorCalculation
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord other)
 		{
-			var conditions = new Dictionary<PaperVariable, PaperWord>();
-
 			if (other is ListType otherList)
 			{
 				var c1 = Type.IsCompatibleTo(otherList.Type);
 				var c2 = Size.IsCompatibleTo(otherList.Size);
 				return Solver.JoinConditions(c1, c2);
 			}
-
-			if (Size is PaperVariable sizeVariable)
-				conditions.Add(sizeVariable, (PaperInt)1);
-			else if (Size is PaperInt sizeInt && sizeInt.Value == 1)
-			{
-			}
-			else
-				return null;
-
-
-			if (Type is PaperVariable typeVariable)
-				conditions.Add(typeVariable, other);
-			else
-				return null;
-
-			return conditions;
+			return null;
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
