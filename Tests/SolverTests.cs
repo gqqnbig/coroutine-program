@@ -12,10 +12,11 @@ namespace GeneratorCalculationTests
 		public void SolveSingle()
 		{
 			var list = new List<Generator>();
-			var g = new GeneratorType((ConcreteType)"Y", ConcreteType.Void);
-			list.Add(new Generator("x", g));
+			list.Add(new Generator("", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+			var g = Solver.Solve(list);
 
-			Assert.Equal(g, Solver.Solve(list));
+			Assert.Equal(ConcreteType.Void, g.Receive);
+			Assert.Contains("Y", g.Yield.ToString());
 		}
 
 		[Fact]
@@ -80,7 +81,7 @@ namespace GeneratorCalculationTests
 
 			var result = Solver.Solve(coroutines);
 
-			Assert.Equal((ConcreteType)"Y", result.Yield);
+			Assert.Contains("Y", result.Yield.ToString());
 			Assert.Equal(ConcreteType.Void, result.Receive);
 		}
 

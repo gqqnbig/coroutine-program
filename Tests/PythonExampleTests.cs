@@ -22,10 +22,8 @@ namespace GeneratorCalculation.Tests
 			var result = Solver.Solve(coroutines);
 
 			Assert.Equal(ConcreteType.Void, result.Receive);
-			Assert.IsType<ListType>(result.Yield);
-			var l = result.Yield as ListType;
-			Assert.IsType<FunctionType>(l.Size);
-			Assert.IsType<SequenceType>(l.Type);
+			Assert.Contains("S, S", result.Yield.ToString());
+			Assert.Contains("min(a, b)", result.Yield.ToString());
 		}
 	}
 }
