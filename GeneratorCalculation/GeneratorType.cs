@@ -423,7 +423,11 @@ namespace GeneratorCalculation
 
 		public PaperType Normalize()
 		{
-			return new GeneratorType(Yield.Normalize(), Receive.Normalize());
+			var g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
+			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
+				return ConcreteType.Void;
+			else
+				return g;
 		}
 
 
@@ -562,14 +566,13 @@ namespace GeneratorCalculation
 
 		public PaperType Normalize()
 		{
-			if (Types.Count == 1)
-				return Types[0].Normalize();
-			else
-			{
-				var a = new SequenceType(from t in Types
-										 select t.Normalize());
-				return a;
-			}
+			var a = new SequenceType(from t in Types
+									 let g = t.Normalize()
+									 where t != ConcreteType.Void
+									 select t);
+			if (a.Types.Count == 0)
+				return ConcreteType.Void;
+			return a;
 		}
 
 		// override object.Equals
@@ -744,12 +747,18 @@ namespace GeneratorCalculation
 
 		public PaperType Normalize()
 		{
-			if (Size is PaperInt i && i.Value == 1)
-				return Type.Normalize();
+
+			if (Size is PaperInt i && i.Value == 0)
+				return ConcreteType.Void;
+
+			var t = Type.Normalize();
+			if (t == ConcreteType.Void)
+				return ConcreteType.Void;
+
 			else if (Size is FunctionType sFunction)
-				return new ListType(Type, sFunction.Evaluate());
+				return new ListType(t, sFunction.Evaluate());
 			else
-				return this;
+				return new ListType(t, Size);
 		}
 	}
 
