@@ -44,6 +44,9 @@ namespace GeneratorCalculation
 
 	}
 
+	/// <summary>
+	/// labeled generator
+	/// </summary>
 	public class Generator
 	{
 		public string Name { get; }
