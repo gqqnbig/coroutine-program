@@ -387,7 +387,12 @@ namespace GeneratorCalculation
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
 		{
-			throw new NotImplementedException();
+			if (t is GeneratorType another)
+				// TODO: should use full match. IsCompatibleTo only checks the head element.
+				return Solver.JoinConditions(Yield.IsCompatibleTo(another.Yield), Receive.IsCompatibleTo(another.Receive));
+
+			return null;
+
 		}
 
 		PaperWord PaperWord.ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -496,8 +501,8 @@ namespace GeneratorCalculation
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
 		{
-			if (Types.Count <= 1)
-				throw new ArgumentException();
+			//if (Types.Count <= 1)
+			//	throw new ArgumentException();
 
 			if (t is SequenceType tSequence)
 			{
