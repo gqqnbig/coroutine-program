@@ -71,21 +71,21 @@ namespace GeneratorCalculation
 
 		public static GeneratorType Solve(List<Generator> coroutines)
 		{
+			//multi-pass
+
+			var freeVariables = new Dictionary<PaperVariable, ConcreteType>();
 			foreach (var g in coroutines)
 			{
-				g.Type.Check();
+				g.Type.Check(freeVariables);
 			}
 
 
 			List<string> availableConstants = new List<string>();
 			for (int i = 0; i < 26; i++)
-				availableConstants.Add(((char)('a' + i)).ToString());
-
-			List<string> constants = new List<string>();
-			foreach (var g in coroutines)
 			{
-				foreach (var n in g.Type.GetVariables(constants).Select(v => v.Name))
-					availableConstants.Remove(n);
+				var name = ((char)('a' + i)).ToString();
+				if (freeVariables.All(v => v.Key.Name != name))
+					availableConstants.Add(name);
 			}
 
 			foreach (var g in coroutines)
@@ -96,9 +96,10 @@ namespace GeneratorCalculation
 
 			foreach (var g in coroutines)
 			{
-				g.Type.ReplaceWithConstant(availableConstants, constants);
+				g.Type.ReplaceWithConstant(availableConstants, freeVariables);
 			}
 
+			var constants = freeVariables.Where(item => item.Value == ConcreteType.Const).ToList();
 			if (constants.Count > 0)
 			{
 				Console.WriteLine("== ReplaceWithConstant ==");
@@ -107,9 +108,54 @@ namespace GeneratorCalculation
 					Console.WriteLine($"{g.Name}:\t{g.Type}");
 			}
 
+			if (freeVariables.Any(item => item.Value == null))
+				Console.WriteLine("Enter multi-pass stage");
 
-			return Solve(coroutines, constants);
+
+			var concreteTypes = new HashSet<ConcreteType>();
+			foreach (var g in coroutines)
+				concreteTypes.UnionWith(g.Type.GetConcreteTypes());
+			concreteTypes.Remove(ConcreteType.Void);
+
+			//assign concrete types to each free variable
+			List<GeneratorType> result = SolveWithFreeVariables(coroutines, freeVariables.ToList(), 0, concreteTypes.ToList());
+
+			throw new NotImplementedException();//to reduce
+			return result[0];
 		}
+
+
+		static List<GeneratorType> SolveWithFreeVariables(List<Generator> pairs, List<KeyValuePair<PaperVariable, ConcreteType>> freeVariables, int assignmentIndex, List<ConcreteType> concreteTypes)
+		{
+			if (assignmentIndex >= freeVariables.Count)
+			{
+
+				Console.WriteLine($"Start to solve with {string.Join(",", freeVariables.Select(fv => fv.Key + "=" + fv.Value))}:");
+				List<string> constants = (from fv in freeVariables
+										  where fv.Value == ConcreteType.Const
+										  select fv.Key.Name).ToList();
+				var equations = freeVariables.ToDictionary(p => p.Key, p => (PaperWord)p.Value);
+
+				var copy = pairs.Select(p => new Generator(p.Name, p.IsInfinite, p.Type.Clone().ApplyEquation(equations))).ToList();
+				return new List<GeneratorType>() { Solve(copy, constants) };
+			}
+
+
+			if (freeVariables[assignmentIndex].Value != null)
+				return SolveWithFreeVariables(pairs, freeVariables, assignmentIndex + 1, concreteTypes);
+			else
+			{
+				List<GeneratorType> result = new List<GeneratorType>();
+				foreach (var t in concreteTypes)
+				{
+					freeVariables[assignmentIndex] = new KeyValuePair<PaperVariable, ConcreteType>(freeVariables[assignmentIndex].Key, t);
+					result.AddRange(SolveWithFreeVariables(pairs, freeVariables, assignmentIndex + 1, concreteTypes));
+				}
+
+				return result;
+			}
+		}
+
 
 
 		static GeneratorType Solve(List<Generator> pairs, List<string> constants)

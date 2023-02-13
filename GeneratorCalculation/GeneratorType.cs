@@ -50,25 +50,19 @@ namespace GeneratorCalculation
 		public List<DataFlow> Flow { get; }
 
 
-		public void Check()
+		public void Check(Dictionary<PaperVariable, ConcreteType> freeVariables)
 		{
-			////Receive is like input, yield is like output.
-			////Yield cannot have variables that are unbound from Receive.
+			//Receive is like input, yield is like output.
+			//Yield cannot have variables that are unbound from Receive.
 
-			//List<string> constants = new List<string>();
-			//var inputVariables = Receive.GetVariables(constants).Select(v => v.Name).ToList();
-			//var outputVariables = Yield.GetVariables(constants).Select(v => v.Name).ToList();
+			List<string> constants = new List<string>();
 
-			//if (outputVariables.Any(v => inputVariables.Contains(v) == false))
-			//{
-			//	var culprits = outputVariables.Where(v => inputVariables.Contains(v) == false).ToList();
-			//	throw new FormatException($"{string.Join(", ", culprits)} are not bound by receive.");
-			//}
-
-
-			////Console.WriteLine("Yield variables: " + string.Join(", ", ));
-
-			////Console.WriteLine("Receive variables: " + string.Join(", ", ));
+			var fv = GetUnboundVariables(constants);
+			foreach (var x in fv)
+			{
+				if (freeVariables.TryAdd(x, null) == false)
+					throw new FormatException($"Free variable {x} is already used in other coroutines.");
+			}
 		}
 
 
@@ -81,11 +75,11 @@ namespace GeneratorCalculation
 		}
 
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
-			var inputVariables = Flow.Where(f => f.Direction == Direction.Resuming).SelectMany(f => f.Type.GetVariables(constants));
-			var outputVariables = Flow.Where(f => f.Direction == Direction.Yielding).SelectMany(f => f.Type.GetVariables(constants));
-			return inputVariables.Concat(outputVariables).ToList();
+			var inputVariables = Receive.GetUnboundVariables(constants);
+			var outputVariables = Yield.GetUnboundVariables(constants);
+			return outputVariables.Except(inputVariables).ToList();
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
@@ -148,7 +142,7 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{
 			foreach (var f in Flow)
 			{
@@ -171,6 +165,16 @@ namespace GeneratorCalculation
 				return ConcreteType.Void;
 			else
 				return new GeneratorType(nf);
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			HashSet<ConcreteType> result = new HashSet<ConcreteType>();
+			foreach (var f in Flow)
+			{
+				result = result.Union(f.Type.GetConcreteTypes()).ToHashSet();
+			}
+			return result;
 		}
 
 

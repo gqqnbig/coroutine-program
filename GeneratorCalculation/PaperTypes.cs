@@ -27,7 +27,12 @@ namespace GeneratorCalculation
 
 	public interface PaperType : PaperWord
 	{
-		List<PaperVariable> GetVariables(List<string> constants);
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="constants">It's used to check if a variable is a constant</param>
+		/// <returns></returns>
+		List<PaperVariable> GetUnboundVariables(List<string> constants);
 
 		/// <summary>
 		/// Pop the head element from the type.
@@ -37,10 +42,12 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		bool Pop(ref PaperType yielded, ref PaperType remaining);
 
-		void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants);
+		void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants);
 
 
 		PaperType Normalize();
+
+		HashSet<ConcreteType> GetConcreteTypes();
 	}
 
 
@@ -78,7 +85,7 @@ namespace GeneratorCalculation
 			return Name.GetHashCode();
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			if (constants.Contains(Name))
 				return new List<PaperVariable>();
@@ -94,12 +101,17 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{ }
 
 		public PaperType Normalize()
 		{
 			return this;
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			return new HashSet<ConcreteType>();
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
@@ -185,6 +197,11 @@ namespace GeneratorCalculation
 	{
 		public static readonly ConcreteType Void = new ConcreteType("Void");
 
+		/// <summary>
+		/// A special Const type to denote constants.
+		/// </summary>
+		public static readonly ConcreteType Const = new ConcreteType("Const");
+
 		public ConcreteType(string name)
 		{
 			if (name.Length == 0 || char.IsUpper(name[0]) == false)
@@ -205,7 +222,7 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			return new List<PaperVariable>();
 		}
@@ -220,12 +237,17 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{ }
 
 		public PaperType Normalize()
 		{
 			return this;
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			return new HashSet<ConcreteType>() { this };
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
@@ -355,9 +377,9 @@ namespace GeneratorCalculation
 			return new SequenceType(newTypes);
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
-			return Types.SelectMany(t => t.GetVariables(constants)).ToList();
+			return Types.SelectMany(t => t.GetUnboundVariables(constants)).ToList();
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -379,7 +401,7 @@ namespace GeneratorCalculation
 			}
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{
 			foreach (var t in Types)
 			{
@@ -397,6 +419,15 @@ namespace GeneratorCalculation
 			if (a.Types.Count == 0)
 				return ConcreteType.Void;
 			return a;
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			var res = new HashSet<ConcreteType>();
+			foreach (var t in Types)
+				res.UnionWith(t.GetConcreteTypes());
+
+			return res;
 		}
 
 		// override object.Equals
@@ -462,11 +493,11 @@ namespace GeneratorCalculation
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			var r = from a in Arguments
 					where a is PaperType
-					from v in ((PaperType)a).GetVariables(constants)
+					from v in ((PaperType)a).GetUnboundVariables(constants)
 					select v;
 
 			return r.ToList();
@@ -478,7 +509,7 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{
 			foreach (var w in Arguments)
 			{
@@ -490,6 +521,17 @@ namespace GeneratorCalculation
 		public virtual PaperType Normalize()
 		{
 			return this;
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			var res = new HashSet<ConcreteType>();
+			foreach (var w in Arguments)
+			{
+				if (w is PaperType t)
+					res.UnionWith(t.GetConcreteTypes());
+			}
+			return res;
 		}
 
 		public virtual PaperWord Evaluate()
@@ -538,11 +580,11 @@ namespace GeneratorCalculation
 				return this;
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
-			var l = Type.GetVariables(constants);
+			var l = Type.GetUnboundVariables(constants);
 			if (Size is PaperType)
-				l.AddRange(((PaperType)Size).GetVariables(constants));
+				l.AddRange(((PaperType)Size).GetUnboundVariables(constants));
 
 			return l;
 		}
@@ -557,13 +599,13 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants)
 		{
 			if (Size is PaperStar)
 			{
 				string c = availableConstants[0];
 				availableConstants.RemoveAt(0);
-				usedConstants.Add(c);
+				usedConstants.Add(new PaperVariable(c), ConcreteType.Const);
 
 				Size = new PaperVariable(c);
 			}
@@ -583,6 +625,11 @@ namespace GeneratorCalculation
 				return new ListType(t, sFunction.Evaluate());
 			else
 				return new ListType(t, Size);
+		}
+
+		public HashSet<ConcreteType> GetConcreteTypes()
+		{
+			return Type.GetConcreteTypes();
 		}
 	}
 

@@ -8,6 +8,13 @@ namespace GeneratorCalculation.Tests
 {
 	public class GeneratorTypeTests
 	{
+		public GeneratorTypeTests(Dictionary<PaperVariable, ConcreteType> freeVariables1)
+		{
+			freeVariables = freeVariables;
+		}
+
+		private Dictionary<PaperVariable, ConcreteType> freeVariables;
+
 		[Fact()]
 		public void CheckTest()
 		{
@@ -15,7 +22,7 @@ namespace GeneratorCalculation.Tests
 				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
 
 
-			Assert.Throws<FormatException>(() => g.Check());
+			Assert.Throws<FormatException>(() => g.Check(freeVariables));
 		}
 	}
 }
