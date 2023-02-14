@@ -220,7 +220,7 @@ namespace GeneratorCalculation
 			{
 				Generator gx = pairs[i];
 
-				if (gx.Type.Yield == ConcreteType.Void && gx.Type.Receive == ConcreteType.Void)
+				if (gx.Type.Normalize() == ConcreteType.Void)
 				{
 					if (gx.IsInfinite)
 					{
