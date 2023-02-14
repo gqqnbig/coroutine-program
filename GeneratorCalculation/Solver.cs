@@ -127,7 +127,7 @@ namespace GeneratorCalculation
 
 				var coroutine = pairs[i].Type;
 
-				if (coroutine.Yield == ConcreteType.Void && coroutine.Receive == ConcreteType.Void)
+				if (coroutine.Normalize() == ConcreteType.Void)
 				{
 					Generator gx = pairs[i];
 					if (gx.IsInfinite)
