@@ -14,7 +14,7 @@ namespace GeneratorCalculation
 		{
 		}
 
-		public override PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public override PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return new DecFunction(Arguments[0].ApplyEquation(equations)).Evaluate();
 		}
