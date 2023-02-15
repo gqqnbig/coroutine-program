@@ -85,7 +85,7 @@ namespace GeneratorCalculation
 				PaperType remaining = null;
 				if (Yield.Pop(ref yieldedType, ref remaining))
 				{
-					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
+					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings);
 					//Forbidden bindings are not needed when the coroutine starts to yield
 					//because all variables have been bound.
 					return new CoroutineType(Receive, remaining, Source, CanRestore);
@@ -203,7 +203,7 @@ namespace GeneratorCalculation
 
 		}
 
-		PaperWord PaperWord.ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		PaperWord PaperWord.ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return ApplyEquation(equations);
 		}
@@ -213,7 +213,7 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public CoroutineType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public CoroutineType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);

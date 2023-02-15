@@ -506,7 +506,7 @@ namespace GeneratorCalculation
 									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 
 									//pairs[i].Type.Receive.Pop
-									pairs[i].Type = new CoroutineType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+									pairs[i].Type = new CoroutineType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions);
 									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 									if (solver.Model.NumConsts > 0)
 									{
@@ -584,7 +584,7 @@ namespace GeneratorCalculation
 
 							try
 							{
-								var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
+								var resultGenerator = newGenerator.ApplyEquation(conditions);
 								Console.WriteLine($"Therefore it becomes {resultGenerator}.");
 
 								//if (resultGenerator.Yield == ConcreteType.Void)
