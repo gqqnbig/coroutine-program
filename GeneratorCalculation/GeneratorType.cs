@@ -255,6 +255,10 @@ namespace GeneratorCalculation
 			Receive.ReplaceWithConstant(availableConstants, usedConstants);
 		}
 
+		/// <summary>
+		/// Either Void or GeneratorType in which all Avoid types are removed.
+		/// </summary>
+		/// <returns></returns>
 		public virtual PaperType Normalize()
 		{
 			CoroutineType g;
