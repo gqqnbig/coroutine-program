@@ -63,8 +63,8 @@ namespace GeneratorCalculationTests
 			list.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
 			var g = new Solver().SolveWithBindings(list);
 
-			Assert.Equal(ConcreteType.Void, g.Receive);
-			Assert.Contains("Y", g.Yield.ToString());
+			Assert.Single(g.Flow);
+			Assert.Contains("Y", g.Flow[0].Type.ToString());
 		}
 
 		[Fact]
@@ -94,7 +94,10 @@ namespace GeneratorCalculationTests
 			list.Add(new Generator("g2", g2));
 
 
-			var result = new CoroutineType((ConcreteType)"B", new SequenceType((ConcreteType)"C", (ConcreteType)"A"));
+			var result = new CoroutineType(
+				new DataFlow(Direction.Yielding, (ConcreteType)"C"),
+				new DataFlow(Direction.Resuming, (ConcreteType)"B"),
+				new DataFlow(Direction.Yielding, (ConcreteType)"A"));
 			Assert.Equal(result, new Solver().SolveWithBindings(list));
 		}
 
@@ -128,9 +131,8 @@ namespace GeneratorCalculationTests
 
 
 			var result = new Solver().SolveWithBindings(coroutines);
-
-			Assert.Contains("Y", result.Yield.ToString());
-			Assert.Equal(ConcreteType.Void, result.Receive);
+			Assert.Single(result.Flow);
+			Assert.Contains("Y", result.Flow[0].Type.ToString());
 		}
 
 
@@ -143,8 +145,8 @@ namespace GeneratorCalculationTests
 
 			var result = new Solver().SolveWithBindings(coroutines);
 
-			Assert.Equal(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), result.Yield);
-			Assert.Equal(ConcreteType.Void, result.Receive);
+			Assert.Equal(new DataFlow(Direction.Yielding, (ConcreteType)"B"), result.Flow[0]);
+			Assert.Equal(new DataFlow(Direction.Yielding, (ConcreteType)"C"), result.Flow[1]);
 		}
 
 		[Fact]
