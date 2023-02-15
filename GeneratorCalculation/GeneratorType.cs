@@ -8,114 +8,116 @@ namespace GeneratorCalculation
 
 	public class GeneratorType : PaperType
 	{
-		public GeneratorType(PaperType @yield, PaperType receive)
+		public GeneratorType(params DataFlow[] flow)
 		{
-			Yield = yield;
-			Receive = receive;
+			Flow = new List<DataFlow>(flow);
 		}
 
-		public PaperType Yield { get; }
+		public GeneratorType(IEnumerable<DataFlow> flow)
+		{
+			Flow = new List<DataFlow>(flow);
+		}
 
-		public PaperType Receive { get; }
+		public GeneratorType(PaperType @yield, PaperType receive)
+		{
+			//Yield = yield;
+			//Receive = receive;
+
+
+			Flow = new List<DataFlow>();
+			if (receive is SequenceType rs)
+			{
+				foreach (var t in rs.Types)
+					Flow.Add(new DataFlow(Direction.Resuming, t));
+			}
+			else if (receive != ConcreteType.Void)
+				Flow.Add(new DataFlow(Direction.Resuming, receive));
+
+			if (@yield is SequenceType ys)
+			{
+				foreach (var t in ys.Types)
+					Flow.Add(new DataFlow(Direction.Yielding, t));
+			}
+			else if (@yield != ConcreteType.Void)
+				Flow.Add(new DataFlow(Direction.Yielding, @yield));
+
+		}
+
+		//public PaperType Yield { get; }
+
+		//public PaperType Receive { get; }
+
+		public List<DataFlow> Flow { get; }
+
 
 		public void Check()
 		{
-			//Receive is like input, yield is like output.
-			//Yield cannot have variables that are unbound from Receive.
+			////Receive is like input, yield is like output.
+			////Yield cannot have variables that are unbound from Receive.
 
-			List<string> constants = new List<string>();
-			var inputVariables = Receive.GetVariables(constants).Select(v => v.Name).ToList();
-			var outputVariables = Yield.GetVariables(constants).Select(v => v.Name).ToList();
+			//List<string> constants = new List<string>();
+			//var inputVariables = Receive.GetVariables(constants).Select(v => v.Name).ToList();
+			//var outputVariables = Yield.GetVariables(constants).Select(v => v.Name).ToList();
 
-			if (outputVariables.Any(v => inputVariables.Contains(v) == false))
-			{
-				var culprits = outputVariables.Where(v => inputVariables.Contains(v) == false).ToList();
-				throw new FormatException($"{string.Join(", ", culprits)} are not bound by receive.");
-			}
-
-
-			//Console.WriteLine("Yield variables: " + string.Join(", ", ));
-
-			//Console.WriteLine("Receive variables: " + string.Join(", ", ));
-		}
-
-		/// <summary>
-		/// If it can yield, return the new type. Otherwise return null.
-		/// </summary>
-		/// <param name="constants"></param>
-		/// <param name="g"></param>
-		/// <param name="yieldedType"></param>
-		/// <returns></returns>
-		public GeneratorType RunYield(List<string> constants, ref PaperType yieldedType)
-		{
-			if (Receive != ConcreteType.Void)
-				return null;
+			//if (outputVariables.Any(v => inputVariables.Contains(v) == false))
+			//{
+			//	var culprits = outputVariables.Where(v => inputVariables.Contains(v) == false).ToList();
+			//	throw new FormatException($"{string.Join(", ", culprits)} are not bound by receive.");
+			//}
 
 
-			if (Yield.GetVariables(constants).Count == 0)
-			{
-				PaperType remaining = null;
-				if (Yield.Pop(ref yieldedType, ref remaining))
-					return new GeneratorType(remaining, Receive);
+			////Console.WriteLine("Yield variables: " + string.Join(", ", ));
 
-			}
-
-			return null;
-		}
-
-		/// <summary>
-		/// Check whether this generator can receive the given type.
-		/// </summary>
-		/// <param name="providedType"></param>
-		/// <param name="conditions"></param>
-		/// <returns></returns>
-		public Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
-		{
-			newGenerator = null;
-			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
-			if (Receive == ConcreteType.Void)
-				return null;
-
-			PaperType head = null;
-			PaperType remaining = null;
-			if (Receive.Pop(ref head, ref remaining))
-			{
-				var c = head.IsCompatibleTo(providedType);
-				if (c == null)
-					return null;
-
-				conditions = Solver.JoinConditions(conditions, c);
-
-				newGenerator = new GeneratorType(Yield, remaining);
-				return conditions;
-			}
-
-			Debug.Assert(Receive == ConcreteType.Void);
-			return null;
+			////Console.WriteLine("Receive variables: " + string.Join(", ", ));
 		}
 
 
 		public override string ToString()
 		{
-			return $"G {Yield} {Receive}";
+			var s = from f in Flow
+					select (f.Direction == Direction.Yielding ? "+" : "-") + f.Type;
+
+			return $"R[{string.Join("; ", s)} ]";
 		}
 
 
 		public List<PaperVariable> GetVariables(List<string> constants)
 		{
-			var inputVariables = Receive.GetVariables(constants).ToList();
-			var outputVariables = Yield.GetVariables(constants).ToList();
+			var inputVariables = Flow.Where(f => f.Direction == Direction.Resuming).SelectMany(f => f.Type.GetVariables(constants));
+			var outputVariables = Flow.Where(f => f.Direction == Direction.Yielding).SelectMany(f => f.Type.GetVariables(constants));
 			return inputVariables.Concat(outputVariables).ToList();
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
 		{
 			if (t is GeneratorType another)
-				// TODO: should use full match. IsCompatibleTo only checks the head element.
-				return Solver.JoinConditions(Yield.IsCompatibleTo(another.Yield), Receive.IsCompatibleTo(another.Receive));
+			{
+				var x = Normalize();
+				var y = another.Normalize();
+
+				if (x is GeneratorType xg && y is GeneratorType yg)
+				{
+					if (xg.Flow.Count != yg.Flow.Count)
+						return null;
+
+
+					Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+					for (int i = 0; i < xg.Flow.Count; i++)
+					{
+						if (xg.Flow[i].Direction != yg.Flow[i].Direction)
+							return null;
+
+						Dictionary<PaperVariable, PaperWord> c = xg.Flow[i].Type.IsCompatibleTo(yg.Flow[i].Type);
+						conditions = Solver.JoinConditions(conditions, c);
+						if (conditions == null)
+							return null;
+					}
+
+					return conditions;
+				}
+			}
 
 			return null;
-
 		}
 
 		PaperWord PaperWord.ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
@@ -130,12 +132,15 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		public GeneratorType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			var newYield = Yield.ApplyEquation(equations);
-			var newReceive = Receive.ApplyEquation(equations);
-			if (newYield is PaperType newYieldType && newReceive is PaperType newReceiveType)
-				return new GeneratorType(newYieldType, newReceiveType);
-			else
+			try
+			{
+				var newFlow = Flow.Select(f => new DataFlow(f.Direction, (PaperType)f.Type.ApplyEquation(equations)));
+				return new GeneratorType(newFlow);
+			}
+			catch (InvalidCastException)
+			{
 				return this;
+			}
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -145,8 +150,10 @@ namespace GeneratorCalculation
 
 		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
 		{
-			Yield.ReplaceWithConstant(availableConstants, usedConstants);
-			Receive.ReplaceWithConstant(availableConstants, usedConstants);
+			foreach (var f in Flow)
+			{
+				f.Type.ReplaceWithConstant(availableConstants, usedConstants);
+			}
 		}
 
 		/// <summary>
@@ -155,11 +162,15 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		public PaperType Normalize()
 		{
-			var g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
-			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
+			var nf = (from f in Flow
+					  let n = f.Type.Normalize()
+					  where n != ConcreteType.Void
+					  select new DataFlow(f.Direction, n)).ToList();
+
+			if (nf.Count == 0)
 				return ConcreteType.Void;
 			else
-				return g;
+				return new GeneratorType(nf);
 		}
 
 
@@ -168,7 +179,15 @@ namespace GeneratorCalculation
 		{
 			if (obj is GeneratorType objGenerator)
 			{
-				return Receive.Equals(objGenerator.Receive) && Yield.Equals(objGenerator.Yield);
+				if (Flow.Count != objGenerator.Flow.Count)
+					return false;
+
+				for (int i = 0; i < Flow.Count; i++)
+				{
+					if (Flow[i].Equals(objGenerator.Flow[i]) == false)
+						return false;
+				}
+				return true;
 			}
 
 			return false;
@@ -177,12 +196,47 @@ namespace GeneratorCalculation
 		// override object.GetHashCode
 		public override int GetHashCode()
 		{
-			return Receive.GetHashCode() ^ Yield.GetHashCode();
+			int hash = typeof(GeneratorType).GetHashCode();
+			for (int i = 0; i < Flow.Count; i++)
+			{
+				hash = hash ^ (10 * i + Flow[i].GetHashCode());
+			}
+
+			return hash;
 		}
 
 		public GeneratorType Clone()
 		{
-			return new GeneratorType(Yield, Receive);
+			return new GeneratorType(Flow);
 		}
+	}
+
+	public class DataFlow
+	{
+		public DataFlow(Direction direction, PaperType type)
+		{
+			Direction = direction;
+			Type = type;
+		}
+
+		public Direction Direction { get; }
+
+		public PaperType Type { get; }
+
+
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			if (obj is DataFlow objD)
+				return objD.Direction == Direction && objD.Type.Equals(Type);
+			return false;
+		}
+
+	}
+
+	public enum Direction
+	{
+		Yielding,
+		Resuming
 	}
 }

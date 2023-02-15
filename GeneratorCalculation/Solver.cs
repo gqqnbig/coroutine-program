@@ -151,15 +151,15 @@ namespace GeneratorCalculation
 				ReceiveGenerator(pairs, constants);
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
-				GeneratorType g = coroutine.RunYield(constants, ref yieldedType);
-				if (g != null)
+
+				if (coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					Debug.Assert(coroutine.Receive == ConcreteType.Void);
+					yieldedType = coroutine.Flow[0].Type;
 
 					//yieldedType = yieldedType.Normalize();
 
-					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
-					pairs[i].Type = g;
+					coroutine.Flow.RemoveAt(0);
+					Console.WriteLine($"--> {coroutine}, yielded: {yieldedType}");
 
 					if (yieldedType is GeneratorType)
 					{
@@ -174,8 +174,6 @@ namespace GeneratorCalculation
 
 					i = 0;
 					continue;
-
-
 				}
 				else
 					Console.WriteLine(" -- Not ready to yield");
@@ -184,19 +182,24 @@ namespace GeneratorCalculation
 			}
 
 
+			//throw new NotImplementedException();
+
 			//allow at most one coroutine to have receive.
-			var lockedCoroutines = pairs.Where(p => p.Type.Receive != ConcreteType.Void).ToList();
+
+			var lockedCoroutines = (from p in pairs
+									let n = p.Type.Normalize()
+									where n != ConcreteType.Void
+									select p).ToList();
+
 			if (lockedCoroutines.Count > 1)
 				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
 			else if (lockedCoroutines.Count == 1)
-				yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
-
-			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
-
-			var yields = new SequenceType(yieldsToOutside).Normalize();
-
-			var result = new GeneratorType(yields, receive);
-			return result;
+			{
+				lockedCoroutines[0].Type.Flow.InsertRange(0, yieldsToOutside.Select(y => new DataFlow(Direction.Yielding, y)));
+				return lockedCoroutines[0].Type;
+			}
+			else
+				return new GeneratorType(new SequenceType(yieldsToOutside), ConcreteType.Void);
 		}
 
 
@@ -207,7 +210,11 @@ namespace GeneratorCalculation
 			{
 				PaperType head = null;
 				PaperType remaining = null;
-				pairs[i].Type.Receive.Pop(ref head, ref remaining);
+
+				if (pairs[i].Type.Flow.Count == 0 || pairs[i].Type.Flow[0].Direction == Direction.Yielding)
+					continue;
+
+				pairs[i].Type.Flow[0].Type.Pop(ref head, ref remaining);
 
 				if (head is GeneratorType)
 					throw new NotImplementedException();
@@ -253,7 +260,8 @@ namespace GeneratorCalculation
 						try
 						{
 							//pairs[i].Type.Receive.Pop
-							pairs[i].Type = new GeneratorType(pairs[i].Type.Yield, remaining).ApplyEquation(conditions.ToList());
+							pairs[i].Type.Flow.RemoveAt(0);
+							pairs[i].Type = pairs[i].Type.ApplyEquation(conditions);
 							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 							Console.Write(" on the conditions that ");
 							Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
@@ -279,14 +287,24 @@ namespace GeneratorCalculation
 			for (var i = 0; i < pairs.Count; i++)
 			{
 				var coroutine = pairs[i].Type;
-				GeneratorType newGenerator;
-				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
+				if (coroutine.Flow.Count == 0 || coroutine.Flow[0].Direction == Direction.Yielding)
+				{
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
+					continue;
+				}
+
+				var acceptor = coroutine.Flow[0].Type;
+				Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(yieldedType);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[i].Name}:\t{coroutine} can receive {yieldedType} and will pop the receive part");
+					var tmp = coroutine.Clone();
+					tmp.Flow.RemoveAt(0);
+					GeneratorType newGenerator = tmp.ApplyEquation(conditions);
+
+					Console.Write($"{pairs[i].Name}:\t{coroutine} can receive {yieldedType}");
 					if (conditions.Count == 0)
 					{
-						Console.WriteLine(".");
+						Console.WriteLine($". Therefore it becomes {newGenerator}.");
 						pairs[i].Type = newGenerator;
 					}
 					else
@@ -326,10 +344,6 @@ namespace GeneratorCalculation
 
 					//Solve(pairs, constants);
 					//return;
-				}
-				else
-				{
-					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
 				}
 			}
 

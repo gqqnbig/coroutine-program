@@ -21,9 +21,9 @@ namespace GeneratorCalculation.Tests
 
 			var result = Solver.Solve(coroutines);
 
-			Assert.Equal(ConcreteType.Void, result.Receive);
-			Assert.Contains("S, S", result.Yield.ToString());
-			Assert.Contains("min(a, b)", result.Yield.ToString());
+			Assert.Single(result.Flow);
+			Assert.Contains("S, S", result.Flow[0].Type.ToString());
+			Assert.Contains("min(a, b)", result.Flow[0].Type.ToString());
 		}
 	}
 }
