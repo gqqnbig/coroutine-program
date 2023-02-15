@@ -8,7 +8,7 @@ using Z3 = Microsoft.Z3;
 
 namespace GeneratorCalculation
 {
-	public class Solver: IDisposable
+	public class Solver : IDisposable
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
 
@@ -250,16 +250,17 @@ namespace GeneratorCalculation
 
 
 			//allow at most one coroutine to have receive.
-			var lockedCoroutines = pairs.Where(p => p.Type.Receive != ConcreteType.Void).ToList();
+			var lockedCoroutines = (from p in pairs
+									let n = p.Type.Normalize()
+									where n != ConcreteType.Void
+									select p).ToList();
+
 			if (lockedCoroutines.Count > 1)
 				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
 			else if (lockedCoroutines.Count == 1)
 			{
-				SequenceType s = lockedCoroutines[0].Type.Yield as SequenceType;
-				if (s == null)
-					yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
-				else
-					yieldsToOutside.AddRange(s.Types);
+				lockedCoroutines[0].Type.Flow.InsertRange(0, yieldsToOutside.Select(y => new DataFlow(Direction.Yielding, y)));
+				return lockedCoroutines[0].Type;
 			}
 
 			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
@@ -300,36 +301,26 @@ namespace GeneratorCalculation
 				// Even if pairs.Count == 1, we have to continue executing the yielding part 
 				// because it may yield coroutines.
 
+
 				var coroutine = pairs[i].Type;
 
-
 				PaperType yieldedType = null;
+				ReceiveGenerator(pairs, constants);
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
-				CoroutineType g = coroutine.RunYield(bindings, ref yieldedType);
-				if (g != null)
+
+				if (coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					Debug.Assert(coroutine.Receive == ConcreteType.Void);
-
-
-					//var g2 = CheckYield(pairs, constants, i + 1);
-					//if (g2 != null)
-					//{
-					//	if (coroutine.Equals(g2) == false)
-					//		throw new FormatException($"{coroutine} and {g2} both can yield, which is not allowed.");
-					//	//TODO: may have to loop and check further yieldables.
-					//}
+					yieldedType = coroutine.Flow[0].Type;
 
 					//yieldedType = yieldedType.Normalize();
 
+					coroutine.Flow.RemoveAt(0);
 					compositionOrder.Add(pairs[i].Type);
-					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
+					Console.WriteLine($"--> {coroutine}, yielded: {yieldedType}");
 
 					canWrap = true;
-
-
-					pairs[i].Type = g;
-
+					
 					if (yieldedType is TupleType tTuple)
 					{
 						if (tTuple.Types.All(t => t is CoroutineType))
@@ -448,7 +439,11 @@ namespace GeneratorCalculation
 			{
 				PaperType head = null;
 				PaperType remaining = null;
-				pairs[i].Type.Receive.Pop(ref head, ref remaining);
+
+				if (pairs[i].Type.Flow.Count == 0 || pairs[i].Type.Flow[0].Direction == Direction.Yielding)
+					continue;
+
+				pairs[i].Type.Flow[0].Type.Pop(ref head, ref remaining);
 
 				if (head is CoroutineType)
 					throw new NotImplementedException();
@@ -506,7 +501,9 @@ namespace GeneratorCalculation
 									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 
 									//pairs[i].Type.Receive.Pop
-									pairs[i].Type = new CoroutineType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions);
+									pairs[i].Type.Flow.RemoveAt(0);
+									pairs[i].Type = pairs[i].Type.ApplyEquation(conditions);
+
 									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 									if (solver.Model.NumConsts > 0)
 									{
@@ -551,14 +548,22 @@ namespace GeneratorCalculation
 			for (var i = 0; i < pairs.Count; i++)
 			{
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
-				CoroutineType newGenerator;
+				if (coroutine.Flow.Count == 0 || coroutine.Flow[0].Direction == Direction.Yielding)
+				{
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {pendingType}");
+					continue;
+				}
+
 				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
-					solver.Add(functionBodies.Values.ToList());
-					var exp = coroutine.RunReceive(pendingType, this, out newGenerator);
-					solver.Add(exp);
-					if (solver.Check() == Z3.Status.SATISFIABLE)
+					var acceptor = coroutine.Flow[0].Type;
+					Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(pendingType);
+					if (conditions != null)
 					{
+						var tmp = coroutine.Clone();
+						tmp.Flow.RemoveAt(0);
+						CoroutineType newGenerator = tmp.ApplyEquation(conditions);
+
 						Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 
 						//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
@@ -625,6 +630,8 @@ namespace GeneratorCalculation
 
 			return null;
 		}
+
+
 
 		//static GeneratorType CheckReceive(PaperType pendingType, List<Generator> pairs, int start)
 		//{
