@@ -149,6 +149,10 @@ namespace GeneratorCalculation
 			Receive.ReplaceWithConstant(availableConstants, usedConstants);
 		}
 
+		/// <summary>
+		/// Either Void or GeneratorType in which all Avoid types are removed.
+		/// </summary>
+		/// <returns></returns>
 		public PaperType Normalize()
 		{
 			var g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
