@@ -22,7 +22,7 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations">this parameter should not be modified</param>
 		/// <returns></returns>
-		PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations);// { return this; }
+		PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations);// { return this; }
 	}
 
 	public interface PaperType : PaperWord
@@ -119,17 +119,12 @@ namespace GeneratorCalculation
 			return d;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			var keys = equations.Select(p => p.Key).ToList();
-			if (keys.Count != keys.Distinct().Count())
-				throw new NotSupportedException("Duplicate keys are not supported.");
-
-			var eq = equations.FirstOrDefault(p => p.Key.Equals(this));
-			if (eq.Key == null)
-				return this;
+			if (equations.TryGetValue(this, out var value))
+				return value;
 			else
-				return eq.Value;
+				return this;
 		}
 	}
 
@@ -150,7 +145,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return this;
 		}
@@ -180,7 +175,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			throw new NotImplementedException();
 		}
@@ -255,7 +250,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return this;
 		}
@@ -342,7 +337,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			PaperType[] newTypes = new PaperType[Types.Count];
 			for (int i = 0; i < Types.Count; i++)
@@ -462,7 +457,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public virtual PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
@@ -534,7 +529,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			var newType = Type.ApplyEquation(equations);
 			if (newType is PaperType newTypeType)

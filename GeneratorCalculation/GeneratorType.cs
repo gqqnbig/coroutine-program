@@ -118,7 +118,7 @@ namespace GeneratorCalculation
 
 		}
 
-		PaperWord PaperWord.ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		PaperWord PaperWord.ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return ApplyEquation(equations);
 		}
@@ -128,7 +128,7 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public GeneratorType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public GeneratorType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);

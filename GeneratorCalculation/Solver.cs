@@ -296,7 +296,7 @@ namespace GeneratorCalculation
 
 						try
 						{
-							var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
+							var resultGenerator = newGenerator.ApplyEquation(conditions);
 							Console.WriteLine($"Therefore it becomes {resultGenerator}.");
 
 							//if (resultGenerator.Yield == ConcreteType.Void)
