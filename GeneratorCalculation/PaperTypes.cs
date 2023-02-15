@@ -28,7 +28,7 @@ namespace GeneratorCalculation
 		/// <remarks>
 		/// The main implementation resides in <see cref="PaperVariable"/>.
 		/// </remarks>
-		PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations);// { return this; }
+		PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations);// { return this; }
 	}
 
 	public interface PaperType : PaperWord
@@ -154,7 +154,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			var keys = equations.Select(p => p.Key).ToList();
 			if (keys.Count != keys.Distinct().Count())
@@ -187,7 +187,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return this;
 		}
@@ -229,7 +229,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			throw new NotImplementedException();
 		}
@@ -297,7 +297,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return this;
 		}
@@ -377,17 +377,17 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
-		{
-			return (SequenceType)ApplyEquation(equations.ToList());
-		}
+		//public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
+		//{
+		//	return (SequenceType)ApplyEquation(equations.ToList());
+		//}
 
 		/// <summary>
 		/// always return SequenceType.
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			PaperType[] newTypes = new PaperType[Types.Count];
 			for (int i = 0; i < Types.Count; i++)
@@ -516,7 +516,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			PaperType[] newTypes = new PaperType[Types.Count];
 			for (int i = 0; i < Types.Count; i++)
@@ -616,7 +616,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public virtual PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
@@ -724,7 +724,7 @@ namespace GeneratorCalculation
 			return engine.ConcreteSort.Context.MkFalse();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			var newType = Type.ApplyEquation(equations);
 			if (newType is PaperType newTypeType)
