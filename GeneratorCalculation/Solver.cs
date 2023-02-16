@@ -69,6 +69,39 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
+		private static Dictionary<PaperVariable, ConcreteType> RemoveStar(List<Generator> coroutines)
+		{
+			var allUsedNames = new HashSet<string>();
+			foreach (var g in coroutines)
+				allUsedNames.UnionWith(g.Type.GetVariables(new List<string>()).Select(v => v.Name));
+
+
+			List<string> availableConstants = new List<string>();
+			for (int i = 0; i < 26; i++)
+			{
+				var name = ((char)('a' + i)).ToString();
+				if (allUsedNames.Contains(name) == false)
+					availableConstants.Add(name);
+			}
+
+
+			var assignments = new Dictionary<PaperVariable, ConcreteType>();
+			foreach (var g in coroutines)
+			{
+				g.Type.ReplaceWithConstant(availableConstants, assignments);
+			}
+
+			if (assignments.Count > 0)
+			{
+				Console.WriteLine("== ReplaceWithConstant ==");
+				Console.WriteLine($"constants: {string.Join(", ", assignments)}");
+				foreach (var g in coroutines)
+					Console.WriteLine($"{g.Name}:\t{g.Type}");
+			}
+
+			return assignments;
+		}
+
 		public static GeneratorType Solve(List<Generator> coroutines)
 		{
 			//multi-pass
