@@ -106,42 +106,17 @@ namespace GeneratorCalculation
 		{
 			//multi-pass
 
-			var freeVariables = new Dictionary<PaperVariable, ConcreteType>();
 			foreach (var g in coroutines)
-			{
-				g.Type.Check(freeVariables);
-			}
-
-
-			List<string> availableConstants = new List<string>();
-			for (int i = 0; i < 26; i++)
-			{
-				var name = ((char)('a' + i)).ToString();
-				if (freeVariables.All(v => v.Key.Name != name))
-					availableConstants.Add(name);
-			}
-
-			foreach (var g in coroutines)
-			{
 				Console.WriteLine($"{g.Name}:\t{g.Type}");
-			}
 
+			var assignments = RemoveStar(coroutines);
+			var constants = assignments.Select(a => a.Key.Name).ToList();
 
 			foreach (var g in coroutines)
-			{
-				g.Type.ReplaceWithConstant(availableConstants, freeVariables);
-			}
+				foreach (var v in g.Type.GetUnboundVariables(constants))
+					assignments.Add(v, null);
 
-			var constants = freeVariables.Where(item => item.Value == ConcreteType.Const).ToList();
-			if (constants.Count > 0)
-			{
-				Console.WriteLine("== ReplaceWithConstant ==");
-				Console.WriteLine($"constants: {string.Join(", ", constants)}");
-				foreach (var g in coroutines)
-					Console.WriteLine($"{g.Name}:\t{g.Type}");
-			}
-
-			if (freeVariables.Any(item => item.Value == null))
+			if (assignments.Any(item => item.Value == null))
 				Console.WriteLine("Enter multi-pass stage");
 
 
@@ -151,7 +126,10 @@ namespace GeneratorCalculation
 			concreteTypes.Remove(ConcreteType.Void);
 
 			//assign concrete types to each free variable
-			List<GeneratorType> result = SolveWithFreeVariables(coroutines, freeVariables.ToList(), 0, concreteTypes.ToList());
+			List<GeneratorType> result = SolveWithFreeVariables(coroutines, assignments.ToList(), 0, concreteTypes.ToList());
+
+
+
 
 			throw new NotImplementedException();//to reduce
 			return result[0];
@@ -167,7 +145,7 @@ namespace GeneratorCalculation
 				List<string> constants = (from fv in freeVariables
 										  where fv.Value == ConcreteType.Const
 										  select fv.Key.Name).ToList();
-				var equations = freeVariables.ToDictionary(p => p.Key, p => (PaperWord)p.Value);
+				var equations = freeVariables.Where(p => p.Value != ConcreteType.Const).ToDictionary(p => p.Key, p => (PaperWord)p.Value);
 
 				var copy = pairs.Select(p => new Generator(p.Name, p.IsInfinite, p.Type.Clone().ApplyEquation(equations))).ToList();
 				return new List<GeneratorType>() { Solve(copy, constants) };
@@ -429,6 +407,33 @@ namespace GeneratorCalculation
 			return false;
 		}
 
+		static List<DataFlow> reduce(Queue<DataFlow> x, Queue<DataFlow> y)
+		{
+			if (x.Count == 0)
+			{
+				if (y.Count == 0)
+					return new List<DataFlow>();
+				else if (y.Count == 1)
+					return y;
+				else
+					return new List<DataFlow>() { new DataFlow(Direction.Yielding, new GeneratorType(y)) };
+			}
+
+
+			if (x.Peek().Direction != y.Peek().Direction)
+				throw new NotImplementedException();
+
+			if (x.Peek().Type.Equals(y.Peek().Type))
+			{
+				var result = new List<DataFlow>();
+				result.Add(new DataFlow(x.Peek().Direction, x.Peek().Type));
+				x.Dequeue();
+				y.Dequeue();
+				result.AddRange(reduce(x, y));
+			}
+
+			throw new NotImplementedException();
+		}
 	}
 
 	public class DeadLockException : Exception

@@ -50,20 +50,27 @@ namespace GeneratorCalculation
 		public List<DataFlow> Flow { get; }
 
 
-		public void Check(Dictionary<PaperVariable, ConcreteType> freeVariables)
-		{
-			//Receive is like input, yield is like output.
-			//Yield cannot have variables that are unbound from Receive.
+		///// <summary>
+		///// 
+		///// </summary>
+		///// <param name="freeVariables"></param>
+		///// <param name="allVariables">Bounding variables, used in Resuming part</param>
+		//public void Check(Dictionary<PaperVariable, ConcreteType> freeVariables, HashSet<PaperVariable> allVariables)
+		//{
+		//	//Receive is like input, yield is like output.
+		//	//Yield cannot have variables that are unbound from Receive.
 
-			List<string> constants = new List<string>();
+		//	List<string> constants = new List<string>();
 
-			var fv = GetUnboundVariables(constants);
-			foreach (var x in fv)
-			{
-				if (freeVariables.TryAdd(x, null) == false)
-					throw new FormatException($"Free variable {x} is already used in other coroutines.");
-			}
-		}
+		//	var fv = GetUnboundVariables(constants);
+		//	foreach (var x in fv)
+		//	{
+		//		if (freeVariables.TryAdd(x, null) == false)
+		//			throw new FormatException($"Free variable {x} is already used in other coroutines.");
+		//	}
+
+		//	allVariables.UnionWith(GetVariables(constants));
+		//}
 
 
 		public override string ToString()
@@ -74,12 +81,18 @@ namespace GeneratorCalculation
 			return $"R[{string.Join("; ", s)} ]";
 		}
 
-
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
 		{
-			var inputVariables = Receive.GetUnboundVariables(constants);
-			var outputVariables = Yield.GetUnboundVariables(constants);
-			return outputVariables.Except(inputVariables).ToList();
+			var inputVariables = Flow.Where(f => f.Direction == Direction.Resuming).SelectMany(f => f.Type.GetVariables(constants));
+			var outputVariables = Flow.Where(f => f.Direction == Direction.Yielding).SelectMany(f => f.Type.GetVariables(constants));
+			return inputVariables.Concat(outputVariables).ToHashSet();
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
+		{
+			var inputVariables = Flow.Where(f => f.Direction == Direction.Resuming).SelectMany(f => f.Type.GetUnboundVariables(constants));
+			var outputVariables = Flow.Where(f => f.Direction == Direction.Yielding).SelectMany(f => f.Type.GetUnboundVariables(constants));
+			return outputVariables.Except(inputVariables).ToHashSet();
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)

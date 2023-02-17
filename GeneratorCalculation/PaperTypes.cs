@@ -27,12 +27,14 @@ namespace GeneratorCalculation
 
 	public interface PaperType : PaperWord
 	{
+		HashSet<PaperVariable> GetVariables(List<string> constants);
+
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="constants">It's used to check if a variable is a constant</param>
 		/// <returns></returns>
-		List<PaperVariable> GetUnboundVariables(List<string> constants);
+		HashSet<PaperVariable> GetUnboundVariables(List<string> constants);
 
 		/// <summary>
 		/// Pop the head element from the type.
@@ -42,7 +44,7 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		bool Pop(ref PaperType yielded, ref PaperType remaining);
 
-		void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> usedConstants);
+		void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, ConcreteType> assignments);
 
 
 		PaperType Normalize();
@@ -85,12 +87,17 @@ namespace GeneratorCalculation
 			return Name.GetHashCode();
 		}
 
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
+		{
+			return GetUnboundVariables(constants);
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			if (constants.Contains(Name))
-				return new List<PaperVariable>();
+				return new HashSet<PaperVariable>();
 			else
-				return new List<PaperVariable>(new[] { this });
+				return new HashSet<PaperVariable>(new[] { this });
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -222,9 +229,14 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
 		{
-			return new List<PaperVariable>();
+			return GetUnboundVariables(constants);
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
+		{
+			return new HashSet<PaperVariable>();
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -377,9 +389,15 @@ namespace GeneratorCalculation
 			return new SequenceType(newTypes);
 		}
 
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
 		{
-			return Types.SelectMany(t => t.GetUnboundVariables(constants)).ToList();
+			return Types.SelectMany(t => t.GetVariables(constants)).ToHashSet();
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
+		{
+			return Types.SelectMany(t => t.GetUnboundVariables(constants)).ToHashSet();
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -493,14 +511,25 @@ namespace GeneratorCalculation
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
 
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
+		{
+			var r = from a in Arguments
+				where a is PaperType
+				from v in ((PaperType)a).GetVariables(constants)
+				select v;
+
+			return r.ToHashSet();
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			var r = from a in Arguments
 					where a is PaperType
 					from v in ((PaperType)a).GetUnboundVariables(constants)
 					select v;
 
-			return r.ToList();
+			return r.ToHashSet();
 
 		}
 
@@ -580,11 +609,20 @@ namespace GeneratorCalculation
 				return this;
 		}
 
-		public List<PaperVariable> GetUnboundVariables(List<string> constants)
+		public HashSet<PaperVariable> GetVariables(List<string> constants)
+		{
+			var l = Type.GetVariables(constants);
+			if (Size is PaperType)
+				l.UnionWith(((PaperType)Size).GetVariables(constants));
+
+			return l;
+		}
+
+		public HashSet<PaperVariable> GetUnboundVariables(List<string> constants)
 		{
 			var l = Type.GetUnboundVariables(constants);
 			if (Size is PaperType)
-				l.AddRange(((PaperType)Size).GetUnboundVariables(constants));
+				l.UnionWith(((PaperType)Size).GetUnboundVariables(constants));
 
 			return l;
 		}

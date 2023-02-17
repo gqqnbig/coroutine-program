@@ -14,7 +14,13 @@ namespace GeneratorCalculation
 			var falsePart = new GeneratorType(ConcreteType.Void, (PaperVariable)"a");
 
 
-			coroutines.Add(new Generator("if", new GeneratorType(new SequenceType(falsePart, truePart, (PaperVariable)"x"), (ConcreteType)"Int")));
+			coroutines.Add(new Generator("if", new GeneratorType(
+				new DataFlow(Direction.Resuming, (ConcreteType)"Int"),
+				new DataFlow(Direction.Yielding, falsePart),
+				new DataFlow(Direction.Yielding, truePart),
+				new DataFlow(Direction.Yielding, (PaperVariable)"x"),
+				new DataFlow(Direction.Resuming, new ListType(falsePart, PaperStar.Instance)),
+				new DataFlow(Direction.Resuming, new ListType(truePart, PaperStar.Instance)))));
 			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Int", ConcreteType.Void)));
 
 
