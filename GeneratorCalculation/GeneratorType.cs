@@ -97,7 +97,7 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			return $"G {Yield} {Receive}";
+			return $"R[{Receive}; {Yield}]";
 		}
 
 
