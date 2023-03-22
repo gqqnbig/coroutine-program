@@ -32,10 +32,11 @@ namespace GeneratorCalculation
 
 		static void Main(string[] args)
 		{
-			var coroutines = GetPrologKnowledgeBase();
+			var coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new SequenceType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new SequenceType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"), (PaperVariable)"x")));
-			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sam", ConcreteType.Void)));
+			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"T", (ConcreteType)"S")));
+			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"S", ConcreteType.Void)));
+			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"U", (ConcreteType)"S")));
 
 			var result = Solver.Solve(coroutines);
 			Console.WriteLine(result);
