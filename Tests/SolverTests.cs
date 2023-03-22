@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using GeneratorCalculation;
 
@@ -8,7 +7,30 @@ namespace GeneratorCalculationTests
 {
 	public class SolverTests
 	{
-		[Fact()]
+		[Fact]
+		public void RunInfiniteLoop()
+		{
+			//Console.WriteLine("hi");
+			var back = Console.Out;
+			Console.SetOut(System.IO.TextWriter.Null);
+
+			//Console.WriteLine("hello");
+			try
+			{
+
+				List<Generator> list = new List<Generator>();
+
+				list.Add(new Generator("a", true, new GeneratorType((ConcreteType)"X", ConcreteType.Void)));
+				list.Add(new Generator("b", true, new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
+				Assert.Throws<StepLimitExceededException>(() => Solver.Solve(list, 100));
+			}
+			finally
+			{
+				Console.SetOut(back);
+			}
+		}
+
+		[Fact]
 		public void SolveSingle()
 		{
 			var list = new List<Generator>();

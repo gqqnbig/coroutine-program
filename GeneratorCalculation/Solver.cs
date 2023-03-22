@@ -69,7 +69,7 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
-		public static GeneratorType Solve(List<Generator> coroutines)
+		public static GeneratorType Solve(List<Generator> coroutines, int steps = 500)
 		{
 			foreach (var g in coroutines)
 			{
@@ -108,18 +108,19 @@ namespace GeneratorCalculation
 			}
 
 
-			return Solve(coroutines, constants);
+			return Solve(coroutines, constants, steps);
 		}
 
 
-		static GeneratorType Solve(List<Generator> pairs, List<string> constants)
+		static GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
 			Console.WriteLine();
 
 			int i = 0;
-			while (i < pairs.Count)
+			int s = 0;
+			while (i < pairs.Count && s++ < steps)
 			{
 				//foreach (var p in pairs)
 				//	Console.WriteLine($"{p.Key}:\t{p.Value}");
@@ -182,6 +183,9 @@ namespace GeneratorCalculation
 
 				i++;
 			}
+
+			if (s >= steps)
+				throw new StepLimitExceededException();
 
 
 			//allow at most one coroutine to have receive.
@@ -350,6 +354,11 @@ namespace GeneratorCalculation
 			this.YieldsToOutside = yieldsToOutside;
 		}
 
+
+	}
+
+	public class StepLimitExceededException : Exception
+	{
 
 	}
 
