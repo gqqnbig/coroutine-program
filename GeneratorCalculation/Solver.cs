@@ -160,6 +160,17 @@ namespace GeneratorCalculation
 					//yieldedType = yieldedType.Normalize();
 
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
+
+					//int startDetection = i+1;
+					var g2 = CheckYield(pairs, constants, i + 1);
+					if (g2 != null)
+					{
+						if (coroutine.Equals(g2) == false)
+							throw new FormatException($"{coroutine} and {g2} both can yield, which is not allowed.");
+						//TODO: may have to loop and check further yieldables.
+					}
+
+
 					pairs[i].Type = g;
 
 					if (yieldedType is GeneratorType)
@@ -201,6 +212,28 @@ namespace GeneratorCalculation
 
 			var result = new GeneratorType(yields, receive);
 			return result;
+		}
+
+		/// <summary>
+		///
+		/// 
+		/// </summary>
+		/// <param name="pairs"></param>
+		/// <param name="constants"></param>
+		/// <param name="start">inclusive</param>
+		/// <returns>one coroutine can yield</returns>
+		static GeneratorType CheckYield(List<Generator> pairs, List<string> constants, int start)
+		{
+			for (int i = start; i < pairs.Count; i++)
+			{
+				var coroutine = pairs[i].Type;
+				PaperType yieldedType = null;
+				GeneratorType g = coroutine.RunYield(constants, ref yieldedType);
+				if (g != null)
+					return coroutine;
+			}
+
+			return null;
 		}
 
 
