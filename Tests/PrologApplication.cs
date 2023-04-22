@@ -24,7 +24,11 @@ namespace GeneratorCalculationTests
 				new Generator("female1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Sue")))),
 				new Generator("female2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Jane")))),
 				new Generator("female3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "June")))),
-				new Generator("female-other", new GeneratorType((ConcreteType)"No", new SequenceType(new SequenceType((ConcreteType) "Female", (PaperVariable) "x")))),
+				new Generator("female-other", new GeneratorType(new Dictionary<SequenceType, List<SequenceType>>()
+					{
+						[new SequenceType((PaperVariable) "x")]= new List<SequenceType>{new SequenceType((ConcreteType) "Sue"),new SequenceType((ConcreteType) "Jane"),new SequenceType((ConcreteType) "June")}
+					},
+					new SequenceType(new SequenceType((ConcreteType) "Female", (PaperVariable) "x")),(ConcreteType)"No")),
 				new Generator("parent", new GeneratorType(new SequenceType(new SequenceType((ConcreteType) "Child", (PaperVariable) "x", (PaperVariable) "y")), new SequenceType(new SequenceType((ConcreteType) "Parent", (PaperVariable) "y", (PaperVariable) "x")))),
 
 				new Generator("Negate", new GeneratorType(new SequenceType(gNegate1,gNegate2),(ConcreteType)"No")),

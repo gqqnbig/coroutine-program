@@ -14,9 +14,18 @@ namespace GeneratorCalculation
 			Receive = receive;
 		}
 
+		public GeneratorType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType @yield)
+		{
+			ForbiddenBindings = forbiddenBindings;
+			Receive = receive;
+			Yield = yield;
+		}
+
 		public PaperType Yield { get; }
 
 		public PaperType Receive { get; }
+
+		public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
 
 		public void Check()
 		{
@@ -85,6 +94,8 @@ namespace GeneratorCalculation
 					return null;
 
 				conditions = Solver.JoinConditions(conditions, c);
+				if (HasForbiddenBindings(conditions))
+					return null;
 
 				newGenerator = new GeneratorType(Yield, remaining);
 				return conditions;
@@ -92,6 +103,20 @@ namespace GeneratorCalculation
 
 			Debug.Assert(Receive == ConcreteType.Void);
 			return null;
+		}
+
+		private bool HasForbiddenBindings(Dictionary<PaperVariable, PaperWord> valueMappings)
+		{
+			foreach (SequenceType key in ForbiddenBindings.Keys)
+			{
+				var valuedKey = key.ApplyEquation(valueMappings);
+				var forbiddenSet = ForbiddenBindings[key];
+
+				if (forbiddenSet.Contains(valuedKey))
+					return true;
+			}
+
+			return false;
 		}
 
 

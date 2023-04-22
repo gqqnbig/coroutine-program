@@ -342,6 +342,11 @@ namespace GeneratorCalculation
 			return null;
 		}
 
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
+		{
+			return ApplyEquation(equations.ToList());
+		}
+
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			PaperType[] newTypes = new PaperType[Types.Count];
