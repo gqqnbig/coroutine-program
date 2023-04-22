@@ -501,6 +501,38 @@ namespace GeneratorCalculation
 		{
 			return this;
 		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is FunctionType objFunction)
+			{
+				if (FunctionName.Equals(objFunction.FunctionName) == false)
+					return false;
+
+				if (Arguments.Count != objFunction.Arguments.Count)
+					return false;
+
+				for (int i = 0; i < Arguments.Count; i++)
+				{
+					if (Arguments[i].Equals(objFunction.Arguments[i]) == false)
+						return false;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+
+		public override int GetHashCode()
+		{
+			int h = FunctionName.GetHashCode() + Arguments.Count * 11;
+
+			for (int i = 0; i < Arguments.Count; i++)
+				h += Arguments[i].GetHashCode() * i;
+			return h;
+		}
 	}
 
 	public class ListType : PaperType
@@ -588,6 +620,21 @@ namespace GeneratorCalculation
 				return new ListType(t, sFunction.Evaluate());
 			else
 				return new ListType(t, Size);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is ListType objList)
+			{
+				return Type.Equals(objList.Type) && Size.Equals(objList.Size);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return Type.GetHashCode() ^ (Size.GetHashCode() << 2);
 		}
 	}
 
