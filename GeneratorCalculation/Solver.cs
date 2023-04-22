@@ -309,7 +309,7 @@ namespace GeneratorCalculation
 			}
 		}
 
-		static bool Receive(PaperType yieldedType, List<Generator> pairs, List<string> constants)
+		static bool Receive(PaperType pendingType, List<Generator> pairs, List<string> constants)
 		{
 			Console.WriteLine();
 
@@ -317,10 +317,10 @@ namespace GeneratorCalculation
 			{
 				var coroutine = pairs[i].Type;
 				GeneratorType newGenerator;
-				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(yieldedType, out newGenerator);
+				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[i].Name}:\t{coroutine} can receive {yieldedType} and will pop the receive part");
+					Console.Write($"{pairs[i].Name}:\t{coroutine} can receive {pendingType} and will pop the receive part");
 					if (conditions.Count == 0)
 					{
 						Console.WriteLine(".");
@@ -366,7 +366,7 @@ namespace GeneratorCalculation
 				}
 				else
 				{
-					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {pendingType}");
 				}
 			}
 
