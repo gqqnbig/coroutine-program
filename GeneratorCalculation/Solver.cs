@@ -146,10 +146,15 @@ namespace GeneratorCalculation
 				}
 
 
+				ReceiveGenerator(pairs, constants);
+				if (i >= pairs.Count)
+				{
+					i = 0;
+					continue;
+				}
 
 
 				PaperType yieldedType = null;
-				ReceiveGenerator(pairs, constants);
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
 				GeneratorType g = coroutine.RunYield(constants, ref yieldedType);
