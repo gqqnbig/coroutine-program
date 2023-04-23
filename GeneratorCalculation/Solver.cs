@@ -290,7 +290,7 @@ namespace GeneratorCalculation
 						try
 						{
 							//pairs[i].Type.Receive.Pop
-							pairs[i].Type = new GeneratorType(pairs[i].Type.Yield, remaining).ApplyEquation(conditions.ToList());
+							pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
 							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 							Console.Write(" on the conditions that ");
 							Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");

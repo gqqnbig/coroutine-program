@@ -203,7 +203,7 @@ namespace GeneratorCalculation
 
 		public GeneratorType Clone()
 		{
-			return new GeneratorType(Yield, Receive);
+			return new GeneratorType(ForbiddenBindings, Receive, Yield);
 		}
 	}
 }
