@@ -14,6 +14,16 @@ namespace GeneratorCalculation
 			Receive = receive;
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="forbiddenBindings">
+		/// Key and value both can have <see cref="PaperVariable"/>.
+		/// <code>[(x,y)] = {(String, Path)}</code>
+		/// <code>[(x)] = {(y), (S)}</code>
+		/// </param>
+		/// <param name="receive"></param>
+		/// <param name="yield"></param>
 		public GeneratorType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType @yield)
 		{
 			ForbiddenBindings = forbiddenBindings;
@@ -112,7 +122,7 @@ namespace GeneratorCalculation
 				var valuedKey = key.ApplyEquation(valueMappings);
 				var forbiddenSet = ForbiddenBindings[key];
 
-				if (forbiddenSet.Contains(valuedKey))
+				if (forbiddenSet.Select(s => s.ApplyEquation(valueMappings)).Any(s => s.Equals(valuedKey)))
 					return true;
 			}
 
@@ -122,7 +132,13 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			return $"R[{Receive}; {Yield}]";
+			if (ForbiddenBindings.Count == 0)
+				return $"R[{Receive}; {Yield}]";
+			else
+			{
+				string constrain = string.Join(", ", ForbiddenBindings.Select(p => p.Key + " not in {" + string.Join(", ", p.Value) + "}"));
+				return $"R[{Receive}; {Yield}] where {constrain}";
+			}
 		}
 
 
@@ -158,7 +174,27 @@ namespace GeneratorCalculation
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);
 			if (newYield is PaperType newYieldType && newReceive is PaperType newReceiveType)
-				return new GeneratorType(newYieldType, newReceiveType);
+			{
+				var copy = new Dictionary<SequenceType, List<SequenceType>>();
+				foreach (SequenceType key in ForbiddenBindings.Keys)
+				{
+					SequenceType valuedKey = (SequenceType)key.ApplyEquation(equations);
+					var valuedSet = ForbiddenBindings[key].Select(s => (SequenceType)s.ApplyEquation(equations)).ToList();
+					if (valuedSet.Any(s => s.Equals(valuedKey)))
+						return new GeneratorType(ConcreteType.Void, ConcreteType.Void); // This identity element will be nuked.
+
+					var c = new List<string>();
+					if (valuedKey.GetVariables(c).Count == 0 && valuedSet.Sum(s => s.GetVariables(c).Count) == 0)
+						continue; //Since both sides have no variables, we don't have to add them to ForbiddenBindings.
+
+					if (copy.ContainsKey(valuedKey))
+						copy[valuedKey].AddRange(valuedSet);
+					else
+						copy[valuedKey] = valuedSet;
+				}
+
+				return new GeneratorType(copy, newReceiveType, newYieldType);
+			}
 			else
 				return this;
 		}

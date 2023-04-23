@@ -13,10 +13,20 @@ namespace GeneratorCalculation.Tests
 			var terminatorTrue = new ListType((ConcreteType)"T", PaperStar.Instance);
 			var terminatorFalse = new ListType((ConcreteType)"F", PaperStar.Instance);
 
-			var falseG = new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y")));
+			var falseG = new GeneratorType(new Dictionary<SequenceType, List<SequenceType>>
+				{
+					[new SequenceType((PaperVariable)"x")] = new List<SequenceType> { new SequenceType((PaperVariable)"y") }
+				},
+				new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"y")), ConcreteType.Void);
 			var trueG = new GeneratorType(terminatorTrue, new SequenceType(new SequenceType((PaperVariable)"x", (PaperVariable)"x")));
-			var rec = new GeneratorType(new SequenceType(falseG, trueG, new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", new DecFunction((PaperVariable)"n")))),
-				receive: new SequenceType(new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperVariable)"n"))));
+			var rec = new GeneratorType(
+				new Dictionary<SequenceType, List<SequenceType>>
+				{
+					//Use a "D"ummy type because (PaperInt)0 is not a PaperType.
+					[new SequenceType(new ListType((ConcreteType)"D", (PaperVariable)"n"))] = new List<SequenceType> { new SequenceType(new ListType((ConcreteType)"D", (PaperInt)0)) }
+				},
+				receive: new SequenceType(new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", (PaperVariable)"n"))),
+				yield: new SequenceType(falseG, trueG, new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new SequenceType((PaperVariable)"x", new ListType((PaperVariable)"y", new DecFunction((PaperVariable)"n")))));
 
 			List<Generator> coroutines = new List<Generator>();
 
