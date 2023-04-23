@@ -159,6 +159,18 @@ namespace GeneratorCalculation
 		{
 			return Value.ToString();
 		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is PaperInt objInt)
+				return Value == objInt.Value;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return Value.GetHashCode();
+		}
 	}
 
 	public class PaperStar : PaperWord
