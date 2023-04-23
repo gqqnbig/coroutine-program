@@ -8,6 +8,32 @@ namespace GeneratorCalculationTests
 	public class SolverTests
 	{
 		[Fact]
+		public void ContinueYieldAfterReceive()
+		{
+			var coroutines = new List<Generator>
+			{
+				new Generator("",new GeneratorType(new SequenceType((ConcreteType)"A",(ConcreteType)"B"),ConcreteType.Void)),
+				new Generator("",new GeneratorType((ConcreteType)"C",(ConcreteType)"A"))
+			};
+
+			var result = Solver.Solve(coroutines);
+
+			Assert.Equal(new SequenceType((ConcreteType)"C", (ConcreteType)"B"), result.Yield);
+		}
+
+		[Fact]
+		public void ReceiveStartPosition()
+		{
+			var coroutines = new List<Generator>();
+
+			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"T", (ConcreteType)"S")));
+			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"S", ConcreteType.Void)));
+			coroutines.Add(new Generator("c", new GeneratorType((ConcreteType)"U", (ConcreteType)"S")));
+
+			var result = Solver.Solve(coroutines);
+		}
+
+		[Fact]
 		public void RunInfiniteLoop()
 		{
 			//Console.WriteLine("hi");
