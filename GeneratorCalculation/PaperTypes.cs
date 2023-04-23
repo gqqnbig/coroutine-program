@@ -342,11 +342,16 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
+		public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			return ApplyEquation(equations.ToList());
+			return (SequenceType) ApplyEquation(equations.ToList());
 		}
 
+		/// <summary>
+		/// always return SequenceType.
+		/// </summary>
+		/// <param name="equations"></param>
+		/// <returns></returns>
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			PaperType[] newTypes = new PaperType[Types.Count];
