@@ -66,7 +66,11 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		// override object.Equals
+		/// <summary>
+		/// It's textual equality, not syntactic equality.
+		/// </summary>
+		/// <param name="obj"></param>
+		/// <returns></returns>
 		public override bool Equals(object obj)
 		{
 			return obj is PaperVariable objVariable && objVariable.Name == Name;
