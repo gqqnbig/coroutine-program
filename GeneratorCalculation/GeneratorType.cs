@@ -133,11 +133,11 @@ namespace GeneratorCalculation
 		public override string ToString()
 		{
 			if (ForbiddenBindings.Count == 0)
-				return $"R[{Receive}; {Yield}]";
+				return $"[{Receive}; {Yield}]";
 			else
 			{
 				string constrain = string.Join(", ", ForbiddenBindings.Select(p => p.Key + " not in {" + string.Join(", ", p.Value) + "}"));
-				return $"R[{Receive}; {Yield}] where {constrain}";
+				return $"[{Receive}; {Yield}] where {constrain}";
 			}
 		}
 
