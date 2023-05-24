@@ -5,38 +5,23 @@ namespace GeneratorCalculation
 {
 	class Program
 	{
-		static List<Generator> GetPrologKnowledgeBase()
-		{
-			var gNegate1 = new GeneratorType((ConcreteType)"Yes", (ConcreteType)"Negate");
-			var gNegate2 = new GeneratorType(ConcreteType.Void, (ConcreteType)"Yes");
-
-			var coroutines = new List<Generator>
-			{
-				new Generator("child1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sue")))),
-				new Generator("child2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sue")))),
-				new Generator("child3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "George")))),
-				new Generator("child4", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sam")))),
-				new Generator("child5", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sam")))),
-				new Generator("child6", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "Gina")))),
-				new Generator("female1", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Sue")))),
-				new Generator("female2", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "Jane")))),
-				new Generator("female3", new GeneratorType(ConcreteType.Void, new SequenceType(new SequenceType((ConcreteType) "Female", (ConcreteType) "June")))),
-				new Generator("female-other", new GeneratorType((ConcreteType)"No", new SequenceType(new SequenceType((ConcreteType) "Female", (PaperVariable) "x")))),
-				new Generator("parent", new GeneratorType(new SequenceType(new SequenceType((ConcreteType) "Child", (PaperVariable) "x", (PaperVariable) "y")), new SequenceType(new SequenceType((ConcreteType) "Parent", (PaperVariable) "y", (PaperVariable) "x")))),
-
-				new Generator("Negate", new GeneratorType(new SequenceType(gNegate1,gNegate2),(ConcreteType)"No")),
-			};
-			return coroutines;
-		}
-
 
 		static void Main(string[] args)
 		{
 			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("createItem", new GeneratorType((ConcreteType)"Item", ConcreteType.Void)));
 
-			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"T", (ConcreteType)"S")));
-			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"S", ConcreteType.Void)));
-			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"U", (ConcreteType)"S")));
+			coroutines.Add(new Generator("createStore", new GeneratorType((ConcreteType)"Store", ConcreteType.Void)));
+			coroutines.Add(new Generator("createCashDesk", new GeneratorType((ConcreteType)"CashDesk", ConcreteType.Void)));
+			coroutines.Add(new Generator("openStore", new GeneratorType(new SequenceType((ConcreteType)"Store", (ConcreteType)"CurrentStore"), (ConcreteType)"Store")));
+			coroutines.Add(new Generator("openCashDesk", new GeneratorType(new SequenceType((ConcreteType)"CashDesk", (ConcreteType)"CurrentStore", (ConcreteType)"CurrentCashDesk"), new SequenceType((ConcreteType)"CashDesk", (ConcreteType)"CurrentStore"))));
+
+			coroutines.Add(new Generator("makeNewSale", new GeneratorType(new SequenceType((ConcreteType)"Sale", (ConcreteType)"CurrentSale", (ConcreteType)"CurrentCashDesk"), (ConcreteType)"CurrentCashDesk")));
+			coroutines.Add(new Generator("enterItem", new GeneratorType(new SequenceType((ConcreteType)"SalesLineItem", (ConcreteType)"CurrentSale", (ConcreteType)"Item"),
+				new SequenceType((ConcreteType)"Item", (ConcreteType)"CurrentSale"))));
+			coroutines.Add(new Generator("endSale", new GeneratorType((ConcreteType)"CurrentSale", (ConcreteType)"CurrentSale")));
+			coroutines.Add(new Generator("makeCashPayment", new GeneratorType(new SequenceType((ConcreteType)"CurrentSale", (ConcreteType)"CashPayment"), (ConcreteType)"CurrentSale")));
+
 
 			var result = Solver.Solve(coroutines);
 			Console.WriteLine(result);

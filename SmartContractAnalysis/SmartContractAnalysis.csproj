@@ -21,5 +21,8 @@
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.12.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratorCalculation\GeneratorCalculation.csproj" />
+  </ItemGroup>
 
 </Project>
