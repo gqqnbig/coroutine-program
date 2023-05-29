@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="cd /d &quot;$(ProjectDir)&quot;&#xD;&#xA;set CLASSPATH=.;$(ProjectDir)antlr-4.13.0-complete.jar;%25CLASSPATH%25&#xD;&#xA;call antlr4.bat -Dlanguage=CSharp  -no-listener -visitor -o generated -package DiffSyntax.Antlr  JavaLexer.g4 JavaParser.g4" />
+    <Exec Command="cd /d &quot;$(ProjectDir)&quot;&#xD;&#xA;set CLASSPATH=.;$(ProjectDir)antlr-4.13.0-complete.jar;%25CLASSPATH%25&#xD;&#xA;&#xD;&#xA;call antlr4.bat -Dlanguage=CSharp  -no-listener -visitor -o generated -package DiffSyntax.Antlr  REModel.g4&#xD;&#xA;call antlr4.bat -Dlanguage=CSharp  -no-listener -visitor -o generated -package DiffSyntax.Antlr  JavaLexer.g4 JavaParser.g4&#xD;&#xA;" />
   </Target>
   <!-- 
 	  The targets are defined in C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Common.targets.

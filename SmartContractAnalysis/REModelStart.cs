@@ -45,14 +45,35 @@ namespace SmartContractAnalysis
 				CommonTokenStream tokens = new CommonTokenStream(lexer);
 				REModelParser parser = new REModelParser(tokens);
 				REModelParser.ContractDefinitionContext tree = parser.contractDefinition();
-				string className = tree.ID(0).GetText();
-				string methodName = tree.ID(1).GetText();
-
-
-				Console.WriteLine($"{className}::{methodName}");
+				ProcessContract(tree);
 
 				startPosition = sectionEndIndex;
 			}
+		}
+
+		static void ProcessContract(REModelParser.ContractDefinitionContext tree)
+		{
+			string className = tree.ID(0).GetText();
+			string methodName = tree.ID(1).GetText();
+
+
+			Console.WriteLine($"{className}::{methodName}");
+
+			//if (methodName != "createStore")
+			//	return;
+
+			Dictionary<string, string> definitions = new Dictionary<string, string>();
+			foreach (var def in tree.definitions().definition())
+			{
+				definitions.Add(def.ID().GetText(), def.type().GetText());
+			}
+
+
+			var c = new ReceiveCollector(definitions);
+			c.Visit(tree.precondition());
+
+			Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
+
 		}
 	}
 
