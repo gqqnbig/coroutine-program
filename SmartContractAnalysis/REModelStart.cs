@@ -4,9 +4,11 @@ using System.Text;
 using System.IO;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using DiffSyntax.Antlr;
+using System.Linq;
 
 namespace SmartContractAnalysis
 {
@@ -18,12 +20,16 @@ namespace SmartContractAnalysis
 			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
 			string content = File.ReadAllText(path);
 
+
+			Dictionary<string, ServiceBlock> serviceDefinitions = CollectProperties(content).ToDictionary(d => d.Name);
+
+
 			int startPosition = 0;
 			// Step 2: Find the specific section that you want to parse.
-			string contractMarker = "Contract ";
+			string marker = "Contract ";
 			while (true)
 			{
-				int contractIndex = content.IndexOf(contractMarker, startPosition);
+				int contractIndex = content.IndexOf(marker, startPosition);
 				if (contractIndex < 0)
 				{
 					Console.WriteLine("Contract not found.");
@@ -45,19 +51,63 @@ namespace SmartContractAnalysis
 				CommonTokenStream tokens = new CommonTokenStream(lexer);
 				REModelParser parser = new REModelParser(tokens);
 				REModelParser.ContractDefinitionContext tree = parser.contractDefinition();
-				ProcessContract(tree);
+				ProcessContract(serviceDefinitions, tree);
 
 				startPosition = sectionEndIndex;
 			}
 		}
 
-		static void ProcessContract(REModelParser.ContractDefinitionContext tree)
+
+		static List<ServiceBlock> CollectProperties(string code)
+		{
+			string servicePattern = @"Service\s+(\w+)\s*\{(.+?)\}";
+			string propertyPattern = @"\[TempProperty\](.+)\n";
+
+			List<ServiceBlock> serviceDefinitions = new List<ServiceBlock>();
+			while (code.Length > 0)
+			{
+				Match m = Regex.Match(code, servicePattern, RegexOptions.Singleline);
+
+				if (!m.Success)
+					break;
+
+				ServiceBlock service = new ServiceBlock();
+				serviceDefinitions.Add(service);
+				service.Name = m.Groups[1].Value;
+
+				string serviceBlock = m.Groups[2].Value;
+
+				Match propertyMatch = Regex.Match(serviceBlock, propertyPattern, RegexOptions.Singleline);
+
+				if (propertyMatch.Success)
+				{
+
+					string propertyBlock = propertyMatch.Groups[1].Value;
+
+					foreach (Match match in Regex.Matches(propertyBlock, @"(\w+)\s*:\s*(\w+)"))
+					{
+						service.Properties[match.Groups[1].Value] = match.Groups[2].Value;
+						//Console.WriteLine($"{match.Groups[1].Value}: {match.Groups[2].Value}");
+					}
+				}
+
+				code = code.Substring(m.Index + m.Length);
+			}
+
+			return serviceDefinitions;
+		}
+
+
+
+		static void ProcessContract(Dictionary<string, ServiceBlock> serviceDefinitions, REModelParser.ContractDefinitionContext tree)
 		{
 			string className = tree.ID(0).GetText();
 			string methodName = tree.ID(1).GetText();
 
 
 			Console.WriteLine($"{className}::{methodName}");
+			var service = serviceDefinitions[className];
+			var global = serviceDefinitions.Values.First(d => d.Name.EndsWith("System"));
 
 			//if (methodName != "createStore")
 			//	return;
@@ -68,7 +118,7 @@ namespace SmartContractAnalysis
 					definitions.Add(def.ID().GetText(), def.type().GetText());
 
 
-			var c = new ReceiveCollector(definitions);
+			var c = new ReceiveCollector(definitions, service.Properties, global.Properties);
 			c.Visit(tree.precondition());
 
 			Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));

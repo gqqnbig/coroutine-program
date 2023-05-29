@@ -10,13 +10,20 @@ namespace SmartContractAnalysis
 {
 	class ReceiveCollector : REModelBaseVisitor<bool>
 	{
-		private readonly Dictionary<string, string> definitions;
+		private readonly Dictionary<string, string> localVariables;
+		private readonly Dictionary<string, string> properties;
+		private readonly Dictionary<string, string> globalProperties;
 
 		public List<ConcreteType> ReceiveList { get; } = new List<ConcreteType>();
 
-		public ReceiveCollector(Dictionary<string, string> definitions)
+		public ReceiveCollector(Dictionary<string, string> localVariables,
+								Dictionary<string, string> properties,
+								Dictionary<string, string> globalProperties
+								)
 		{
-			this.definitions = definitions;
+			this.localVariables = localVariables;
+			this.properties = properties;
+			this.globalProperties = globalProperties;
 		}
 
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
@@ -29,9 +36,16 @@ namespace SmartContractAnalysis
 				{
 					var obj = text.Substring(0, text.Length - ".oclIsUndefined()".Length);
 
-					Debug.Assert(definitions.ContainsKey(obj));
+					//Debug.Assert(definitions.ContainsKey(obj));
+					if (localVariables.ContainsKey(obj))
+						ReceiveList.Add(localVariables[obj]);
+					else if (properties.ContainsKey(obj))
+						ReceiveList.Add(properties[obj]);
+					else if (globalProperties.ContainsKey(obj))
+						ReceiveList.Add(globalProperties[obj]);
+					else
+						throw new FormatException($"{obj} is undefined.");
 
-					ReceiveList.Add(definitions[obj]);
 				}
 			}
 
