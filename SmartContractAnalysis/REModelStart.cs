@@ -63,10 +63,9 @@ namespace SmartContractAnalysis
 			//	return;
 
 			Dictionary<string, string> definitions = new Dictionary<string, string>();
-			foreach (var def in tree.definitions().definition())
-			{
-				definitions.Add(def.ID().GetText(), def.type().GetText());
-			}
+			if (tree.definitions() != null)
+				foreach (var def in tree.definitions().definition())
+					definitions.Add(def.ID().GetText(), def.type().GetText());
 
 
 			var c = new ReceiveCollector(definitions);
