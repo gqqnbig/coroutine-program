@@ -123,6 +123,12 @@ namespace SmartContractAnalysis
 
 			Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
+
+			var post = tree.postcondition().expression();
+			var y = new YieldCollector();
+			y.Visit(post);
+			Console.WriteLine("- yield: " + string.Join(", ", y.YieldList));
+
 		}
 	}
 
