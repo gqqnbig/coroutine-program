@@ -29,10 +29,10 @@ namespace SmartContractAnalysis
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
 		{
 			// obj.oclIsUndefined() = false
-			if (context.additiveExpression(1) != null &&
-				context.GetChild(1).GetText() == "=")
+			var exp = BooleanUtils.SomethingIsFalse(context);
+			if (exp != null)
 			{
-				var text = context.additiveExpression(0).GetText();
+				var text = exp.GetText();
 				if (text.EndsWith(".oclIsUndefined()"))
 				{
 					var obj = text.Substring(0, text.Length - ".oclIsUndefined()".Length);
