@@ -40,9 +40,9 @@ namespace SmartContractAnalysis
 					if (localVariables.ContainsKey(obj))
 						ReceiveList.Add(localVariables[obj]);
 					else if (properties.ContainsKey(obj))
-						ReceiveList.Add(properties[obj]);
+						ReceiveList.Add(obj);
 					else if (globalProperties.ContainsKey(obj))
-						ReceiveList.Add(globalProperties[obj]);
+						ReceiveList.Add(obj);
 					else
 						throw new FormatException($"{obj} is undefined.");
 
