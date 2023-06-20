@@ -1,6 +1,17 @@
 grammar REModel;
 import OCL;
 
+basicExpression
+    : 'null'
+    | basicExpression '.' ID '@pre'?
+    | basicExpression '(' expressionList? ')'
+    | basicExpression '[' expression ']'
+    | INT
+    | FLOAT_LITERAL
+    | STRING_LITERAL
+    | ID
+    | '(' expression ')'
+    ;
 
 letExpression
     : 'let' ID ':' type 'in' expression
