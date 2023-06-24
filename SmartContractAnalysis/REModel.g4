@@ -18,9 +18,20 @@ letExpression
     : 'let' ID ':' type 'in' expression
     ;
 
+//Special syntax in REModel
 reFactor2Expression:
    | factor2Expression '->any' '(' identifier ':' type  '|' expression ')'
+   | factor2Expression '->forAll' '(' identifier ':' type '|' expression ')'
+   | factor2Expression '->select' '(' identifier ':' type '|' expression ')'
+   | factor2Expression '->collect' '(' identifier ':' type '|' expression ')'
    | factor2Expression;
+
+factorExpression
+    : factor2Expression ('*' | '/' | 'mod' | 'div')
+                                   factorExpression
+    | factor2Expression
+    | reFactor2Expression
+    ;
 
 definition:
     ID ':' type '=' reFactor2Expression;
