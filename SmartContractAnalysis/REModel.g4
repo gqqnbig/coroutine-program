@@ -4,6 +4,7 @@ import OCL;
 basicExpression
     : 'null'
     | basicExpression '.' ID '@pre'?
+    | basicExpression '::' ID
     | basicExpression '(' expressionList? ')'
     | basicExpression '[' expression ']'
     | INT
