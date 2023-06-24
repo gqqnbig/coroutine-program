@@ -8,6 +8,16 @@
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="cd /d &quot;$(ProjectDir)&quot;&#xD;&#xA;set CLASSPATH=.;$(ProjectDir)antlr-4.13.0-complete.jar;%25CLASSPATH%25&#xD;&#xA;antlr4.bat -Dlanguage=CSharp  -no-listener -visitor -o generated -package DiffSyntax.Antlr  JavaLexer.g4 JavaParser.g4" />
   </Target>
+  <!-- 
+	  The targets are defined in C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Common.targets.
+	  Build has three sub-steps, BeforeBuild, CoreBuild, AfterBuild.
+	  CoreBuild has many sub-steps, including PreBuildEvent and PostBuildEvent.
+
+	  Clean is the same, but CoreClean has no sub-steps.
+  -->
+  <Target Name="RemoveGeneratedFiles" BeforeTargets="BeforeClean">
+    <RemoveDir Directories="generated"/>
+  </Target>
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.12.0" />
   </ItemGroup>
