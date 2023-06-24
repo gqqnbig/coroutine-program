@@ -207,7 +207,6 @@ namespace GeneratorCalculation
 					{
 						pairs.Insert(i + 1, new Generator("", (GeneratorType)yieldedType));
 					}
-					//what if nowhere to receive?
 					else
 					{
 						var receiverIndex = Receive(yieldedType, pairs, constants, i);
