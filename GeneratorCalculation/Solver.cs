@@ -217,6 +217,7 @@ namespace GeneratorCalculation
 						}
 						else
 						{
+							Console.WriteLine($"Add to external yield: {yieldedType}");
 							yieldsToOutside.Add(yieldedType);
 							i = 0;
 						}
@@ -368,7 +369,7 @@ namespace GeneratorCalculation
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[(i + from) % pairs.Count].Name}:\t{coroutine} can receive {pendingType} and will pop the receive part");
+					Console.Write($"{pairs[(i + from) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 
 					//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
 					//if (g2 != null)
