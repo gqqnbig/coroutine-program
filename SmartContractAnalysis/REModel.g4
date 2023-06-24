@@ -5,7 +5,8 @@ basicExpression
     : 'null'
     | basicExpression '.' ID '@pre'?
     | basicExpression '::' ID
-    | basicExpression '(' expressionList? ')'
+    | basicExpression '(' ')'
+    | basicExpression '(' expressionList ')'
     | basicExpression '[' expression ']'
     | INT
     | FLOAT_LITERAL
