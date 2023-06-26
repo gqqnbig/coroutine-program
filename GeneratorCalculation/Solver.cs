@@ -168,7 +168,7 @@ namespace GeneratorCalculation
 					continue;
 				}
 
-				if(ReceiveGenerator(pairs, constants))
+				if (ReceiveGenerator(pairs, i, constants))
 				{
 					i = 0;
 					continue;
@@ -274,81 +274,78 @@ namespace GeneratorCalculation
 		}
 
 
-		static bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
+		static bool ReceiveGenerator(List<Generator> pairs, int i, List<string> constants)
 		{
+			PaperType head = null;
+			PaperType remaining = null;
+			pairs[i].Type.Receive.Pop(ref head, ref remaining);
 
-			for (var i = 0; i < pairs.Count; i++)
+			if (head is GeneratorType)
+				throw new NotImplementedException();
+			else if (head is ListType l)
 			{
-				PaperType head = null;
-				PaperType remaining = null;
-				pairs[i].Type.Receive.Pop(ref head, ref remaining);
-
-				if (head is GeneratorType)
-					throw new NotImplementedException();
-				else if (head is ListType l)
+				if (l.Type is GeneratorType receiveG)
 				{
-					if (l.Type is GeneratorType receiveG)
+					Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+					List<int> matches = new List<int>();
+					for (int j = 0; j < pairs.Count; j++)
 					{
-						Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
-						List<int> matches = new List<int>();
-						for (int j = 0; j < pairs.Count; j++)
-						{
-							if (i == j)
-								continue;
+						if (i == j)
+							continue;
 
-							var c = JoinConditions(conditions, receiveG.IsCompatibleTo(pairs[j].Type));
-							if (c != null)
-							{
-								conditions = c;
-								matches.Add(j);
-							}
+						var c = JoinConditions(conditions, receiveG.IsCompatibleTo(pairs[j].Type));
+						if (c != null)
+						{
+							conditions = c;
+							matches.Add(j);
 						}
+					}
 
 
-						if (l.Size is PaperInt pi)
+					if (l.Size is PaperInt pi)
+					{
+						if (matches.Count < pi.Value)
 						{
-							if (matches.Count < pi.Value)
-							{
-								Console.WriteLine($"No enough coroutines to match {receiveG}. Nothing is removed.");
-								conditions = null;
-							}
-							else
-								matches = matches.Take(pi.Value).ToList();
-
-						}
-						else if (l.Size is PaperVariable pv)
-						{
-							conditions = JoinConditions(conditions, new Dictionary<PaperVariable, PaperWord> { { pv.Name, (PaperInt)matches.Count } });
+							Console.WriteLine($"No enough coroutines to match {receiveG}. Nothing is removed.");
+							conditions = null;
 						}
 						else
-							throw new NotImplementedException();
+							matches = matches.Take(pi.Value).ToList();
 
-						if (conditions != null)
+					}
+					else if (l.Size is PaperVariable pv)
+					{
+						conditions = JoinConditions(conditions, new Dictionary<PaperVariable, PaperWord> { { pv.Name, (PaperInt)matches.Count } });
+					}
+					else
+						throw new NotImplementedException();
+
+
+					if (conditions != null)
+					{
+						try
 						{
-							try
+							//pairs[i].Type.Receive.Pop
+							pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
+							if (conditions.Count > 0)
 							{
-								//pairs[i].Type.Receive.Pop
-								pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
-								Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-								if (conditions.Count > 0)
-								{
-									Console.Write(" on the conditions that ");
-									Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
-								}
-
-								Console.WriteLine(".");
-
-								foreach (int indice in matches.OrderByDescending(v => v))
-									pairs.RemoveAt(indice);
-
-								//Run one more time
-								ReceiveGenerator(pairs, constants);
-								return true;
+								Console.Write(" on the conditions that ");
+								Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
 							}
-							catch (PaperSyntaxException e)
-							{
-								Console.WriteLine(e.Message);
-							}
+
+							Console.WriteLine(".");
+
+							foreach (int indice in matches.OrderByDescending(v => v))
+								pairs.RemoveAt(indice);
+
+							//Run one more time
+							//ReceiveGenerator(pairs, constants);
+							return true;
+						}
+						catch (PaperSyntaxException e)
+						{
+							Console.WriteLine(e.Message);
 						}
 					}
 				}
