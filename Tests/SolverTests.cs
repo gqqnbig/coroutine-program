@@ -147,7 +147,17 @@ namespace GeneratorCalculationTests
 			Assert.Equal(ConcreteType.Void, result.Receive);
 		}
 
+		[Fact]
+		public void ReceiveCoroutine()
+		{
+			var coroutines = new List<Generator>();
+			var g = new GeneratorType((ConcreteType)"A", ConcreteType.Void);
+			coroutines.Add(new Generator("a", g));
+			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"B", new SequenceType(new ListType(g.Clone(), (PaperInt)1)))));
 
+			var result = Solver.Solve(coroutines);
+
+		}
 
 	}
 }

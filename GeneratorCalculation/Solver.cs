@@ -316,8 +316,13 @@ namespace GeneratorCalculation
 							//pairs[i].Type.Receive.Pop
 							pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
 							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-							Console.Write(" on the conditions that ");
-							Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
+							if (conditions.Count > 0)
+							{
+								Console.Write(" on the conditions that ");
+								Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+							}
+							Console.WriteLine(".");
+
 							foreach (int indice in matches.OrderByDescending(v => v))
 								pairs.RemoveAt(indice);
 
