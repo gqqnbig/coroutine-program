@@ -309,29 +309,32 @@ namespace GeneratorCalculation
 						else
 							throw new NotImplementedException();
 
-
-						try
+						if (conditions != null)
 						{
-							//pairs[i].Type.Receive.Pop
-							pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
-							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-							if (conditions.Count > 0)
+							try
 							{
-								Console.Write(" on the conditions that ");
-								Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+								//pairs[i].Type.Receive.Pop
+								pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+								Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
+								if (conditions.Count > 0)
+								{
+									Console.Write(" on the conditions that ");
+									Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+								}
+
+								Console.WriteLine(".");
+
+								foreach (int indice in matches.OrderByDescending(v => v))
+									pairs.RemoveAt(indice);
+
+								//Run one more time
+								ReceiveGenerator(pairs, constants);
+								return true;
 							}
-							Console.WriteLine(".");
-
-							foreach (int indice in matches.OrderByDescending(v => v))
-								pairs.RemoveAt(indice);
-
-							//Run one more time
-							ReceiveGenerator(pairs, constants);
-							return true;
-						}
-						catch (PaperSyntaxException e)
-						{
-							Console.WriteLine(e.Message);
+							catch (PaperSyntaxException e)
+							{
+								Console.WriteLine(e.Message);
+							}
 						}
 					}
 				}
