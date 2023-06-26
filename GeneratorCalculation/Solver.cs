@@ -156,8 +156,7 @@ namespace GeneratorCalculation
 				}
 
 
-				ReceiveGenerator(pairs, constants);
-				if (i >= pairs.Count)
+				if(ReceiveGenerator(pairs, constants))
 				{
 					i = 0;
 					continue;
@@ -261,7 +260,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static void ReceiveGenerator(List<Generator> pairs, List<string> constants)
+		static bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
 		{
 
 			for (var i = 0; i < pairs.Count; i++)
@@ -328,6 +327,7 @@ namespace GeneratorCalculation
 
 							//Run one more time
 							ReceiveGenerator(pairs, constants);
+							return true;
 						}
 						catch (PaperSyntaxException e)
 						{
@@ -336,6 +336,8 @@ namespace GeneratorCalculation
 					}
 				}
 			}
+
+			return false;
 		}
 
 		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int from)
