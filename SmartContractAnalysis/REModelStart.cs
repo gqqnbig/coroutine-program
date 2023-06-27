@@ -9,6 +9,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using DiffSyntax.Antlr;
 using System.Linq;
+using GeneratorCalculation;
 
 namespace SmartContractAnalysis
 {
@@ -20,10 +21,38 @@ namespace SmartContractAnalysis
 			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
 			string content = File.ReadAllText(path);
 
+			var generators = GetAllGenerators(content);
 
+			string[] interestedCoroutines =
+			{
+				"CoCoMESystem::openStore",
+				"CoCoMESystem::openCashDesk",
+				"ProcessSaleService::makeNewSale",
+				"ProcessSaleService::enterItem",
+				"ManageStoreCRUDService::createStore",
+				"ManageCashDeskCRUDService::createCashDesk",
+			};
+
+			foreach (var g in generators)
+			{
+				Console.WriteLine(g);
+			}
+
+			Console.WriteLine("\nNow, let's execute interested coroutines.");
+
+			var ig = generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1).ToList();
+
+			Solver.Solve(ig);
+
+
+
+		}
+
+		private static List<Generator> GetAllGenerators(string content)
+		{
 			Dictionary<string, ServiceBlock> serviceDefinitions = CollectProperties(content).ToDictionary(d => d.Name);
 
-
+			List<Generator> generators = new List<Generator>();
 			int startPosition = 0;
 			// Step 2: Find the specific section that you want to parse.
 			string marker = "Contract ";
@@ -31,16 +60,13 @@ namespace SmartContractAnalysis
 			{
 				int contractIndex = content.IndexOf(marker, startPosition);
 				if (contractIndex < 0)
-				{
-					Console.WriteLine("Contract not found.");
-					return;
-				}
+					break;
 
 				int sectionEndIndex = content.IndexOf("}", contractIndex);
 				if (sectionEndIndex < 0)
 				{
 					Console.WriteLine("Section end not found.");
-					return;
+					return generators;
 				}
 
 				string sectionContent = content.Substring(contractIndex, sectionEndIndex - contractIndex + 1);
@@ -51,10 +77,14 @@ namespace SmartContractAnalysis
 				CommonTokenStream tokens = new CommonTokenStream(lexer);
 				REModelParser parser = new REModelParser(tokens);
 				REModelParser.ContractDefinitionContext tree = parser.contractDefinition();
-				ProcessContract(serviceDefinitions, tree);
+				var g = ProcessContract(serviceDefinitions, tree);
+				if (g != null)
+					generators.Add(g);
 
 				startPosition = sectionEndIndex;
 			}
+
+			return generators;
 		}
 
 
@@ -99,17 +129,19 @@ namespace SmartContractAnalysis
 
 
 
-		static void ProcessContract(Dictionary<string, ServiceBlock> serviceDefinitions, REModelParser.ContractDefinitionContext tree)
+		static Generator ProcessContract(Dictionary<string, ServiceBlock> serviceDefinitions, REModelParser.ContractDefinitionContext tree)
 		{
 			string className = tree.ID(0).GetText();
 			string methodName = tree.ID(1).GetText();
 
 
-			Console.WriteLine($"{className}::{methodName}");
+			//Console.WriteLine($"{className}::{methodName}");
 			var service = serviceDefinitions[className];
 			var global = serviceDefinitions.Values.First(d => d.Name.EndsWith("System"));
 
-			//if (methodName != "createStore")
+			var classDef = serviceDefinitions.Values.First(d => d.Name == className);
+
+			//if (methodName != "makeNewOrder")
 			//	return;
 
 			Dictionary<string, string> definitions = new Dictionary<string, string>();
@@ -121,11 +153,21 @@ namespace SmartContractAnalysis
 			var c = new ReceiveCollector(definitions, service.Properties, global.Properties);
 			c.Visit(tree.precondition());
 
-			Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
+			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
-			var yieldList = YieldCollector.GetYieldList(definitions, global.Properties, c.ReceiveList, tree.postcondition());
-			Console.WriteLine("- yield: " + string.Join(", ", yieldList));
-			Console.WriteLine();
+			var yieldList = YieldCollector.GetYieldList(definitions, classDef.Properties, global.Properties, c.ReceiveList, tree.postcondition());
+			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
+			//Console.WriteLine();
+
+			var g = new Generator($"{className}::{methodName}", new GeneratorType(new SequenceType(yieldList), new SequenceType(c.ReceiveList)));
+			var n = g.Type.Normalize();
+			if (n == ConcreteType.Void)
+				return null;
+			else
+			{
+				g.Type = (GeneratorType)n;
+				return g;
+			}
 		}
 	}
 
