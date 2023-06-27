@@ -111,6 +111,33 @@ namespace GeneratorCalculation
 			return Solve(coroutines, constants, steps);
 		}
 
+		static bool RemoveVoid(List<Generator> pairs)
+		{
+			bool isProcessed = false;
+			for (int i = 0; i < pairs.Count; i++)
+			{
+				Generator gx = pairs[i];
+
+				if (gx.Type.Yield == ConcreteType.Void && gx.Type.Receive == ConcreteType.Void)
+				{
+					if (gx.IsInfinite)
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
+						gx.Type = gx.OriginalType.Clone();
+					}
+					else
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
+						pairs.RemoveAt(i);
+						i--;
+					}
+					isProcessed = true;
+				}
+			}
+
+			return isProcessed;
+		}
+
 
 		static GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
 		{
@@ -135,32 +162,19 @@ namespace GeneratorCalculation
 				}
 
 
-				var coroutine = pairs[i].Type;
-
-				if (coroutine.Yield == ConcreteType.Void && coroutine.Receive == ConcreteType.Void)
+				if (RemoveVoid(pairs))
 				{
-					Generator gx = pairs[i];
-					if (gx.IsInfinite)
-					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
-						gx.Type = gx.OriginalType.Clone();
-						i = 0;
-					}
-					else
-					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
-						pairs.RemoveAt(i);
-					}
-
+					i = 0;
 					continue;
 				}
-
 
 				if(ReceiveGenerator(pairs, constants))
 				{
 					i = 0;
 					continue;
 				}
+
+				var coroutine = pairs[i].Type;
 
 
 				PaperType yieldedType = null;
