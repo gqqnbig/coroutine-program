@@ -28,9 +28,7 @@ reFactor2Expression:
    | factor2Expression;
 
 factorExpression
-    : factor2Expression ('*' | '/' | 'mod' | 'div')
-                                   factorExpression
-    | factor2Expression
+    : reFactor2Expression ('*' | '/' | 'mod' | 'div') reFactor2Expression
     | reFactor2Expression
     ;
 
