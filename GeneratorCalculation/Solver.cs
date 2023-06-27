@@ -111,6 +111,33 @@ namespace GeneratorCalculation
 			return Solve(coroutines, constants, steps);
 		}
 
+		static bool RemoveVoid(List<Generator> pairs)
+		{
+			bool isProcessed = false;
+			for (int i = 0; i < pairs.Count; i++)
+			{
+				Generator gx = pairs[i];
+
+				if (gx.Type.Yield == ConcreteType.Void && gx.Type.Receive == ConcreteType.Void)
+				{
+					if (gx.IsInfinite)
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
+						gx.Type = gx.OriginalType.Clone();
+					}
+					else
+					{
+						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
+						pairs.RemoveAt(i);
+						i--;
+					}
+					isProcessed = true;
+				}
+			}
+
+			return isProcessed;
+		}
+
 
 		static GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
 		{
@@ -135,33 +162,19 @@ namespace GeneratorCalculation
 				}
 
 
-				var coroutine = pairs[i].Type;
-
-				if (coroutine.Yield == ConcreteType.Void && coroutine.Receive == ConcreteType.Void)
-				{
-					Generator gx = pairs[i];
-					if (gx.IsInfinite)
-					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
-						gx.Type = gx.OriginalType.Clone();
-						i = 0;
-					}
-					else
-					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
-						pairs.RemoveAt(i);
-					}
-
-					continue;
-				}
-
-
-				ReceiveGenerator(pairs, constants);
-				if (i >= pairs.Count)
+				if (RemoveVoid(pairs))
 				{
 					i = 0;
 					continue;
 				}
+
+				if(ReceiveGenerator(pairs, constants))
+				{
+					i = 0;
+					continue;
+				}
+
+				var coroutine = pairs[i].Type;
 
 
 				PaperType yieldedType = null;
@@ -261,7 +274,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static void ReceiveGenerator(List<Generator> pairs, List<string> constants)
+		static bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
 		{
 
 			for (var i = 0; i < pairs.Count; i++)
@@ -310,32 +323,38 @@ namespace GeneratorCalculation
 						else
 							throw new NotImplementedException();
 
-
-						try
+						if (conditions != null)
 						{
-							//pairs[i].Type.Receive.Pop
-							pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
-							Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-							if (conditions.Count > 0)
+							try
 							{
-								Console.Write(" on the conditions that ");
-								Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+								//pairs[i].Type.Receive.Pop
+								pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+								Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
+								if (conditions.Count > 0)
+								{
+									Console.Write(" on the conditions that ");
+									Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+								}
+
+								Console.WriteLine(".");
+
+								foreach (int indice in matches.OrderByDescending(v => v))
+									pairs.RemoveAt(indice);
+
+								//Run one more time
+								ReceiveGenerator(pairs, constants);
+								return true;
 							}
-							Console.WriteLine(".");
-
-							foreach (int indice in matches.OrderByDescending(v => v))
-								pairs.RemoveAt(indice);
-
-							//Run one more time
-							ReceiveGenerator(pairs, constants);
-						}
-						catch (PaperSyntaxException e)
-						{
-							Console.WriteLine(e.Message);
+							catch (PaperSyntaxException e)
+							{
+								Console.WriteLine(e.Message);
+							}
 						}
 					}
 				}
 			}
+
+			return false;
 		}
 
 		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int from)
