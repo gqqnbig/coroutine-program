@@ -35,10 +35,10 @@ namespace SmartContractAnalysis
 
 			foreach (var g in generators)
 			{
-				Console.WriteLine(g);
+				Console.WriteLine($"{g.Name}:\t{g.Type}");
 			}
 
-			Console.WriteLine("\nNow, let's execute interested coroutines.");
+			Console.WriteLine("\nNow, let's compose interested coroutines.");
 
 			var ig = generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1).ToList();
 
