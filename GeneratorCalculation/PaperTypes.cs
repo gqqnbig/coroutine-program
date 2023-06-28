@@ -329,6 +329,12 @@ namespace GeneratorCalculation
 				throw new ArgumentException();
 		}
 
+		public SequenceType(params ConcreteType[] types) : this((IEnumerable<PaperType>)types)
+		{
+			if (types.Length == 0)
+				throw new ArgumentException();
+		}
+
 		public SequenceType(IEnumerable<PaperType> types)
 		{
 			Types = new List<PaperType>(types);
