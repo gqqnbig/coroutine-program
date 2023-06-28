@@ -31,6 +31,7 @@ namespace SmartContractAnalysis
 				"ProcessSaleService::enterItem",
 				"ManageStoreCRUDService::createStore",
 				"ManageCashDeskCRUDService::createCashDesk",
+				"ManageItemCRUDService::createItem",
 			};
 
 			foreach (var g in generators)
