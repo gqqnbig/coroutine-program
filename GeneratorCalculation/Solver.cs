@@ -161,17 +161,13 @@ namespace GeneratorCalculation
 						break;
 				}
 
-
-				if (RemoveVoid(pairs))
+				if (i == 0)
 				{
-					i = 0;
-					continue;
-				}
+					if (RemoveVoid(pairs))
+						continue;
 
-				if(ReceiveGenerator(pairs, constants))
-				{
-					i = 0;
-					continue;
+					if (ReceiveGenerator(pairs, constants))
+						continue;
 				}
 
 				var coroutine = pairs[i].Type;
