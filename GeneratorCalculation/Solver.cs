@@ -353,18 +353,26 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int from)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="pendingType"></param>
+		/// <param name="pairs"></param>
+		/// <param name="constants"></param>
+		/// <param name="startIndex">From which index we start to evaluate</param>
+		/// <returns></returns>
+		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int startIndex)
 		{
 			Console.WriteLine();
 
 			for (var i = 0; i < pairs.Count; i++)
 			{
-				var coroutine = pairs[(i + from) % pairs.Count].Type;
+				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				GeneratorType newGenerator;
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[(i + from) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
+					Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 
 					//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
 					//if (g2 != null)
@@ -377,7 +385,7 @@ namespace GeneratorCalculation
 					if (conditions.Count == 0)
 					{
 						Console.WriteLine(".");
-						pairs[(i + from) % pairs.Count].Type = newGenerator;
+						pairs[(i + startIndex) % pairs.Count].Type = newGenerator;
 					}
 					else
 					{
@@ -403,7 +411,7 @@ namespace GeneratorCalculation
 							//	}
 							//}
 							//else 
-							pairs[(i + from) % pairs.Count].Type = resultGenerator;
+							pairs[(i + startIndex) % pairs.Count].Type = resultGenerator;
 						}
 						catch (PaperSyntaxException e)
 						{
@@ -412,14 +420,14 @@ namespace GeneratorCalculation
 						}
 					}
 
-					return (i + from) % pairs.Count;
+					return (i + startIndex) % pairs.Count;
 
 					//Solve(pairs, constants);
 					//return;
 				}
 				else
 				{
-					Console.WriteLine($"{pairs[(i + from) % pairs.Count].Name}:\t{pairs[(i + from) % pairs.Count].Type} -- Cannot receive {pendingType}");
+					Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{pairs[(i + startIndex) % pairs.Count].Type} -- Cannot receive {pendingType}");
 				}
 			}
 
