@@ -7,6 +7,8 @@ namespace GeneratorCalculation
 {
 	public class Solver
 	{
+		private List<Generator> compositionOrder = new List<Generator>();
+
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
 		{
 			var c = new Dictionary<PaperVariable, PaperWord>();
@@ -69,7 +71,7 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
-		public static GeneratorType Solve(List<Generator> coroutines, int steps = 500)
+		public GeneratorType Solve(List<Generator> coroutines, int steps = 500)
 		{
 			foreach (var g in coroutines)
 			{
@@ -108,7 +110,11 @@ namespace GeneratorCalculation
 			}
 
 
-			return Solve(coroutines, constants, steps);
+			var result = Solve(coroutines, constants, steps);
+
+			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g => string.IsNullOrEmpty(g.Name) ? g.OriginalType.ToString() : g.Name)));
+
+			return result;
 		}
 
 		static bool RemoveVoid(List<Generator> pairs)
@@ -139,7 +145,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
+		GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
@@ -192,6 +198,7 @@ namespace GeneratorCalculation
 
 					//yieldedType = yieldedType.Normalize();
 
+					compositionOrder.Add(pairs[i]);
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
 
 					canWrap = true;

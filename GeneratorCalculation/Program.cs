@@ -23,7 +23,7 @@ namespace GeneratorCalculation
 			coroutines.Add(new Generator("makeCashPayment", new GeneratorType(new SequenceType((ConcreteType)"CurrentSale", (ConcreteType)"CashPayment"), (ConcreteType)"CurrentSale")));
 
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 			Console.WriteLine(result);
 		}
 

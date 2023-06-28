@@ -43,7 +43,7 @@ namespace SmartContractAnalysis
 
 			var ig = generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1).ToList();
 
-			Solver.Solve(ig);
+			new Solver().Solve(ig);
 
 
 
