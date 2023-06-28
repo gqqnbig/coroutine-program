@@ -226,6 +226,12 @@ namespace GeneratorCalculation
 					Console.WriteLine(" -- Not ready to yield");
 
 				i++;
+
+				if (i >= pairs.Count)
+				{
+					if (LoopExternalYield(yieldsToOutside, pairs, constants))
+						canWrap = true;
+				}
 			}
 
 			if (s >= steps)
@@ -246,6 +252,33 @@ namespace GeneratorCalculation
 			var result = new GeneratorType(yields, receive);
 			return result;
 		}
+
+
+
+		static bool LoopExternalYield(List<PaperType> yieldsToOutside, List<Generator> pairs, List<string> constants)
+		{
+			Console.WriteLine("Loop external yield: " + string.Join(", ", yieldsToOutside));
+			for (int i = 0; i < yieldsToOutside.Count; i++)
+			{
+				var pendingType = yieldsToOutside[i];
+
+				for (int j = 0; j < pairs.Count; j++)
+				{
+					Debug.Assert(pendingType is GeneratorType == false);
+
+
+					var receiverIndex = Receive(pendingType, pairs, constants, 0);
+					if (receiverIndex != null)
+					{
+						yieldsToOutside.RemoveAt(i);
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
 
 		/// <summary>
 		///
