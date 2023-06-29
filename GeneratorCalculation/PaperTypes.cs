@@ -11,10 +11,10 @@ namespace GeneratorCalculation
 	public interface PaperWord
 	{
 		/// <summary>
-		/// Not compatible, return null. Always compatible, return dict of size 0.
+		/// Check if this type equals to another type for receiving purpose.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <returns></returns>
+		/// <returns>Returns <c>null</c> if not compatible. Returns a dict of size 0 if it's always compatible.</returns>
 		Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t);
 
 		/// <summary>
