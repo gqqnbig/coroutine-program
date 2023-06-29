@@ -317,7 +317,7 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			return "(" + string.Join(", ", Types) + ")";
+			return "<" + string.Join(", ", Types) + ">";
 		}
 
 		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
@@ -442,6 +442,94 @@ namespace GeneratorCalculation
 			return hashcode;
 		}
 	}
+
+	public class TupleType : PaperType
+	{
+		public List<PaperType> Types { get; }
+
+		public TupleType(params PaperType[] types) : this((IEnumerable<PaperType>)types)
+		{
+			if (types.Length == 0)
+				throw new ArgumentException();
+		}
+
+		public TupleType(IEnumerable<PaperType> types)
+		{
+			Types = new List<PaperType>(types);
+		}
+
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			if (t is TupleType tTuple)
+			{
+				if (Types.Count != tTuple.Types.Count)
+					return null;
+
+
+				var dict = new Dictionary<PaperVariable, PaperWord>();
+				for (int i = 0; i < Types.Count; i++)
+					dict = Solver.JoinConditions(dict, Types[i].IsCompatibleTo(tTuple.Types[i]));
+				return dict;
+			}
+			return null;
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			PaperType[] newTypes = new PaperType[Types.Count];
+			for (int i = 0; i < Types.Count; i++)
+			{
+				var t = Types[i].ApplyEquation(equations);
+				if (t is PaperType tType)
+					newTypes[i] = tType;
+				else
+				{
+					Console.WriteLine($"Application is ignored because it produces an illegal type for {nameof(TupleType)}.");
+					newTypes[i] = Types[i];
+				}
+			}
+
+			return new TupleType(newTypes);
+		}
+
+		public List<PaperVariable> GetVariables(List<string> constants)
+		{
+			var list = new List<PaperVariable>();
+			foreach (var t in Types)
+			{
+				list.AddRange(t.GetVariables(constants));
+			}
+
+			return list;
+		}
+
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
+		{
+			yielded = this;
+			remaining = ConcreteType.Void;
+			return true;
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		{
+			foreach (var t in Types)
+			{
+				t.ReplaceWithConstant(availableConstants, usedConstants);
+			}
+		}
+
+		public PaperType Normalize()
+		{
+			return this;
+		}
+
+
+		public override string ToString()
+		{
+			return "(" + string.Join(", ", Types) + ")";
+		}
+	}
+
 
 	public class FunctionType : PaperType
 	{
