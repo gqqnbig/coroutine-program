@@ -294,31 +294,6 @@ namespace GeneratorCalculation
 		}
 	}
 
-	//class VariableType : PaperType
-	//{
-	//	public string Name { get; set; }
-	//}
-
-	//class OrType : PaperType
-	//{
-	//	public List<PaperType> Types { get; } = new List<PaperType>();
-	//}
-
-	//class AndType : PaperType
-	//{
-	//	public AndType(params PaperType[] types)
-	//	{
-	//		Types = new List<PaperType>(types);
-	//	}
-
-	//	public List<PaperType> Types { get; }
-
-	//	public override string ToString()
-	//	{
-	//		return "(" + string.Join("&", Types) + ")";
-	//	}
-	//}
-
 	public class SequenceType : PaperType
 	{
 		public List<PaperType> Types { get; }
