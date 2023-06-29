@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace GeneratorCalculation
 {
 	public class Solver
 	{
+		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
+		
 		private List<Generator> compositionOrder = new List<Generator>();
 
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
@@ -92,7 +95,7 @@ namespace GeneratorCalculation
 
 			foreach (var g in coroutines)
 			{
-				Console.WriteLine($"{g.Name}:\t{g.Type}");
+				logger.LogInformation($"{g.Name}:\t{g.Type}");
 			}
 
 
@@ -103,10 +106,10 @@ namespace GeneratorCalculation
 
 			if (constants.Count > 0)
 			{
-				Console.WriteLine("== ReplaceWithConstant ==");
-				Console.WriteLine($"constants: {string.Join(", ", constants)}");
+				logger.LogInformation("== ReplaceWithConstant ==");
+				logger.LogInformation($"constants: {string.Join(", ", constants)}");
 				foreach (var g in coroutines)
-					Console.WriteLine($"{g.Name}:\t{g.Type}");
+					logger.LogInformation($"{g.Name}:\t{g.Type}");
 			}
 
 
@@ -128,12 +131,12 @@ namespace GeneratorCalculation
 				{
 					if (gx.IsInfinite)
 					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Reset to original.");
+						logger.LogInformation($"{gx.Name} reached the simplest form. Reset to original.");
 						gx.Type = gx.OriginalType.Clone();
 					}
 					else
 					{
-						Console.WriteLine($"{gx.Name} reached the simplest form. Remove from the list.");
+						logger.LogInformation($"{gx.Name} reached the simplest form. Remove from the list.");
 						pairs.RemoveAt(i);
 						i--;
 					}
@@ -219,7 +222,7 @@ namespace GeneratorCalculation
 						}
 						else
 						{
-							Console.WriteLine($"Add to external yield: {yieldedType}");
+							logger.LogInformation($"Add to external yield: {yieldedType}");
 							yieldsToOutside.Add(yieldedType);
 							i = 0;
 						}
@@ -345,7 +348,7 @@ namespace GeneratorCalculation
 						{
 							if (matches.Count < pi.Value)
 							{
-								Console.WriteLine($"No enough coroutines to match {receiveG}. Nothing is removed.");
+								logger.LogInformation($"No enough coroutines to match {receiveG}. Nothing is removed.");
 								conditions = null;
 							}
 							else
@@ -383,7 +386,7 @@ namespace GeneratorCalculation
 							}
 							catch (PaperSyntaxException e)
 							{
-								Console.WriteLine(e.Message);
+								logger.LogInformation(e.Message);
 							}
 						}
 					}
