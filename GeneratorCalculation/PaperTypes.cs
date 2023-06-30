@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace GeneratorCalculation
 {
@@ -297,6 +298,8 @@ namespace GeneratorCalculation
 
 	public class SequenceType : PaperType
 	{
+		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(SequenceType));
+
 		public List<PaperType> Types { get; }
 
 		public SequenceType(params PaperType[] types) : this((IEnumerable<PaperType>)types)
@@ -366,7 +369,7 @@ namespace GeneratorCalculation
 					newTypes[i] = tType;
 				else
 				{
-					Console.WriteLine($"Application is ignored because it produces an illegal type for {nameof(SequenceType)}.");
+					logger.LogInformation($"Application is ignored because it produces an illegal type for {nameof(SequenceType)}.");
 					newTypes[i] = Types[i];
 				}
 			}
