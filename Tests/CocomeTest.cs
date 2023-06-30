@@ -21,7 +21,7 @@ namespace GeneratorCalculation.Tests
 			coroutines.Add(new Generator("createItem", new CoroutineType(ConcreteType.Void, new SequenceType("Item"))));
 
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 			Assert.Equal(ConcreteType.Void, result.Receive);
 		}
 

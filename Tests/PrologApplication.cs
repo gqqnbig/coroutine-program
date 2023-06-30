@@ -46,7 +46,7 @@ namespace GeneratorCalculationTests
 
 			try
 			{
-				var result = Solver.Solve(coroutines);
+				var result = new Solver().Solve(coroutines);
 			}
 			catch (DeadLockException e)
 			{
@@ -65,7 +65,7 @@ namespace GeneratorCalculationTests
 
 			try
 			{
-				var result = Solver.Solve(coroutines);
+				var result = new Solver().Solve(coroutines);
 			}
 			catch (DeadLockException e)
 			{
@@ -86,7 +86,7 @@ namespace GeneratorCalculationTests
 
 			try
 			{
-				var result = Solver.Solve(coroutines);
+				var result = new Solver().Solve(coroutines);
 			}
 			catch (DeadLockException e)
 			{
@@ -106,7 +106,7 @@ namespace GeneratorCalculationTests
 
 			try
 			{
-				var result = Solver.Solve(coroutines);
+				var result = new Solver().Solve(coroutines);
 			}
 			catch (DeadLockException e)
 			{
