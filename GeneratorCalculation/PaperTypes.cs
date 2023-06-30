@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace GeneratorCalculation
@@ -312,6 +313,12 @@ namespace GeneratorCalculation
 
 		public SequenceType(IEnumerable<PaperType> types)
 		{
+			foreach (var t in types)
+			{
+				Debug.Assert(t is SequenceType == false, "A sequence can't nest another sequence " + t);
+			}
+
+
 			Types = new List<PaperType>(types);
 		}
 
