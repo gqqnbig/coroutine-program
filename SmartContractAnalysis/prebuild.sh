@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cd "${ProjectDir}"
 export CLASSPATH=".:${ProjectDir}antlr-4.13.0-complete.jar:${CLASSPATH}"
 alias antlr4='java org.antlr.v4.Tool'
