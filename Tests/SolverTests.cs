@@ -16,7 +16,7 @@ namespace GeneratorCalculationTests
 				new Generator("",new GeneratorType((ConcreteType)"C",(ConcreteType)"A"))
 			};
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 
 			Assert.Equal(new SequenceType((ConcreteType)"C", (ConcreteType)"B"), result.Yield);
 		}
@@ -30,7 +30,7 @@ namespace GeneratorCalculationTests
 			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"S", ConcreteType.Void)));
 			coroutines.Add(new Generator("c", new GeneratorType((ConcreteType)"U", (ConcreteType)"S")));
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 		}
 
 		[Fact]
@@ -48,7 +48,7 @@ namespace GeneratorCalculationTests
 
 				list.Add(new Generator("a", true, new GeneratorType((ConcreteType)"X", ConcreteType.Void)));
 				list.Add(new Generator("b", true, new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-				Assert.Throws<StepLimitExceededException>(() => Solver.Solve(list, 100));
+				Assert.Throws<StepLimitExceededException>(() => new Solver().Solve(list, 100));
 			}
 			finally
 			{
@@ -61,7 +61,7 @@ namespace GeneratorCalculationTests
 		{
 			var list = new List<Generator>();
 			list.Add(new Generator("", new GeneratorType((ConcreteType)"Y", ConcreteType.Void)));
-			var g = Solver.Solve(list);
+			var g = new Solver().Solve(list);
 
 			Assert.Equal(ConcreteType.Void, g.Receive);
 			Assert.Contains("Y", g.Yield.ToString());
@@ -80,7 +80,7 @@ namespace GeneratorCalculationTests
 			var g3 = new GeneratorType((ConcreteType)"D", (ConcreteType)"E");
 			list.Add(new Generator("g3", g3));
 
-			Assert.Throws<DeadLockException>(() => Solver.Solve(list));
+			Assert.Throws<DeadLockException>(() => new Solver().Solve(list));
 		}
 
 		[Fact]
@@ -95,7 +95,7 @@ namespace GeneratorCalculationTests
 
 
 			var result = new GeneratorType(new SequenceType((ConcreteType)"C", (ConcreteType)"A"), (ConcreteType)"B");
-			Assert.Equal(result, Solver.Solve(list));
+			Assert.Equal(result, new Solver().Solve(list));
 		}
 
 		[Fact]
@@ -112,7 +112,7 @@ namespace GeneratorCalculationTests
 				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
 			coroutines.Add(new Generator("interleave", interleave));
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 
 			Console.WriteLine("Final result:");
 			Console.WriteLine(result);
@@ -127,7 +127,7 @@ namespace GeneratorCalculationTests
 			coroutines.Add(new Generator("b", new GeneratorType((PaperVariable)"a", (PaperVariable)"a")));
 
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 
 			Assert.Contains("Y", result.Yield.ToString());
 			Assert.Equal(ConcreteType.Void, result.Receive);
@@ -141,7 +141,7 @@ namespace GeneratorCalculationTests
 			coroutines.Add(new Generator("a", new GeneratorType((ConcreteType)"A", ConcreteType.Void)));
 			coroutines.Add(new Generator("b", new GeneratorType(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), (ConcreteType)"A")));
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 
 			Assert.Equal(new SequenceType((ConcreteType)"B", (ConcreteType)"C"), result.Yield);
 			Assert.Equal(ConcreteType.Void, result.Receive);
@@ -155,7 +155,7 @@ namespace GeneratorCalculationTests
 			coroutines.Add(new Generator("a", g));
 			coroutines.Add(new Generator("b", new GeneratorType((ConcreteType)"B", new SequenceType(new ListType(g.Clone(), (PaperInt)1)))));
 
-			var result = Solver.Solve(coroutines);
+			var result = new Solver().Solve(coroutines);
 
 		}
 

@@ -6,6 +6,7 @@ using System.Linq;
 namespace GeneratorCalculation
 {
 
+	[Obsolete]
 	public class GeneratorType : PaperType
 	{
 		public GeneratorType(PaperType @yield, PaperType receive)
@@ -240,6 +241,17 @@ namespace GeneratorCalculation
 		public GeneratorType Clone()
 		{
 			return new GeneratorType(ForbiddenBindings, Receive, Yield);
+		}
+	}
+
+	public class CoroutineType : GeneratorType
+	{
+		public CoroutineType(PaperType receive, PaperType yield) : base(yield, receive)
+		{
+		}
+
+		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield) : base(forbiddenBindings, receive, yield)
+		{
 		}
 	}
 }

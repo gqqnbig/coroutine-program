@@ -7,6 +7,8 @@ namespace GeneratorCalculation
 {
 	public class Solver
 	{
+		private List<Generator> compositionOrder = new List<Generator>();
+
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
 		{
 			var c = new Dictionary<PaperVariable, PaperWord>();
@@ -69,7 +71,7 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
-		public static GeneratorType Solve(List<Generator> coroutines, int steps = 500)
+		public GeneratorType Solve(List<Generator> coroutines, int steps = 500)
 		{
 			foreach (var g in coroutines)
 			{
@@ -108,7 +110,11 @@ namespace GeneratorCalculation
 			}
 
 
-			return Solve(coroutines, constants, steps);
+			var result = Solve(coroutines, constants, steps);
+
+			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g => string.IsNullOrEmpty(g.Name) ? g.OriginalType.ToString() : g.Name)));
+
+			return result;
 		}
 
 		static bool RemoveVoid(List<Generator> pairs)
@@ -139,7 +145,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
+		GeneratorType Solve(List<Generator> pairs, List<string> constants, int steps)
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
@@ -161,17 +167,13 @@ namespace GeneratorCalculation
 						break;
 				}
 
-
-				if (RemoveVoid(pairs))
+				if (i == 0)
 				{
-					i = 0;
-					continue;
-				}
+					if (RemoveVoid(pairs))
+						continue;
 
-				if(ReceiveGenerator(pairs, constants))
-				{
-					i = 0;
-					continue;
+					if (ReceiveGenerator(pairs, constants))
+						continue;
 				}
 
 				var coroutine = pairs[i].Type;
@@ -196,6 +198,7 @@ namespace GeneratorCalculation
 
 					//yieldedType = yieldedType.Normalize();
 
+					compositionOrder.Add(pairs[i]);
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
 
 					canWrap = true;
@@ -230,6 +233,12 @@ namespace GeneratorCalculation
 					Console.WriteLine(" -- Not ready to yield");
 
 				i++;
+
+				if (i >= pairs.Count)
+				{
+					if (LoopExternalYield(yieldsToOutside, pairs, constants))
+						canWrap = true;
+				}
 			}
 
 			if (s >= steps)
@@ -250,6 +259,33 @@ namespace GeneratorCalculation
 			var result = new GeneratorType(yields, receive);
 			return result;
 		}
+
+
+
+		static bool LoopExternalYield(List<PaperType> yieldsToOutside, List<Generator> pairs, List<string> constants)
+		{
+			Console.WriteLine("Loop external yield: " + string.Join(", ", yieldsToOutside));
+			for (int i = 0; i < yieldsToOutside.Count; i++)
+			{
+				var pendingType = yieldsToOutside[i];
+
+				for (int j = 0; j < pairs.Count; j++)
+				{
+					Debug.Assert(pendingType is GeneratorType == false);
+
+
+					var receiverIndex = Receive(pendingType, pairs, constants, 0);
+					if (receiverIndex != null)
+					{
+						yieldsToOutside.RemoveAt(i);
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
 
 		/// <summary>
 		///
@@ -357,18 +393,26 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int from)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="pendingType"></param>
+		/// <param name="pairs"></param>
+		/// <param name="constants"></param>
+		/// <param name="startIndex">From which index we start to evaluate</param>
+		/// <returns></returns>
+		static int? Receive(PaperType pendingType, List<Generator> pairs, List<string> constants, int startIndex)
 		{
 			Console.WriteLine();
 
 			for (var i = 0; i < pairs.Count; i++)
 			{
-				var coroutine = pairs[(i + from) % pairs.Count].Type;
+				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				GeneratorType newGenerator;
 				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
 				if (conditions != null)
 				{
-					Console.Write($"{pairs[(i + from) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
+					Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 
 					//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
 					//if (g2 != null)
@@ -381,7 +425,7 @@ namespace GeneratorCalculation
 					if (conditions.Count == 0)
 					{
 						Console.WriteLine(".");
-						pairs[(i + from) % pairs.Count].Type = newGenerator;
+						pairs[(i + startIndex) % pairs.Count].Type = newGenerator;
 					}
 					else
 					{
@@ -407,7 +451,7 @@ namespace GeneratorCalculation
 							//	}
 							//}
 							//else 
-							pairs[(i + from) % pairs.Count].Type = resultGenerator;
+							pairs[(i + startIndex) % pairs.Count].Type = resultGenerator;
 						}
 						catch (PaperSyntaxException e)
 						{
@@ -416,14 +460,14 @@ namespace GeneratorCalculation
 						}
 					}
 
-					return (i + from) % pairs.Count;
+					return (i + startIndex) % pairs.Count;
 
 					//Solve(pairs, constants);
 					//return;
 				}
 				else
 				{
-					Console.WriteLine($"{pairs[(i + from) % pairs.Count].Name}:\t{pairs[(i + from) % pairs.Count].Type} -- Cannot receive {pendingType}");
+					Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{pairs[(i + startIndex) % pairs.Count].Type} -- Cannot receive {pendingType}");
 				}
 			}
 

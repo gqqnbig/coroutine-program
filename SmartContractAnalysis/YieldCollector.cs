@@ -11,11 +11,12 @@ namespace SmartContractAnalysis
 	class YieldCollector : REModelBaseVisitor<bool>
 	{
 
-		public static List<ConcreteType> GetYieldList(Dictionary<string, string> localVariables, Dictionary<string, string> globalProperties, List<ConcreteType> receiveList, REModelParser.PostconditionContext context)
+		public static List<ConcreteType> GetYieldList(Dictionary<string, string> localVariables, Dictionary<string, string> classProperties, Dictionary<string, string> globalProperties, 
+														List<ConcreteType> receiveList, REModelParser.PostconditionContext context)
 		{
 
 			var post = context.expression();
-			var y = new YieldCollector(localVariables, globalProperties);
+			var y = new YieldCollector(localVariables, classProperties,globalProperties);
 			y.Visit(post);
 
 			List<ConcreteType> yieldList = new List<ConcreteType>(receiveList);
@@ -30,12 +31,14 @@ namespace SmartContractAnalysis
 
 
 		private readonly Dictionary<string, string> localVariables;
+		private readonly Dictionary<string, string> classProperties;
 		private readonly Dictionary<string, string> globalProperties;
 		private readonly Dictionary<string, string> letVariables = new Dictionary<string, string>();
 
-		private YieldCollector(Dictionary<string, string> localVariables, Dictionary<string, string> globalProperties)
+		private YieldCollector(Dictionary<string, string> localVariables, Dictionary<string, string> classProperties, Dictionary<string, string> globalProperties)
 		{
 			this.localVariables = localVariables;
+			this.classProperties = classProperties;
 			this.globalProperties = globalProperties;
 		}
 
@@ -95,7 +98,7 @@ namespace SmartContractAnalysis
 					components.RemoveAt(0);
 
 
-				if (globalProperties.ContainsKey(components[0]))
+				if (globalProperties.ContainsKey(components[0]) || classProperties.ContainsKey(components[0]))
 					ElementsAddedModified.Add(components[0]);
 			}
 
