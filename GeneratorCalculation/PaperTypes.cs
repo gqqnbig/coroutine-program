@@ -39,6 +39,11 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		bool Pop(ref PaperType yielded, ref PaperType remaining);
 
+		/// <summary>
+		/// For constants, PaperWord is null.
+		/// </summary>
+		/// <param name="availableConstants"></param>
+		/// <param name="usedConstants"></param>
 		void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants);
 
 
