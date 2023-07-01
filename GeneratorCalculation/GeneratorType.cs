@@ -108,7 +108,7 @@ namespace GeneratorCalculation
 				if (HasForbiddenBindings(conditions))
 					return null;
 
-				newGenerator = new GeneratorType(Yield, remaining);
+				newGenerator = new GeneratorType(ForbiddenBindings, remaining, Yield);
 				return conditions;
 			}
 
