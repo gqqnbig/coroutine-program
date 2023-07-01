@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="prebuild.bat" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
+    <Exec Condition="'$(OS)' != 'Windows_NT'" Command="./prebuild.sh" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
+  </Target>
+  <Target Name="AddGeneratedFiles" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
+    <ItemGroup>
+      <Compile Include="generated/*.cs" />
+    </ItemGroup>
+  </Target>
+  <!-- 
+	  The targets are defined in C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Common.targets.
+	  Build has three sub-steps, BeforeBuild, CoreBuild, AfterBuild.
+	  CoreBuild has many sub-steps, including PreBuildEvent and PostBuildEvent.
+
+	  Clean is the same, but CoreClean has no sub-steps.
+  -->
+  <Target Name="RemoveGeneratedFiles" BeforeTargets="BeforeClean">
+    <RemoveDir Directories="generated"/>
+  </Target>
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.12.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GeneratorCalculation\GeneratorCalculation.csproj" />
+  </ItemGroup>
+
+</Project>
