@@ -107,10 +107,11 @@ namespace GeneratorCalculation
 				g.Type.ReplaceWithConstant(availableConstants, bindings);
 			}
 
-			if (bindings.Count > 0)
+			var constant = bindings.Where(p => p.Value == null).Select(p => p.Key.Name).ToList();
+			if (constant.Count > 0)
 			{
 				logger.LogInformation("== ReplaceWithConstant ==");
-				logger.LogInformation($"constants: {string.Join(", ", bindings)}");
+				logger.LogInformation($"constants: {string.Join(", ", constant)}");
 				foreach (var g in coroutines)
 					logger.LogInformation($"{g.Name}:\t{g.Type}");
 			}
@@ -211,6 +212,15 @@ namespace GeneratorCalculation
 
 
 					pairs[i].Type = g;
+
+					if (yieldedType is TupleType tTuple)
+					{
+						if (tTuple.Types.All(t => t is GeneratorType))
+						{
+							yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), constants);
+						}
+					}
+
 
 					if (yieldedType is GeneratorType)
 					{
