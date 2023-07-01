@@ -8,8 +8,6 @@
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Condition="'$(OS)' == 'Windows_NT'" Command="prebuild.bat" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
     <Exec Condition="'$(OS)' != 'Windows_NT'" Command="./prebuild.sh" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
-  </Target>
-  <Target Name="AddGeneratedFiles" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
     <ItemGroup>
       <Compile Include="generated/*.cs" />
     </ItemGroup>
