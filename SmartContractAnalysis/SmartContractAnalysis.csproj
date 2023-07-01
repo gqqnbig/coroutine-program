@@ -9,6 +9,11 @@
     <Exec Condition="'$(OS)' == 'Windows_NT'" Command="prebuild.bat" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
     <Exec Condition="'$(OS)' != 'Windows_NT'" Command="./prebuild.sh" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
   </Target>
+  <Target Name="AddGeneratedFiles" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
+    <ItemGroup>
+      <Compile Include="generated/*.cs" />
+    </ItemGroup>
+  </Target>
   <!-- 
 	  The targets are defined in C:\Windows\Microsoft.NET\Framework\v4.0.30319\Microsoft.Common.targets.
 	  Build has three sub-steps, BeforeBuild, CoreBuild, AfterBuild.
