@@ -29,7 +29,7 @@ namespace GeneratorCalculation
 
 	public interface PaperType : PaperWord
 	{
-		List<PaperVariable> GetVariables(List<string> constants);
+		List<PaperVariable> GetVariables();
 
 		/// <summary>
 		/// Pop the head element from the type.
@@ -39,7 +39,7 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		bool Pop(ref PaperType yielded, ref PaperType remaining);
 
-		void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants);
+		void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants);
 
 
 		PaperType Normalize();
@@ -84,12 +84,9 @@ namespace GeneratorCalculation
 			return Name.GetHashCode();
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
-			if (constants.Contains(Name))
-				return new List<PaperVariable>();
-			else
-				return new List<PaperVariable>(new[] { this });
+			return new List<PaperVariable>(new[] { this });
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -100,7 +97,7 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{ }
 
 		public PaperType Normalize()
@@ -228,7 +225,7 @@ namespace GeneratorCalculation
 			return Name;
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
 			return new List<PaperVariable>();
 		}
@@ -243,7 +240,7 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{ }
 
 		public PaperType Normalize()
@@ -351,7 +348,7 @@ namespace GeneratorCalculation
 
 		public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			return (SequenceType) ApplyEquation(equations.ToList());
+			return (SequenceType)ApplyEquation(equations.ToList());
 		}
 
 		/// <summary>
@@ -377,9 +374,9 @@ namespace GeneratorCalculation
 			return new SequenceType(newTypes);
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
-			return Types.SelectMany(t => t.GetVariables(constants)).ToList();
+			return Types.SelectMany(t => t.GetVariables()).ToList();
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -401,7 +398,7 @@ namespace GeneratorCalculation
 			}
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
 			foreach (var t in Types)
 			{
@@ -502,12 +499,12 @@ namespace GeneratorCalculation
 			return new TupleType(newTypes);
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
 			var list = new List<PaperVariable>();
 			foreach (var t in Types)
 			{
-				list.AddRange(t.GetVariables(constants));
+				list.AddRange(t.GetVariables());
 			}
 
 			return list;
@@ -520,7 +517,7 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
 			foreach (var t in Types)
 			{
@@ -572,11 +569,11 @@ namespace GeneratorCalculation
 			return new FunctionType(FunctionName, Arguments.Select(a => a.ApplyEquation(equations))).Evaluate();
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
 			var r = from a in Arguments
 					where a is PaperType
-					from v in ((PaperType)a).GetVariables(constants)
+					from v in ((PaperType)a).GetVariables()
 					select v;
 
 			return r.ToList();
@@ -588,7 +585,7 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
 			foreach (var w in Arguments)
 			{
@@ -680,11 +677,11 @@ namespace GeneratorCalculation
 				return this;
 		}
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
-			var l = Type.GetVariables(constants);
+			var l = Type.GetVariables();
 			if (Size is PaperType)
-				l.AddRange(((PaperType)Size).GetVariables(constants));
+				l.AddRange(((PaperType)Size).GetVariables());
 
 			return l;
 		}
@@ -699,13 +696,13 @@ namespace GeneratorCalculation
 			return true;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
 			if (Size is PaperStar)
 			{
 				string c = availableConstants[0];
 				availableConstants.RemoveAt(0);
-				usedConstants.Add(c);
+				usedConstants.Add(c, null);
 
 				Size = new PaperVariable(c);
 			}

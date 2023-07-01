@@ -19,7 +19,7 @@ namespace GeneratorCalculation.Tests
 			coroutines.Add(new Generator("fr2", new GeneratorType(new ListType((ConcreteType)"S", PaperStar.Instance), (ConcreteType)"Y")));
 			coroutines.Add(new Generator("zip", new GeneratorType(new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"m", (PaperVariable)"n")), new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"m"), new ListType((PaperVariable)"y", (PaperVariable)"n")))));
 
-			var result = new Solver().Solve(coroutines);
+			var result = new Solver().SolveWithBindings(coroutines);
 
 			Assert.Equal(ConcreteType.Void, result.Receive);
 			Assert.Contains("S, S", result.Yield.ToString());

@@ -44,8 +44,8 @@ namespace GeneratorCalculation
 			//Yield cannot have variables that are unbound from Receive.
 
 			List<string> constants = new List<string>();
-			var inputVariables = Receive.GetVariables(constants).Select(v => v.Name).ToList();
-			var outputVariables = Yield.GetVariables(constants).Select(v => v.Name).ToList();
+			var inputVariables = Receive.GetVariables().Select(v => v.Name).ToList();
+			var outputVariables = Yield.GetVariables().Select(v => v.Name).ToList();
 
 			if (outputVariables.Any(v => inputVariables.Contains(v) == false))
 			{
@@ -66,19 +66,24 @@ namespace GeneratorCalculation
 		/// <param name="g"></param>
 		/// <param name="yieldedType"></param>
 		/// <returns></returns>
-		public GeneratorType RunYield(List<string> constants, ref PaperType yieldedType)
+		public GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
 		{
 			if (Receive != ConcreteType.Void)
 				return null;
 
 
-			if (Yield.GetVariables(constants).Count == 0)
+			if (Yield.GetVariables().Except(bindings.Keys.ToList()).Any() == false)
 			{
 				PaperType remaining = null;
 				if (Yield.Pop(ref yieldedType, ref remaining))
+				{
+					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
 					return new GeneratorType(remaining, Receive);
-
+				}
 			}
+			else
+				Console.WriteLine("Unable to yield due to unbound variables");
+
 
 			return null;
 		}
@@ -143,10 +148,10 @@ namespace GeneratorCalculation
 		}
 
 
-		public List<PaperVariable> GetVariables(List<string> constants)
+		public List<PaperVariable> GetVariables()
 		{
-			var inputVariables = Receive.GetVariables(constants).ToList();
-			var outputVariables = Yield.GetVariables(constants).ToList();
+			var inputVariables = Receive.GetVariables().ToList();
+			var outputVariables = Yield.GetVariables().ToList();
 			return inputVariables.Concat(outputVariables).ToList();
 		}
 
@@ -185,7 +190,7 @@ namespace GeneratorCalculation
 						return new GeneratorType(ConcreteType.Void, ConcreteType.Void); // This identity element will be nuked.
 
 					var c = new List<string>();
-					if (valuedKey.GetVariables(c).Count == 0 && valuedSet.Sum(s => s.GetVariables(c).Count) == 0)
+					if (valuedKey.GetVariables().Count == 0 && valuedSet.Sum(s => s.GetVariables().Count) == 0)
 						continue; //Since both sides have no variables, we don't have to add them to ForbiddenBindings.
 
 					if (copy.ContainsKey(valuedKey))
@@ -205,7 +210,7 @@ namespace GeneratorCalculation
 			return false;
 		}
 
-		public void ReplaceWithConstant(List<string> availableConstants, List<string> usedConstants)
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
 			Yield.ReplaceWithConstant(availableConstants, usedConstants);
 			Receive.ReplaceWithConstant(availableConstants, usedConstants);
@@ -254,4 +259,78 @@ namespace GeneratorCalculation
 		{
 		}
 	}
+
+
+	//public class LabeledCoroutineType : GeneratorType
+	//{
+	//	public string Name { get; }
+	//	public bool IsInfinite { get; }
+
+	//	public GeneratorType OriginalType { get; }
+
+	//	public LabeledCoroutineType(PaperType receive, PaperType yield, string name = null, bool isInfinite = false) : base(yield, receive)
+	//	{
+	//		Name = name;
+	//		IsInfinite = isInfinite;
+
+	//		if (IsInfinite)
+	//			OriginalType = new GeneratorType(receive, yield);
+
+	//	}
+
+	//	public LabeledCoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, string name = null, bool isInfinite = false) : base(forbiddenBindings, receive, yield)
+	//	{
+	//		Name = name;
+	//		IsInfinite = isInfinite;
+
+	//		if (IsInfinite)
+	//			OriginalType = new GeneratorType(receive, yield);
+	//	}
+
+	//	/// <summary>
+	//	/// If it can yield, return the new type. Otherwise return null.
+	//	/// </summary>
+	//	/// <param name="constants"></param>
+	//	/// <param name="g"></param>
+	//	/// <param name="yieldedType"></param>
+	//	/// <returns></returns>
+	//	public override LabeledCoroutineType RunYield(List<string> constants, ref PaperType yieldedType)
+	//	{
+	//		if (Receive != ConcreteType.Void)
+	//			return null;
+
+
+	//		if (Yield.GetVariables(constants).Count == 0)
+	//		{
+	//			PaperType remaining = null;
+	//			if (Yield.Pop(ref yieldedType, ref remaining))
+	//				return new GeneratorType(remaining, Receive);
+
+	//		}
+
+	//		return null;
+	//	}
+
+	//	public override bool Equals(object obj)
+	//	{
+	//		if (obj is GeneratorType objGenerator)
+	//		{
+	//			return Receive.Equals(objGenerator.Receive) && Yield.Equals(objGenerator.Yield);
+	//		}
+
+	//		return false;
+	//	}
+
+	//	public override int GetHashCode()
+	//	{
+	//		return Name.GetHashCode();
+	//	}
+
+	//	public LabeledCoroutineType Clone()
+	//	{
+	//		return new LabeledCoroutineType(ForbiddenBindings, Receive, Yield, Name, IsInfinite);
+	//	}
+	//}
+
+
 }
