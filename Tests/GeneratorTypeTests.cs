@@ -17,5 +17,20 @@ namespace GeneratorCalculation.Tests
 
 			Assert.Throws<FormatException>(() => g.Check());
 		}
+
+		[Fact]
+		public void TestForbiddenBindings()
+		{
+			var forbiddenBindings = new Dictionary<SequenceType, List<SequenceType>>();
+			forbiddenBindings[new SequenceType((PaperVariable)"b")] = new List<SequenceType> { new SequenceType((ConcreteType)"B") };
+			GeneratorType g = new GeneratorType(forbiddenBindings, new SequenceType((PaperVariable)"a", (PaperVariable)"b"), (ConcreteType)"X");
+
+			GeneratorType ng;
+			var conditions = g.RunReceive((ConcreteType)"A", out ng);
+			Assert.True(conditions != null, "The coroutine should have no problem in receiving A.");
+
+			Assert.Equal(forbiddenBindings, ng.ForbiddenBindings);
+		}
 	}
+
 }
