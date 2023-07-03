@@ -10,7 +10,7 @@ namespace GeneratorCalculation
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
 		
-		private List<Generator> compositionOrder = new List<Generator>();
+		private readonly List<GeneratorType> compositionOrder = new List<GeneratorType>();
 
 		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
 		{
@@ -138,7 +138,13 @@ namespace GeneratorCalculation
 
 			var result = Solve(coroutines, bindings, steps);
 
-			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g => string.IsNullOrEmpty(g.Name) ? g.OriginalType.ToString() : g.Name)));
+			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g =>
+			{
+				if (g is CoroutineType cg)
+					return string.IsNullOrEmpty(cg.Source?.Name) ? g.ToString() : cg.Source.Name;
+				else
+					return g.ToString();
+			})));
 
 			return result;
 		}
@@ -224,7 +230,7 @@ namespace GeneratorCalculation
 
 					//yieldedType = yieldedType.Normalize();
 
-					compositionOrder.Add(pairs[i]);
+					compositionOrder.Add(pairs[i].Type);
 					Console.WriteLine($"--> {g}, yielded: {yieldedType}");
 
 					canWrap = true;
