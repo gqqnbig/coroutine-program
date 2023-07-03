@@ -78,6 +78,8 @@ namespace GeneratorCalculation
 				if (Yield.Pop(ref yieldedType, ref remaining))
 				{
 					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
+					//Forbidden bindings are not needed when the coroutine starts to yield
+					//because all variables have been bound.
 					return new GeneratorType(remaining, Receive);
 				}
 			}
