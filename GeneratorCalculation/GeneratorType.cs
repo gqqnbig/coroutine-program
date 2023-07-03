@@ -66,7 +66,7 @@ namespace GeneratorCalculation
 		/// <param name="g"></param>
 		/// <param name="yieldedType"></param>
 		/// <returns></returns>
-		public GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
+		public virtual GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
 		{
 			if (Receive != ConcreteType.Void)
 				return null;
@@ -96,7 +96,7 @@ namespace GeneratorCalculation
 		/// <param name="providedType"></param>
 		/// <param name="conditions"></param>
 		/// <returns></returns>
-		public Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
+		public virtual Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
 		{
 			newGenerator = null;
 			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
@@ -123,7 +123,7 @@ namespace GeneratorCalculation
 			return null;
 		}
 
-		private bool HasForbiddenBindings(Dictionary<PaperVariable, PaperWord> valueMappings)
+		protected bool HasForbiddenBindings(Dictionary<PaperVariable, PaperWord> valueMappings)
 		{
 			foreach (SequenceType key in ForbiddenBindings.Keys)
 			{
@@ -256,7 +256,13 @@ namespace GeneratorCalculation
 		public PaperVariable Source { get; }
 		public bool CanRestore { get; }
 
-
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="receive"></param>
+		/// <param name="yield"></param>
+		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
+		/// <param name="canRestore"></param>
 		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(yield, receive)
 		{
 			Source = source;
@@ -267,6 +273,69 @@ namespace GeneratorCalculation
 		{
 			Source = source;
 			CanRestore = canRestore;
+		}
+		/// <summary>
+		/// Check whether this generator can receive the given type.
+		/// </summary>
+		/// <param name="providedType"></param>
+		/// <param name="conditions"></param>
+		/// <returns></returns>
+		public override Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
+		{
+			newGenerator = null;
+			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+			if (Receive == ConcreteType.Void)
+				return null;
+
+			PaperType head = null;
+			PaperType remaining = null;
+			if (Receive.Pop(ref head, ref remaining))
+			{
+				var c = head.IsCompatibleTo(providedType);
+				if (c == null)
+					return null;
+
+				conditions = Solver.JoinConditions(conditions, c);
+				if (HasForbiddenBindings(conditions))
+					return null;
+
+				newGenerator = new CoroutineType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
+				return conditions;
+			}
+
+			Debug.Assert(Receive == ConcreteType.Void);
+			return null;
+		}
+
+		/// <summary>
+		/// If it can yield, return the new type. Otherwise return null.
+		/// </summary>
+		/// <param name="constants"></param>
+		/// <param name="g"></param>
+		/// <param name="yieldedType"></param>
+		/// <returns></returns>
+		public override GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
+		{
+			if (Receive != ConcreteType.Void)
+				return null;
+
+
+			if (Yield.GetVariables().Except(bindings.Keys.ToList()).Any() == false)
+			{
+				PaperType remaining = null;
+				if (Yield.Pop(ref yieldedType, ref remaining))
+				{
+					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
+					//Forbidden bindings are not needed when the coroutine starts to yield
+					//because all variables have been bound.
+					return new CoroutineType(Receive, remaining, Source, CanRestore);
+				}
+			}
+			else
+				Console.WriteLine("Unable to yield due to unbound variables");
+
+
+			return null;
 		}
 
 		public override string ToString()
