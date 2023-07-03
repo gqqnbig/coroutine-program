@@ -131,6 +131,8 @@ namespace GeneratorCalculation
 			var eq = equations.FirstOrDefault(p => p.Key.Equals(this));
 			if (eq.Key == null)
 				return this;
+			else if (eq.Value == null) // null denotes a constant.
+				return this;
 			else
 				return eq.Value;
 		}
