@@ -243,7 +243,7 @@ namespace GeneratorCalculation
 			return Receive.GetHashCode() ^ Yield.GetHashCode();
 		}
 
-		public GeneratorType Clone()
+		public virtual GeneratorType Clone()
 		{
 			return new GeneratorType(ForbiddenBindings, Receive, Yield);
 		}
@@ -251,12 +251,33 @@ namespace GeneratorCalculation
 
 	public class CoroutineType : GeneratorType
 	{
-		public CoroutineType(PaperType receive, PaperType yield) : base(yield, receive)
+		public PaperVariable Source { get; }
+		public bool CanRestore { get; }
+
+
+		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(yield, receive)
 		{
+			Source = source;
+			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield) : base(forbiddenBindings, receive, yield)
+		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(forbiddenBindings, receive, yield)
 		{
+			Source = source;
+			CanRestore = canRestore;
+		}
+
+		public override string ToString()
+		{
+			if (Source == null)
+				return base.ToString();
+			else
+				return Source.ToString() + (CanRestore ? "*" : "") + ": " + base.ToString();
+		}
+
+		public override GeneratorType Clone()
+		{
+			return new CoroutineType(ForbiddenBindings, Receive, Yield, Source, CanRestore);
 		}
 	}
 
