@@ -25,5 +25,27 @@ namespace GeneratorCalculation.Tests
 			Assert.Equal(ConcreteType.Void, result.Receive);
 		}
 
+		[Fact]
+		public void DeleteItemAtTheEnd()
+		{
+			var bindings = new Dictionary<PaperVariable, PaperWord>();
+			bindings.Add("openStore", new CoroutineType(new SequenceType("Store"), new SequenceType("Store", "CurrentStore")));
+			bindings.Add("openCashDesk", new CoroutineType(new SequenceType("CashDesk", "CurrentStore"), new SequenceType("CashDesk", "CurrentStore", "CurrentCashDesk")));
+			bindings.Add("makeNewSale", new CoroutineType(new SequenceType("CurrentCashDesk"), new SequenceType("CurrentCashDesk", "Sale", "CurrentSale")));
+			bindings.Add("enterItem", new CoroutineType(new SequenceType("CurrentSale", "Item"), new SequenceType("CurrentSale", "Item", "SalesLineItem", "CurrentSaleLine")));
+			bindings.Add("createStore", new CoroutineType(ConcreteType.Void, new SequenceType("Store")));
+			bindings.Add("createCashDesk", new CoroutineType(ConcreteType.Void, new SequenceType("CashDesk")));
+			bindings.Add("createItem", new CoroutineType(ConcreteType.Void, new SequenceType("Item")));
+
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("", new GeneratorType(new TupleType((PaperVariable)"openStore", (PaperVariable)"openCashDesk", (PaperVariable)"makeNewSale", (PaperVariable)"enterItem", (PaperVariable)"createStore", (PaperVariable)"createCashDesk", (PaperVariable)"createItem"), ConcreteType.Void)));
+			coroutines.Add(new Generator("deleteItem", new CoroutineType(new SequenceType("Item"), ConcreteType.Void)));
+
+
+			var result = new Solver().SolveWithBindings(coroutines, bindings);
+			Assert.Equal(ConcreteType.Void, result.Receive);
+			Assert.DoesNotContain((ConcreteType)"Item", ((SequenceType)result.Yield).Types);
+		}
+
 	}
 }
