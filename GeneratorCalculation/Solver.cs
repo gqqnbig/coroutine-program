@@ -74,6 +74,30 @@ namespace GeneratorCalculation
 			return $"{p.Key}/{p.Value}";
 		}
 
+
+		static List<string> BuildAvailableNames(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings)
+		{
+			HashSet<string> availableConstants = new HashSet<string>();
+			for (int i = 0; i < 26; i++)
+				availableConstants.Add(((char)('a' + i)).ToString());
+
+			//Dictionary<string, PaperType> constants = new Dictionary<string, PaperType>();
+			foreach (var g in coroutines)
+			{
+				availableConstants.ExceptWith(g.Type.GetVariables().Select(v => v.Name));
+			}
+
+			foreach (var w in bindings.Values)
+			{
+				if (w is PaperType pt)
+				{
+					availableConstants.ExceptWith(pt.GetVariables().Select(v => v.Name));
+				}
+			}
+
+			return availableConstants.ToList();
+		}
+
 		public GeneratorType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
 		{
 			if (bindings == null)
@@ -85,27 +109,22 @@ namespace GeneratorCalculation
 			//}
 
 
-			List<string> availableConstants = new List<string>();
-			for (int i = 0; i < 26; i++)
-				availableConstants.Add(((char)('a' + i)).ToString());
-
-			//Dictionary<string, PaperType> constants = new Dictionary<string, PaperType>();
-			foreach (var g in coroutines)
-			{
-				foreach (var n in g.Type.GetVariables().Select(v => v.Name))
-					availableConstants.Remove(n);
-			}
-
 			foreach (var g in coroutines)
 			{
 				logger.LogInformation($"{g.Name}:\t{g.Type}");
 			}
 
-
+			List<string> availableConstants = BuildAvailableNames(coroutines, bindings);
 			foreach (var g in coroutines)
 			{
 				g.Type.ReplaceWithConstant(availableConstants, bindings);
 			}
+			foreach (var w in bindings.Values.ToList())
+			{
+				if (w is PaperType pt)
+					pt.ReplaceWithConstant(availableConstants, bindings);
+			}
+
 
 			var constant = bindings.Where(p => p.Value == null).Select(p => p.Key.Name).ToList();
 			if (constant.Count > 0)
