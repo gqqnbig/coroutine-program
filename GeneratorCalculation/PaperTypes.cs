@@ -24,6 +24,9 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations">this parameter should not be modified</param>
 		/// <returns></returns>
+		/// <remarks>
+		/// The main implementation resides in <see cref="PaperVariable"/>.
+		/// </remarks>
 		PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations);// { return this; }
 	}
 
@@ -648,6 +651,9 @@ namespace GeneratorCalculation
 	{
 		public ListType(PaperType type, PaperWord size)
 		{
+			if (size == null)
+				throw new ArgumentNullException(nameof(size));
+
 			if (size is PaperInt sInt && sInt.Value < 0)
 				throw new PaperSyntaxException("List size must be non-negative. Your size is " + size);
 
