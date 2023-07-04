@@ -207,6 +207,8 @@ namespace GeneratorCalculation
 					if (ReceiveGenerator(pairs, constants.Keys.Select(v => v.Name).ToList()))
 						continue;
 				}
+				// Even if pairs.Count == 1, we have to continue executing the yielding part 
+				// because it may yield coroutines.
 
 				var coroutine = pairs[i].Type;
 
