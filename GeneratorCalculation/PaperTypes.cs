@@ -56,10 +56,14 @@ namespace GeneratorCalculation
 
 	public class PaperVariable : PaperWord, PaperType
 	{
+		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(PaperVariable));
+
 		public PaperVariable(string name)
 		{
-			if (name.Length == 0 || char.IsLower(name[0]) == false)
-				throw new ArgumentException("The first letter must be lowercase.", nameof(name));
+			if (name.Length == 0)
+				throw new ArgumentException("Variable name can't be empty string.");
+			if (char.IsLower(name[0]) == false)
+				logger.LogWarning($"Variable {name} doesn't follow the convention. The first letter should be lowercase.");
 
 			Name = name;
 		}
