@@ -425,6 +425,8 @@ namespace GeneratorCalculation
 									 select t);
 			if (a.Types.Count == 0)
 				return ConcreteType.Void;
+			if (a.Types.Count == 1)
+				return a.Types[0];
 			return a;
 		}
 
