@@ -218,7 +218,7 @@ namespace GeneratorCalculation
 			Receive.ReplaceWithConstant(availableConstants, usedConstants);
 		}
 
-		public PaperType Normalize()
+		public virtual PaperType Normalize()
 		{
 			var g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
@@ -336,6 +336,15 @@ namespace GeneratorCalculation
 
 
 			return null;
+		}
+
+		public override PaperType Normalize()
+		{
+			var g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
+			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
+				return ConcreteType.Void;
+			else
+				return g;
 		}
 
 		public override string ToString()
