@@ -33,6 +33,7 @@ namespace SmartContractAnalysis
 				"ManageCashDeskCRUDService::createCashDesk",
 				"ManageItemCRUDService::createItem",
 			};
+			string[] lowPriorityCoroutines = { "ManageItemCRUDService::deleteItem" };
 
 			foreach (var g in generators)
 			{
@@ -41,9 +42,22 @@ namespace SmartContractAnalysis
 
 			Console.WriteLine("\nNow, let's compose interested coroutines.");
 
-			var ig = generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1).ToList();
 
-			var result = new Solver().SolveWithBindings(ig);
+
+			var bindings = new Dictionary<PaperVariable, PaperWord>();
+			foreach (var g in generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1))
+			{
+				bindings.Add(g.Name, g.Type);
+			}
+
+			var coroutines = new List<Generator>();
+
+			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
+			coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
+
+
+
+			var result = new Solver().SolveWithBindings(coroutines, bindings);
 			Console.WriteLine(result);
 
 
@@ -160,7 +174,7 @@ namespace SmartContractAnalysis
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 
-			var g = new Generator($"{className}::{methodName}", new GeneratorType(new SequenceType(yieldList), new SequenceType(c.ReceiveList)));
+			var g = new Generator($"{className}::{methodName}", new CoroutineType(new SequenceType(c.ReceiveList), new SequenceType(yieldList), $"{className}::{methodName}"));
 			var n = g.Type.Normalize();
 			if (n == ConcreteType.Void)
 				return null;
