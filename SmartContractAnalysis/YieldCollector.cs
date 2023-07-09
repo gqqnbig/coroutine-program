@@ -5,6 +5,7 @@ using Antlr4.Runtime.Misc;
 using DiffSyntax.Antlr;
 using GeneratorCalculation;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace SmartContractAnalysis
 {
@@ -26,6 +27,13 @@ namespace SmartContractAnalysis
 				yieldList.Remove(t);
 			}
 
+			foreach (var t in y.PropertiesModified.OrderBy(c => c.Name))
+			{
+				if (yieldList.Contains(t) == false)
+					yieldList.Add(t);
+			}
+
+
 			return yieldList;
 		}
 
@@ -44,6 +52,7 @@ namespace SmartContractAnalysis
 
 		List<ConcreteType> ElementsAddedModified { get; } = new List<ConcreteType>();
 		List<ConcreteType> ElementsRemoved { get; } = new List<ConcreteType>();
+		HashSet<ConcreteType> PropertiesModified { get; } = new HashSet<ConcreteType>();
 
 
 		public override bool VisitLetExpression([NotNull] REModelParser.LetExpressionContext context)
@@ -99,7 +108,7 @@ namespace SmartContractAnalysis
 
 
 				if (globalProperties.ContainsKey(components[0]) || classProperties.ContainsKey(components[0]))
-					ElementsAddedModified.Add(components[0]);
+					PropertiesModified.Add(components[0]);
 			}
 
 
