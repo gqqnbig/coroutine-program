@@ -9,6 +9,9 @@ using System.Linq;
 
 namespace SmartContractAnalysis
 {
+	/// <summary>
+	/// This class collects the yielding types from the post condition section from a service definition.
+	/// </summary>
 	class YieldCollector : REModelBaseVisitor<bool>
 	{
 
@@ -22,17 +25,15 @@ namespace SmartContractAnalysis
 
 			List<ConcreteType> yieldList = new List<ConcreteType>(receiveList);
 			yieldList.AddRange(y.ElementsAddedModified);
-			foreach (var t in y.ElementsRemoved)
-			{
-				yieldList.Remove(t);
-			}
-
 			foreach (var t in y.PropertiesModified.OrderBy(c => c.Name))
 			{
 				if (yieldList.Contains(t) == false)
 					yieldList.Add(t);
 			}
-
+			foreach (var t in y.ElementsRemoved)
+			{
+				yieldList.Remove(t);
+			}
 
 			return yieldList;
 		}
@@ -84,6 +85,14 @@ namespace SmartContractAnalysis
 					// We are also sure that there's a condition like
 					// allInstance()->includes(obj)
 				}
+				else if (text.EndsWith(".oclIsUndefined()"))
+				{
+					var obj = text.Substring(0, text.Length - ".oclIsUndefined()".Length);
+					ElementsRemoved.Add(obj);
+				}
+
+
+
 
 				Regex regex = new Regex(@"->excludes\((\w+)\)$");
 				var m = regex.Match(text);
