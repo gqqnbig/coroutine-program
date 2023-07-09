@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 using DiffSyntax.Antlr;
 using System.Linq;
 using GeneratorCalculation;
