@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartContractAnalysis
 {
-	class ServiceBlock
+	public class ServiceBlock
 	{
 		public string Name { get; set; }
 
