@@ -1,6 +1,17 @@
 grammar REModel;
 import OCL;
 
+type
+    : 'Sequence' '(' type ')'
+    | 'Set' '(' type ')'
+    | 'Bag' '(' type ')'
+    | 'OrderedSet' '(' type ')'
+    | 'Map' '(' type ',' type ')'
+    | 'Function' '(' type ',' type ')'
+    | ID '[' ID ('|' ID)* ']'
+    | ID
+    ;
+
 basicExpression
     : 'null'
     | basicExpression '.' ID '@pre'?
