@@ -32,10 +32,15 @@ namespace SmartContractAnalysis
 				"ManageItemCRUDService::createItem",
 
 				"ProcessSaleService::makeCashPayment",
-				"ProcessSaleService::makeCardPayment",
+				//"ProcessSaleService::makeCardPayment",
 
 			};
-			//string[] lowPriorityCoroutines = { "ManageItemCRUDService::deleteItem" };
+			string[] lowPriorityCoroutines =
+			{
+				"ManageItemCRUDService::deleteItem",
+				"ManageStoreCRUDService::deleteStore",
+				"ManageCashDeskCRUDService::deleteCashDesk",
+			};
 
 			foreach (var g in generators)
 			{
@@ -55,7 +60,7 @@ namespace SmartContractAnalysis
 			var coroutines = new List<Generator>();
 
 			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
-			//coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
+			coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 
 
 
