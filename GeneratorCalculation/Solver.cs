@@ -179,10 +179,30 @@ namespace GeneratorCalculation
 
 		GeneratorType Solve(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
 		{
-			List<PaperType> yieldsToOutside = new List<PaperType>();
 			//find a generator type where the next type is not void.
 			Console.WriteLine();
 
+			List<PaperType> yieldsToOutside = SolveWithinSteps(pairs, constants, steps);
+
+
+			//allow at most one coroutine to have receive.
+			var lockedCoroutines = pairs.Where(p => p.Type.Receive != ConcreteType.Void).ToList();
+			if (lockedCoroutines.Count > 1)
+				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
+			else if (lockedCoroutines.Count == 1)
+				yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
+
+			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
+
+			var yields = new SequenceType(yieldsToOutside).Normalize();
+
+			var result = new GeneratorType(yields, receive);
+			return result;
+		}
+
+		private List<PaperType> SolveWithinSteps(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
+		{
+			List<PaperType> yieldsToOutside = new List<PaperType>();
 			int i = 0;
 			int s = 0;
 			bool canWrap = false;
@@ -287,22 +307,8 @@ namespace GeneratorCalculation
 			if (s >= steps)
 				throw new StepLimitExceededException();
 
-
-			//allow at most one coroutine to have receive.
-			var lockedCoroutines = pairs.Where(p => p.Type.Receive != ConcreteType.Void).ToList();
-			if (lockedCoroutines.Count > 1)
-				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
-			else if (lockedCoroutines.Count == 1)
-				yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
-
-			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
-
-			var yields = new SequenceType(yieldsToOutside).Normalize();
-
-			var result = new GeneratorType(yields, receive);
-			return result;
+			return yieldsToOutside;
 		}
-
 
 
 		static bool LoopExternalYield(List<PaperType> yieldsToOutside, List<Generator> pairs)
