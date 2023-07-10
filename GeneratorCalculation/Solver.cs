@@ -190,7 +190,13 @@ namespace GeneratorCalculation
 			if (lockedCoroutines.Count > 1)
 				throw new DeadLockException(yieldsToOutside, lockedCoroutines);
 			else if (lockedCoroutines.Count == 1)
-				yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
+			{
+				SequenceType s = lockedCoroutines[0].Type.Yield as SequenceType;
+				if (s == null)
+					yieldsToOutside.Add(lockedCoroutines[0].Type.Yield);
+				else
+					yieldsToOutside.AddRange(s.Types);
+			}
 
 			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
 
