@@ -16,7 +16,7 @@ namespace SmartContractAnalysis
 			{
 				if (context.additiveExpression(1).GetText() == "true")
 					return context.additiveExpression(0);
-				else
+				else if (context.additiveExpression(0).GetText() == "true")
 					return context.additiveExpression(1);
 			}
 			return null;
