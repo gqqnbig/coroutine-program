@@ -62,6 +62,14 @@ namespace SmartContractAnalysis
 			return VisitExpression(context.expression());
 		}
 
+		public override bool VisitConditionalExpression([NotNull] REModelParser.ConditionalExpressionContext context)
+		{
+			//skip the if part
+			Visit(context.expression(1));
+			Visit(context.expression(2));
+			return true;
+		}
+
 
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
 		{
