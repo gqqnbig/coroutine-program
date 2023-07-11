@@ -36,16 +36,19 @@ namespace SmartContractAnalysis
 				if (text.EndsWith(".oclIsUndefined()"))
 				{
 					var obj = text.Substring(0, text.Length - ".oclIsUndefined()".Length);
+					var components = new List<string>(obj.Split('.'));
+					if (components[0] == "self")
+						components.RemoveAt(0);
 
 					//Debug.Assert(definitions.ContainsKey(obj));
-					if (localVariables.ContainsKey(obj))
-						ReceiveList.Add(localVariables[obj]);
-					else if (properties.ContainsKey(obj))
-						ReceiveList.Add(obj);
-					else if (globalProperties.ContainsKey(obj))
-						ReceiveList.Add(obj);
+					if (localVariables.ContainsKey(components[0]))
+						ReceiveList.Add(localVariables[components[0]]);
+					else if (properties.ContainsKey(components[0]))
+						ReceiveList.Add(components[0]);
+					else if (globalProperties.ContainsKey(components[0]))
+						ReceiveList.Add(components[0]);
 					else
-						throw new FormatException($"{obj} is undefined.");
+						throw new FormatException($"{components[0]} is undefined.");
 
 				}
 			}
