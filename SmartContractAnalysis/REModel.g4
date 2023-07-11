@@ -12,6 +12,8 @@ type
     | ID
     ;
 
+statement : ;
+
 basicExpression
     : 'null'
     | basicExpression '.' ID '@pre'?
