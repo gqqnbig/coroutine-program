@@ -284,6 +284,8 @@ namespace GeneratorCalculation
 						var receiverIndex = Receive(yieldedType, pairs, i);
 						if (receiverIndex != null)
 						{
+							compositionOrder.Add(pairs[receiverIndex.Value].Type);
+
 							i = receiverIndex.Value;
 						}
 						else
