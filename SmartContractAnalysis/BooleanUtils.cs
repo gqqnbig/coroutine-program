@@ -10,7 +10,12 @@ namespace SmartContractAnalysis
 		public static REModelParser.AdditiveExpressionContext SomethingIsTrue(REModelParser.EqualityExpressionContext context)
 		{
 			if (context.additiveExpression().Length == 1)
-				return context.additiveExpression(0);
+			{
+				if (context.additiveExpression(0).GetText() == "true")
+					return null;
+				else
+					return context.additiveExpression(0);
+			}
 
 			if (context.GetChild(1).GetText() == "=")
 			{
