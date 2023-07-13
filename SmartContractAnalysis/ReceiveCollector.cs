@@ -40,21 +40,36 @@ namespace SmartContractAnalysis
 					if (components[0] == "self")
 						components.RemoveAt(0);
 
-					//Debug.Assert(definitions.ContainsKey(obj));
-					if (localVariables.ContainsKey(components[0]))
-						ReceiveList.Add(localVariables[components[0]]);
-					else if (properties.ContainsKey(components[0]))
-						ReceiveList.Add(components[0]);
-					else if (globalProperties.ContainsKey(components[0]))
-						ReceiveList.Add(components[0]);
-					else
-						throw new FormatException($"{components[0]} is undefined.");
-
+					AddToReceiveList(components[0]);
 				}
+			}
+
+			exp = BooleanUtils.SomethingIsTrue(context);
+			if (exp != null)
+			{
+				var text = exp.GetText();
+				var components = new List<string>(text.Split('.'));
+				if (components[0] == "self")
+					components.RemoveAt(0);
+
+				AddToReceiveList(components[0]);
 			}
 
 
 			return base.VisitEqualityExpression(context);
+		}
+
+		private void AddToReceiveList(string key)
+		{
+			//Debug.Assert(definitions.ContainsKey(obj));
+			if (localVariables.ContainsKey(key))
+				ReceiveList.Add(localVariables[key]);
+			else if (properties.ContainsKey(key))
+				ReceiveList.Add(key);
+			else if (globalProperties.ContainsKey(key))
+				ReceiveList.Add(key);
+			else
+				throw new FormatException($"{key} is undefined.");
 		}
 	}
 }
