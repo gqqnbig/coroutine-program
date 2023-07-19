@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
+
 using Antlr4.Runtime.Misc;
 using DiffSyntax.Antlr;
 using GeneratorCalculation;
@@ -15,7 +17,14 @@ namespace SmartContractAnalysis
 		private readonly Dictionary<string, string> properties;
 		private readonly Dictionary<string, string> globalProperties;
 
-		public List<ConcreteType> ReceiveList { get; } = new List<ConcreteType>();
+
+		/// <summary>
+		/// Mapping from identifier to its type
+		/// </summary>
+		/// <remarks>
+		/// When we meet the same identifier twice, we then know do not add the type twice.
+		/// </remarks>
+		private List<KeyValuePair<string, ConcreteType>> receivedObjects = new List<KeyValuePair<string, ConcreteType>>();
 
 		public ReceiveCollector(Dictionary<string, string> localVariables,
 								Dictionary<string, string> properties,
@@ -25,6 +34,11 @@ namespace SmartContractAnalysis
 			this.localVariables = localVariables;
 			this.properties = properties;
 			this.globalProperties = globalProperties;
+		}
+
+		public List<ConcreteType> GetReceiveList()
+		{
+			return receivedObjects.Select(p => p.Value).ToList();
 		}
 
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
@@ -55,10 +69,20 @@ namespace SmartContractAnalysis
 				{
 					var obj = m.Groups[1].Value;
 					if (localVariables.ContainsKey(obj))
-						ReceiveList.Add(localVariables[obj]);
+					{
+						if (receivedObjects.All(p => p.Key != obj))
+							receivedObjects.Add(new KeyValuePair<string, ConcreteType>(obj, localVariables[obj]));
+					}
 					else
 						throw new NotImplementedException($"{obj} is to be checked in DB, but it's not defined locally.");
 
+					return true;
+				}
+
+				if (text.EndsWith(".oclIsUndefined()"))
+				{
+					var obj = text.Substring(0, text.Length - ".oclIsUndefined()".Length);
+					//Do nothing
 					return base.VisitEqualityExpression(context);
 				}
 
@@ -77,15 +101,18 @@ namespace SmartContractAnalysis
 
 		private void AddToReceiveList(string key)
 		{
-			//Debug.Assert(definitions.ContainsKey(obj));
+			string t;
 			if (localVariables.ContainsKey(key))
-				ReceiveList.Add(localVariables[key]);
+				t = localVariables[key];
 			else if (properties.ContainsKey(key))
-				ReceiveList.Add(key);
+				t = key;
 			else if (globalProperties.ContainsKey(key))
-				ReceiveList.Add(key);
+				t = key;
 			else
 				throw new FormatException($"{key} is undefined.");
+
+			if (receivedObjects.All(p => p.Key != t))
+				receivedObjects.Add(new KeyValuePair<string, ConcreteType>(key, t));
 		}
 	}
 }

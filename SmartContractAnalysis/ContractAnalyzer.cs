@@ -47,11 +47,12 @@ namespace SmartContractAnalysis
 
 			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
-			var yieldList = YieldCollector.GetYieldList(definitions, classDef.Properties, global.Properties, c.ReceiveList, tree.postcondition());
+			var receiveList = c.GetReceiveList();
+			var yieldList = YieldCollector.GetYieldList(definitions, classDef.Properties, global.Properties, receiveList, tree.postcondition());
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 
-			var g = new Generator($"{className}::{methodName}", new CoroutineType(new SequenceType(c.ReceiveList), new SequenceType(yieldList), $"{className}::{methodName}"));
+			var g = new Generator($"{className}::{methodName}", new CoroutineType(new SequenceType(receiveList), new SequenceType(yieldList), $"{className}::{methodName}"));
 			var n = g.Type.Normalize();
 			if (n == ConcreteType.Void)
 				return null;
