@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime.Misc;
 using DiffSyntax.Antlr;
 using GeneratorCalculation;
@@ -48,6 +49,21 @@ namespace SmartContractAnalysis
 			if (exp != null)
 			{
 				var text = exp.GetText();
+				Regex regex = new Regex(@"->includes\((\w+)\)$");
+				var m = regex.Match(text);
+				if (m.Success)
+				{
+					var obj = m.Groups[1].Value;
+					if (localVariables.ContainsKey(obj))
+						ReceiveList.Add(localVariables[obj]);
+					else
+						throw new NotImplementedException($"{obj} is to be checked in DB, but it's not defined locally.");
+
+					return base.VisitEqualityExpression(context);
+				}
+
+
+
 				var components = new List<string>(text.Split('.'));
 				if (components[0] == "self")
 					components.RemoveAt(0);
