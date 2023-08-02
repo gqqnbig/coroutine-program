@@ -41,6 +41,17 @@ namespace SmartContractAnalysis
 			return receivedObjects.Select(p => p.Value).ToList();
 		}
 
+		public override bool VisitBasicExpression([NotNull] REModelParser.BasicExpressionContext context)
+		{
+			if (context.ChildCount > 0)
+			{
+				if (context.GetChild(0).GetText().EndsWith("oclIsTypeOf"))
+					return base.Visit(context.GetChild(0)); // don't visit the argument of oclIsTypeOf because it's a type.
+			}
+
+			return base.VisitBasicExpression(context);
+		}
+
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
 		{
 			// obj.oclIsUndefined() = false
