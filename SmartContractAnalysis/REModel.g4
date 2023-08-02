@@ -28,6 +28,10 @@ basicExpression
     | '(' expression ')'
     ;
 
+conditionalExpression
+    : 'if' expression 'then' expression ('else' expression)? 'endif'
+    ;
+
 letExpression
     : 'let' ID ':' type 'in' expression
     ;
