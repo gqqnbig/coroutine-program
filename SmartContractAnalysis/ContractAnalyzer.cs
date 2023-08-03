@@ -36,19 +36,21 @@ namespace SmartContractAnalysis
 			//if (methodName != "makeNewOrder")
 			//	return;
 
+			var parameters = ParametersCollector.CollectParameters(tree.parameterDeclarations());
+
 			Dictionary<string, string> definitions = new Dictionary<string, string>();
 			if (tree.definitions() != null)
 				foreach (var def in tree.definitions().definition())
 					definitions.Add(def.ID().GetText(), def.type().GetText());
 
 
-			var c = new ReceiveCollector(definitions, service.Properties, global.Properties);
+			var c = new ReceiveCollector(definitions, parameters, service.Properties, global.Properties);
 			c.Visit(tree.precondition());
 
 			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
 			var receiveList = c.GetReceiveList();
-			var yieldList = YieldCollector.GetYieldList(definitions, service.Properties, global.Properties, receiveList, tree.postcondition());
+			var yieldList = YieldCollector.GetYieldList(definitions, parameters, service.Properties, global.Properties, receiveList, tree.postcondition());
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 

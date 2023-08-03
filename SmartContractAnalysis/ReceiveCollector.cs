@@ -14,6 +14,7 @@ namespace SmartContractAnalysis
 	class ReceiveCollector : REModelBaseVisitor<bool>
 	{
 		private readonly Dictionary<string, string> localVariables;
+		private readonly ICollection<string> parameters;
 		private readonly Dictionary<string, string> properties;
 		private readonly Dictionary<string, string> globalProperties;
 
@@ -27,11 +28,13 @@ namespace SmartContractAnalysis
 		private List<KeyValuePair<string, ConcreteType>> receivedObjects = new List<KeyValuePair<string, ConcreteType>>();
 
 		public ReceiveCollector(Dictionary<string, string> localVariables,
+								ICollection<string> parameters,
 								Dictionary<string, string> properties,
 								Dictionary<string, string> globalProperties
 								)
 		{
 			this.localVariables = localVariables;
+			this.parameters = parameters;
 			this.properties = properties;
 			this.globalProperties = globalProperties;
 		}
@@ -50,6 +53,38 @@ namespace SmartContractAnalysis
 			}
 
 			return base.VisitBasicExpression(context);
+		}
+
+		/// <summary>
+		/// Ignore if conditions
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		public override bool VisitConditionalExpression([NotNull] REModelParser.ConditionalExpressionContext context)
+		{
+			return true;
+		}
+
+		public override bool VisitLogicalExpression([NotNull] REModelParser.LogicalExpressionContext context)
+		{
+			if (context.ChildCount == 1)
+			{
+				//Ignore keywords in REModel.
+				//Today translates to LocalDate.now() in Java.
+				if (context.GetText() == "Today")
+					return true;
+
+				return base.VisitLogicalExpression(context);
+			}
+
+			if (context.ChildCount == 3 && context.GetChild(1).GetText() == "and")
+			{
+				VisitLogicalExpression(context.logicalExpression(0));
+				VisitLogicalExpression(context.logicalExpression(1));
+				return true;
+			}
+
+			return true;
 		}
 
 		public override bool VisitEqualityExpression([NotNull] REModelParser.EqualityExpressionContext context)
@@ -125,6 +160,8 @@ namespace SmartContractAnalysis
 				t = key;
 			else if (globalProperties.ContainsKey(key))
 				t = key;
+			else if (parameters.Contains(key))
+				return;
 			else
 				throw new FormatException($"{key} is undefined.");
 
