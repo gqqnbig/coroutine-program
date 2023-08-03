@@ -32,6 +32,15 @@ namespace GeneratorCalculation
 			Yield = yield;
 		}
 
+		public GeneratorType(Condition condition, PaperType receive, PaperType @yield)
+		{
+			Condition = condition;
+			Receive = receive;
+			Yield = yield;
+		}
+
+		public Condition Condition { get; }
+
 		public PaperType Yield { get; }
 
 		public PaperType Receive { get; }
@@ -140,7 +149,9 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			if (ForbiddenBindings.Count == 0)
+			if (Condition != null)
+				return $"[{Receive}; {Yield}] where {Condition}";
+			else if (ForbiddenBindings.Count == 0)
 				return $"[{Receive}; {Yield}]";
 			else
 			{
@@ -220,7 +231,14 @@ namespace GeneratorCalculation
 
 		public virtual PaperType Normalize()
 		{
-			var g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
+			GeneratorType g;
+			if (Condition != null)
+				g = new GeneratorType(Condition, Receive.Normalize(), Yield.Normalize());
+			else if (ForbiddenBindings != null)
+				g = new GeneratorType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
+			else
+				g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
+
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
 				return ConcreteType.Void;
 			else
@@ -270,6 +288,12 @@ namespace GeneratorCalculation
 		}
 
 		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(forbiddenBindings, receive, yield)
+		{
+			Source = source;
+			CanRestore = canRestore;
+		}
+
+		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, yield, receive)
 		{
 			Source = source;
 			CanRestore = canRestore;
@@ -340,7 +364,14 @@ namespace GeneratorCalculation
 
 		public override PaperType Normalize()
 		{
-			var g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
+			CoroutineType g;
+			if (Condition != null)
+				g = new CoroutineType(Condition, Receive.Normalize(), Yield.Normalize());
+			else if (ForbiddenBindings != null)
+				g = new CoroutineType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
+			else
+				g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
+			
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
 				return ConcreteType.Void;
 			else
