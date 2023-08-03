@@ -64,7 +64,7 @@ postcondition:
 
 contractDefinition
       : ('static')? 'Contract' ID '::' ID
-        '(' parameterDeclarations? ')' ':' type
+        '(' parameterDeclarations? ')' (':' type)?
         '{'
         definitions?
         precondition?
