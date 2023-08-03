@@ -31,7 +31,7 @@ namespace SmartContractAnalysis
 			var service = serviceDefinitions[className];
 			var global = serviceDefinitions.Values.First(d => d.Name.EndsWith("System"));
 
-			var classDef = serviceDefinitions.Values.First(d => d.Name == className);
+			//var classDef = serviceDefinitions.Values.First(d => d.Name == className);
 
 			//if (methodName != "makeNewOrder")
 			//	return;
@@ -48,7 +48,7 @@ namespace SmartContractAnalysis
 			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
 			var receiveList = c.GetReceiveList();
-			var yieldList = YieldCollector.GetYieldList(definitions, classDef.Properties, global.Properties, receiveList, tree.postcondition());
+			var yieldList = YieldCollector.GetYieldList(definitions, service.Properties, global.Properties, receiveList, tree.postcondition());
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 
