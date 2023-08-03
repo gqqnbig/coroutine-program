@@ -42,6 +42,7 @@ reFactor2Expression:
    | factor2Expression '->forAll' '(' identifier ':' type '|' expression ')'
    | factor2Expression '->select' '(' identifier ':' type '|' expression ')'
    | factor2Expression '->collect' '(' identifier ':' type '|' expression ')'
+   | factor2Expression '->exists' '(' identifier ':' type '|' expression ')'
    | factor2Expression;
 
 factorExpression
