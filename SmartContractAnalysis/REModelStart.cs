@@ -17,7 +17,9 @@ namespace SmartContractAnalysis
 			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
 			string content = File.ReadAllText(path);
 
-			var generators = GetAllGenerators(content);
+
+			var inheritance = GetObjectInheritance(content);
+			var generators = GetAllGenerators(content, inheritance);
 
 
 
@@ -70,7 +72,23 @@ namespace SmartContractAnalysis
 
 		}
 
-		private static List<Generator> GetAllGenerators(string content)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="content"></param>
+		/// <returns>subclass : superclass</returns>
+		private static Dictionary<string, string> GetObjectInheritance(string content)
+		{
+			var result = new Dictionary<string, string>();
+			foreach (Match m in Regex.Matches(content, @"Actor\s+(\w+)\s+extends\s+(\w+)"))
+			{
+				result.Add(m.Groups[1].Value, m.Groups[2].Value);
+			}
+
+			return result;
+		}
+
+		private static List<Generator> GetAllGenerators(string content, Dictionary<string, string> inheritance)
 		{
 			Dictionary<string, ServiceBlock> serviceDefinitions = CollectProperties(content).ToDictionary(d => d.Name);
 
@@ -94,7 +112,7 @@ namespace SmartContractAnalysis
 				string sectionContent = content.Substring(contractIndex, sectionEndIndex - contractIndex + 1);
 
 				// Step 3: Parse the section using the Antlr4 parser.
-				var g = ContractAnalyzer.GetGenerator(serviceDefinitions, sectionContent);
+				var g = ContractAnalyzer.GetGenerator(serviceDefinitions, sectionContent, inheritance);
 				if (g != null)
 					generators.Add(g);
 

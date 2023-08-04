@@ -10,18 +10,18 @@ namespace SmartContractAnalysis
 {
 	public class ContractAnalyzer
 	{
-		public static Generator GetGenerator(Dictionary<string, ServiceBlock> serviceDefinitions, string code)
+		public static Generator GetGenerator(Dictionary<string, ServiceBlock> serviceDefinitions, string code, Dictionary<string, string> inheritance)
 		{
 			AntlrInputStream inputStream = new AntlrInputStream(code);
 			REModelLexer lexer = new REModelLexer(inputStream);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			REModelParser parser = new REModelParser(tokens);
 			REModelParser.ContractDefinitionContext tree = parser.contractDefinition();
-			return ProcessContract(serviceDefinitions, tree);
+			return ProcessContract(serviceDefinitions, tree, inheritance);
 		}
 
 
-		static Generator ProcessContract(Dictionary<string, ServiceBlock> serviceDefinitions, REModelParser.ContractDefinitionContext tree)
+		static Generator ProcessContract(Dictionary<string, ServiceBlock> serviceDefinitions, REModelParser.ContractDefinitionContext tree, Dictionary<string, string> inheritance)
 		{
 			string className = tree.ID(0).GetText();
 			string methodName = tree.ID(1).GetText();
@@ -49,12 +49,23 @@ namespace SmartContractAnalysis
 
 			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
-			var receiveList = c.GetReceiveList();
-			var yieldList = YieldCollector.GetYieldList(definitions, parameters, service.Properties, global.Properties, receiveList, tree.postcondition());
+			List<ConcreteType> receiveList = c.GetReceiveList();
+			List<ConcreteType> yieldList = YieldCollector.GetYieldList(definitions, parameters, service.Properties, global.Properties, receiveList, tree.postcondition());
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 
-			var g = new Generator($"{className}::{methodName}", new CoroutineType(new SequenceType(receiveList), new SequenceType(yieldList), $"{className}::{methodName}"));
+			List<PaperType> receiveList2;
+			List<PaperType> yieldList2;
+			var condition = ReplaceSuperclasses(inheritance, receiveList, yieldList, out receiveList2, out yieldList2);
+
+
+			CoroutineType ct;
+			if (condition == null)
+				ct = new CoroutineType(new SequenceType(receiveList), new SequenceType(yieldList), $"{className}::{methodName}");
+			else
+				ct = new CoroutineType(condition, new SequenceType(receiveList2), new SequenceType(yieldList2), $"{className}::{methodName}");
+
+			var g = new Generator($"{className}::{methodName}", ct);
 			var n = g.Type.Normalize();
 			if (n == ConcreteType.Void)
 				return null;
@@ -65,6 +76,73 @@ namespace SmartContractAnalysis
 			}
 		}
 
+
+		static List<string> GetSubclasses(Dictionary<string, string> inheritance, string superclass)
+		{
+			var matches = inheritance.Where(pair => pair.Value == superclass)
+				.Select(pair => pair.Key);
+			return matches.ToList();
+		}
+
+
+		static Condition ReplaceSuperclasses(Dictionary<string, string> inheritance,
+										List<ConcreteType> receiveList, List<ConcreteType> yieldList,
+										out List<PaperType> receiveList2, out List<PaperType> yieldList2)
+		{
+			int usedVariable = 0;
+			Dictionary<string, char> variableMapping = new Dictionary<string, char>();
+			receiveList2 = new List<PaperType>(receiveList);
+			for (var i = 0; i < receiveList.Count; i++)
+			{
+				var t = receiveList[i];
+				var subclasses = GetSubclasses(inheritance, t.Name);
+				if (subclasses.Count == 0)
+					continue;
+
+				if (variableMapping.TryGetValue(t.Name, out char v) == false)
+				{
+					v = (char)((int)'a' + usedVariable);
+					variableMapping[t.Name] = v;
+					usedVariable++;
+				}
+
+				receiveList2[i] = new PaperVariable(v.ToString());
+			}
+
+
+			yieldList2 = new List<PaperType>(yieldList);
+			for (int i = 0; i < yieldList.Count; i++)
+			{
+				if (variableMapping.TryGetValue(yieldList[i].Name, out char v))
+					yieldList2[i] = new PaperVariable(v.ToString());
+			}
+
+
+			var em = variableMapping.GetEnumerator();
+			if (em.MoveNext() == false)
+				return null;
+
+			Condition c = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) };
+			if (em.MoveNext() == false)
+				return c;
+
+			Condition c2 = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) };
+			c = new AndCondition { Condition1 = c, Condition2 = c2 };
+			if (em.MoveNext() == false)
+				return c;
+
+			do
+			{
+				c = new AndCondition
+				{
+					Condition1 = c,
+					Condition2 = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) }
+				};
+
+			} while (em.MoveNext());
+
+			return c;
+		}
 
 	}
 }
