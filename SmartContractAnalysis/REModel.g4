@@ -33,7 +33,7 @@ conditionalExpression
     ;
 
 letExpression
-    : 'let' ID ':' type 'in' expression
+    : 'let' (ID ':' type ',')* ID ':' type 'in' expression
     ;
 
 //Special syntax in REModel

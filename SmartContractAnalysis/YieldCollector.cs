@@ -66,7 +66,9 @@ namespace SmartContractAnalysis
 
 		public override bool VisitLetExpression([NotNull] REModelParser.LetExpressionContext context)
 		{
-			letVariables.Add(context.ID().GetText(), context.type().GetText());
+			for (int i = 0; i < context.ID().Length; i++)
+				letVariables.Add(context.ID(i).GetText(), context.type(i).GetText());
+
 			return VisitExpression(context.expression());
 		}
 
