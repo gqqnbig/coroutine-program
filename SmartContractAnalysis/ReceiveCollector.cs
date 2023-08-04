@@ -144,7 +144,9 @@ namespace SmartContractAnalysis
 				if (components[0] == "self")
 					components.RemoveAt(0);
 
-				AddToReceiveList(components[0]);
+				//If it is a method call, do not add the method.
+				if (components[0].Contains("(") == false)
+					AddToReceiveList(components[0]);
 			}
 
 
