@@ -31,7 +31,7 @@ namespace SmartContractAnalysis.Tests
 			systemService.Properties.Add("CurrentStore", "Store");
 			serviceDefinitions.Add("System", systemService);
 
-			var generator = ContractAnalyzer.GetGenerator(serviceDefinitions, code);
+			var generator = ContractAnalyzer.GetGenerator(serviceDefinitions, code, new Dictionary<string, string>());
 			var count = CountStringOccurrence(generator.Type.Yield.ToString(), "CurrentSale");
 			Assert.True(count == 1, "makeCashPayment should only yield CurrentSale once.");
 		}
