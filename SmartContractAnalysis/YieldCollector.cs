@@ -72,11 +72,13 @@ namespace SmartContractAnalysis
 			return VisitExpression(context.expression());
 		}
 
+		/// <summary>
+		/// Ignore if conditions
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
 		public override bool VisitConditionalExpression([NotNull] REModelParser.ConditionalExpressionContext context)
 		{
-			//skip the if part
-			Visit(context.expression(1));
-			Visit(context.expression(2));
 			return true;
 		}
 
