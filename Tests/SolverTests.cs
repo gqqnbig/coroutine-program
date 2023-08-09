@@ -159,5 +159,27 @@ namespace GeneratorCalculationTests
 
 		}
 
+		/// <summary>
+		/// r1 and r2 are in a tuple and they are composed first. They dead lock.
+		/// Nevertheless, l should activate r1, and return a simple coroutine.
+		/// </summary>
+		[Fact]
+		public void ComposeTupleOfCoroutines()
+		{
+			var bindings = new Dictionary<PaperVariable, PaperWord>();
+			bindings.Add("r1", new CoroutineType((ConcreteType)"A", (ConcreteType)"B"));
+			bindings.Add("r2", new CoroutineType((ConcreteType)"B", (ConcreteType)"D"));
+
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("", new GeneratorType(new TupleType((PaperVariable)"r1", (PaperVariable)"r2"), ConcreteType.Void)));
+			coroutines.Add(new Generator("l", new CoroutineType(ConcreteType.Void, (ConcreteType)"A")));
+
+
+			var result = new Solver().SolveWithBindings(coroutines, bindings);
+			Assert.Equal(ConcreteType.Void, result.Receive);
+			Assert.Equal((ConcreteType)"D", result.Yield);
+
+		}
+
 	}
 }
