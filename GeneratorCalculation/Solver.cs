@@ -270,7 +270,16 @@ namespace GeneratorCalculation
 					{
 						if (tTuple.Types.All(t => t is GeneratorType))
 						{
-							yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), constants);
+							try
+							{
+								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), constants);
+							}
+							catch (DeadLockException e)
+							{
+								yieldedType = new SequenceType(e.YieldsToOutside);
+								foreach (var eg in e.LockedGenerators)
+									pairs.Insert(i + 1, eg);
+							}
 						}
 					}
 
@@ -278,6 +287,10 @@ namespace GeneratorCalculation
 					if (yieldedType is GeneratorType)
 					{
 						pairs.Insert(i + 1, new Generator("", (GeneratorType)yieldedType));
+					}
+					else if (yieldedType is SequenceType ys)
+					{
+						yieldsToOutside.AddRange(ys.Types);
 					}
 					else
 					{
