@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace GeneratorCalculation
@@ -109,9 +110,18 @@ namespace GeneratorCalculation
 			//}
 
 
+			StringBuilder sb = new StringBuilder();
 			foreach (var g in coroutines)
 			{
-				logger.LogInformation($"{g.Name}:\t{g.Type}");
+				sb.AppendLine($"{g.Name}:\t{g.Type}");
+			}
+
+			Console.WriteLine("compose({0})", sb);
+			if (bindings.Count > 0)
+			{
+				var m = from p in bindings
+						select p.Key.ToString() + "=" + p.Value.ToString();
+				Console.WriteLine("where " + string.Join(",\n", m) + "\n.");
 			}
 
 			List<string> availableConstants = BuildAvailableNames(coroutines, bindings);
