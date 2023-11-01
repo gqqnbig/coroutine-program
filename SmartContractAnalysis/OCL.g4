@@ -171,6 +171,7 @@ logicalExpression
     | logicalExpression '=>' logicalExpression  
     | logicalExpression 'implies' logicalExpression  
     | equalityExpression
+    | conditionalExpression
     ; 
 
 equalityExpression 

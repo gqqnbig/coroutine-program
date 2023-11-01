@@ -13,38 +13,36 @@ namespace SmartContractAnalysis
 	{
 		static void Main(string[] args)
 		{
-			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
+			string path = @"D:\rm2pt\CaseStudies\LibraryMS\Requirementmodel\library.remodel";
 
-			string[] interestedCoroutines =
-			{
-				"CoCoMESystem::openStore",
-				"CoCoMESystem::openCashDesk",
-				"ProcessSaleService::makeNewSale",
-				"ProcessSaleService::enterItem",
-				"ManageStoreCRUDService::createStore",
-				"ManageCashDeskCRUDService::createCashDesk",
-				"ManageItemCRUDService::createItem",
+			string[] interestedCoroutines = null;
+			//{
+			//	"AutomatedTellerMachineSystem::inputCard",
+			//	"AutomatedTellerMachineSystem::inputPassword",
+			//	"AutomatedTellerMachineSystem::printReceipt",
+			//	"AutomatedTellerMachineSystem::checkBalance",
+			//	"AutomatedTellerMachineSystem::ejectCard",
+			//	"AutomatedTellerMachineSystem::withdrawCash",
+			//	"AutomatedTellerMachineSystem::depositFunds",
 
-				"ProcessSaleService::makeCashPayment",
-				//"ProcessSaleService::makeCardPayment",
-			};
-			string[] lowPriorityCoroutines =
-			{
-				"ManageItemCRUDService::deleteItem",
-				"ManageStoreCRUDService::deleteStore",
-				"ManageCashDeskCRUDService::deleteCashDesk",
-			};
+			//	"ManageBankCardCRUDService::createBankCard",
 
-
+			//};
+			string[] lowPriorityCoroutines = null;
+			//{
+			//	"ManageBankCardCRUDService::deleteBankCard",
+			//};
+			
+			
 
 			List<Generator> generators = FindTypes(path);
 
 			foreach (var g in generators)
 				Console.WriteLine($"{g.Name}:\t{g.Type}");
 
-			Console.WriteLine("\nNow, let's compose interested coroutines.");
-			GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
-			Console.WriteLine(result);
+			//Console.WriteLine("\nNow, let's compose interested coroutines.");
+			//GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
+			//Console.WriteLine(result);
 
 		}
 
