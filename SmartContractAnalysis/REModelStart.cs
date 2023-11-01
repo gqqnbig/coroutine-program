@@ -13,15 +13,7 @@ namespace SmartContractAnalysis
 	{
 		static void Main(string[] args)
 		{
-			// Step 1: Load the file content into a string.
 			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
-			string content = File.ReadAllText(path);
-
-
-			var inheritance = GetObjectInheritance(content);
-			var generators = GetAllGenerators(content, inheritance);
-
-
 
 			string[] interestedCoroutines =
 			{
@@ -35,7 +27,6 @@ namespace SmartContractAnalysis
 
 				"ProcessSaleService::makeCashPayment",
 				//"ProcessSaleService::makeCardPayment",
-
 			};
 			string[] lowPriorityCoroutines =
 			{
@@ -44,32 +35,48 @@ namespace SmartContractAnalysis
 				"ManageCashDeskCRUDService::deleteCashDesk",
 			};
 
+
+
+			List<Generator> generators = FindTypes(path);
+
 			foreach (var g in generators)
-			{
 				Console.WriteLine($"{g.Name}:\t{g.Type}");
-			}
 
 			Console.WriteLine("\nNow, let's compose interested coroutines.");
+			GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
+			Console.WriteLine(result);
+
+		}
+
+		public static List<Generator> FindTypes(string remodelPath)
+		{
+			string content = File.ReadAllText(remodelPath);
 
 
+			var inheritance = GetObjectInheritance(content);
+			return GetAllGenerators(content, inheritance);
+		}
+
+		public static GeneratorType Compose(List<Generator> generators, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
+		{
+			List<Generator> filtered;
+			if (interestedCoroutines != null)
+				filtered = generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1).ToList();
+			else
+				filtered = generators;
 
 			var bindings = new Dictionary<PaperVariable, PaperWord>();
-			foreach (var g in generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1))
-			{
+			foreach (var g in filtered)
 				bindings.Add(g.Name, g.Type);
-			}
 
 			var coroutines = new List<Generator>();
 
 			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
-			coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
+			if (lowPriorityCoroutines != null)
+				coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 
 
-
-			var result = new Solver().SolveWithBindings(coroutines, bindings);
-			Console.WriteLine(result);
-
-
+			return new Solver().SolveWithBindings(coroutines, bindings);
 		}
 
 		/// <summary>
