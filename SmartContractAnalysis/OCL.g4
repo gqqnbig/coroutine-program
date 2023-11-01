@@ -269,18 +269,8 @@ factor2Expression
    | factor2Expression ('->oclAsType' | '->oclIsTypeOf' | 
                        '->oclIsKindOf' | 
                        '->oclAsSet') '(' expression ')' 
-   | factor2Expression '->collect' '(' identifier '|' expression ')' 
-   | factor2Expression '->select' '(' identifier '|' expression ')' 
-   | factor2Expression '->reject' '(' identifier '|' expression ')' 
-   | factor2Expression '->forAll' '(' identifier '|' expression ')' 
-   | factor2Expression '->exists' '(' identifier '|' expression ')' 
-   | factor2Expression '->exists1' '(' identifier '|' expression ')' 
-   | factor2Expression '->one' '(' identifier '|' expression ')' 
-   | factor2Expression '->any' '(' identifier '|' expression ')' 
-   | factor2Expression '->closure' '(' identifier '|' expression ')' 
-   | factor2Expression '->sortedBy' '(' identifier '|' expression ')' 
-   | factor2Expression '->isUnique' '(' identifier '|' expression ')' 
-
+   | factor2Expression '->' ID '(' expression? ')'
+   | factor2Expression '->' ID '(' ID (':' type)? '|' expression ')'
    | factor2Expression '->subrange' '(' expression ',' expression ')'  
    | factor2Expression '->replace' '(' expression ',' expression ')'  
    | factor2Expression '->replaceAll' '(' expression ',' expression ')' 
@@ -289,7 +279,7 @@ factor2Expression
    | factor2Expression '->insertAt' '(' expression ',' expression ')'  
    | factor2Expression '->insertInto' '(' expression ',' expression ')'  
    | factor2Expression '->setAt' '(' expression ',' expression ')' 
-   | factor2Expression '->iterate' '(' identifier ';' identifier '=' expression '|' expression ')'  
+   | factor2Expression '->iterate' '(' identifier (: type)? ';' identifier (: type)? '=' expression '|' expression ')'
    | setExpression 
    | basicExpression
    ; 

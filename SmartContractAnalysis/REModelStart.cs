@@ -9,41 +9,43 @@ using GeneratorCalculation;
 
 namespace SmartContractAnalysis
 {
-	class REModelStart
+	public class REModelStart
 	{
 		static void Main(string[] args)
 		{
-			string path = @"D:\rm2pt\CaseStudies\LibraryMS\Requirementmodel\library.remodel";
 
-			string[] interestedCoroutines = null;
-			//{
-			//	"AutomatedTellerMachineSystem::inputCard",
-			//	"AutomatedTellerMachineSystem::inputPassword",
-			//	"AutomatedTellerMachineSystem::printReceipt",
-			//	"AutomatedTellerMachineSystem::checkBalance",
-			//	"AutomatedTellerMachineSystem::ejectCard",
-			//	"AutomatedTellerMachineSystem::withdrawCash",
-			//	"AutomatedTellerMachineSystem::depositFunds",
+			// Step 1: Load the file content into a string.
+			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
 
-			//	"ManageBankCardCRUDService::createBankCard",
+			string[] interestedCoroutines =
+			{
+				"CoCoMESystem::openStore",
+				"CoCoMESystem::openCashDesk",
+				"ProcessSaleService::makeNewSale",
+				"ProcessSaleService::enterItem",
+				"ManageStoreCRUDService::createStore",
+				"ManageCashDeskCRUDService::createCashDesk",
+				"ManageItemCRUDService::createItem",
 
-			//};
-			string[] lowPriorityCoroutines = null;
-			//{
-			//	"ManageBankCardCRUDService::deleteBankCard",
-			//};
-			
-			
+				"ProcessSaleService::makeCashPayment",
+				//"ProcessSaleService::makeCardPayment",
+
+			};
+			string[] lowPriorityCoroutines =
+			{
+				"ManageItemCRUDService::deleteItem",
+				"ManageStoreCRUDService::deleteStore",
+				"ManageCashDeskCRUDService::deleteCashDesk",
+			};
 
 			List<Generator> generators = FindTypes(path);
 
 			foreach (var g in generators)
 				Console.WriteLine($"{g.Name}:\t{g.Type}");
 
-			//Console.WriteLine("\nNow, let's compose interested coroutines.");
-			//GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
-			//Console.WriteLine(result);
-
+			Console.WriteLine("\nNow, let's compose interested coroutines.");
+			GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
+			Console.WriteLine(result);
 		}
 
 		public static List<Generator> FindTypes(string remodelPath)
@@ -82,7 +84,7 @@ namespace SmartContractAnalysis
 		/// </summary>
 		/// <param name="content"></param>
 		/// <returns>subclass : superclass</returns>
-		private static Dictionary<string, string> GetObjectInheritance(string content)
+		public static Dictionary<string, string> GetObjectInheritance(string content)
 		{
 			var result = new Dictionary<string, string>();
 			foreach (Match m in Regex.Matches(content, @"Actor\s+(\w+)\s+extends\s+(\w+)"))
@@ -93,7 +95,7 @@ namespace SmartContractAnalysis
 			return result;
 		}
 
-		private static List<Generator> GetAllGenerators(string content, Dictionary<string, string> inheritance)
+		public static List<Generator> GetAllGenerators(string content, Dictionary<string, string> inheritance)
 		{
 			Dictionary<string, ServiceBlock> serviceDefinitions = CollectProperties(content).ToDictionary(d => d.Name);
 
