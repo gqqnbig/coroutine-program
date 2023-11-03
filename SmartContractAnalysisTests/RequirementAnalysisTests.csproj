@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SmartContractAnalysis\SmartContractAnalysis.csproj" />
+    <ProjectReference Include="..\SmartContractAnalysis\RequirementAnalysis.csproj" />
 	<EmbeddedResource Include="cocome.remodel" />
   </ItemGroup>
 
