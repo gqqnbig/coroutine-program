@@ -4,7 +4,7 @@ using System.Text;
 using Antlr4.Runtime.Misc;
 using DiffSyntax.Antlr;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	class ParametersCollector : REModelBaseVisitor<bool>
 	{

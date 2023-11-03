@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using DiffSyntax.Antlr;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	class BooleanUtils
 	{

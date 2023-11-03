@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Xunit;
 
-namespace SmartContractAnalysis.Tests
+namespace RequirementAnalysis.Tests
 {
 	public class ContractTests
 	{

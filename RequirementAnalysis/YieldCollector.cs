@@ -7,7 +7,7 @@ using GeneratorCalculation;
 using System.Text.RegularExpressions;
 using System.Linq;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	/// <summary>
 	/// This class collects the yielding types from the post condition section from a service definition.

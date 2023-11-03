@@ -9,7 +9,7 @@ using Antlr4.Runtime.Misc;
 using DiffSyntax.Antlr;
 using GeneratorCalculation;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	class ReceiveCollector : REModelBaseVisitor<bool>
 	{

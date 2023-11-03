@@ -6,7 +6,7 @@ using Antlr4.Runtime;
 using DiffSyntax.Antlr;
 using GeneratorCalculation;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	public class ContractAnalyzer
 	{

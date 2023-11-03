@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneratorCalculation", "Gen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneratorCalculationTests", "Tests\GeneratorCalculationTests.csproj", "{B26D55B5-DE2F-46BF-BC25-47D245D78577}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysis", "SmartContractAnalysis\RequirementAnalysis.csproj", "{FF3257A3-6B34-47D6-9281-06333AF37B68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysis", "RequirementAnalysis\RequirementAnalysis.csproj", "{FF3257A3-6B34-47D6-9281-06333AF37B68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysisTests", "SmartContractAnalysisTests\RequirementAnalysisTests.csproj", "{757DEF4C-8700-4F26-B594-01202852A22E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysisTests", "RequirementAnalysisTests\RequirementAnalysisTests.csproj", "{757DEF4C-8700-4F26-B594-01202852A22E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

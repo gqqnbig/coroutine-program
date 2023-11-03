@@ -6,7 +6,7 @@ using System.Reflection;
 using GeneratorCalculation;
 using Xunit;
 
-namespace SmartContractAnalysis.Tests
+namespace RequirementAnalysis.Tests
 {
 	public class CocomeTest
 	{

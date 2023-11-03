@@ -7,7 +7,7 @@ using DiffSyntax.Antlr;
 using System.Linq;
 using GeneratorCalculation;
 
-namespace SmartContractAnalysis
+namespace RequirementAnalysis
 {
 	public class REModelStart
 	{
