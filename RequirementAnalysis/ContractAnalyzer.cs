@@ -49,8 +49,8 @@ namespace RequirementAnalysis
 
 			//Console.WriteLine("- receive: " + string.Join(", ", c.ReceiveList));
 
-			List<ConcreteType> receiveList = c.GetReceiveList();
-			List<ConcreteType> yieldList = YieldCollector.GetYieldList(definitions, parameters, service.Properties, global.Properties, receiveList, tree.postcondition());
+			List<PaperType> receiveList = c.GetReceiveList();
+			List<PaperType> yieldList = YieldCollector.GetYieldList(definitions, parameters, service.Properties, global.Properties, receiveList, tree.postcondition());
 			//Console.WriteLine("- yield: " + string.Join(", ", yieldList));
 			//Console.WriteLine();
 
@@ -86,7 +86,7 @@ namespace RequirementAnalysis
 
 
 		static Condition ReplaceSuperclasses(Dictionary<string, string> inheritance,
-										List<ConcreteType> receiveList, List<ConcreteType> yieldList,
+										List<PaperType> receiveList, List<PaperType> yieldList,
 										out List<PaperType> receiveList2, out List<PaperType> yieldList2)
 		{
 			int usedVariable = 0;
@@ -94,7 +94,11 @@ namespace RequirementAnalysis
 			receiveList2 = new List<PaperType>(receiveList);
 			for (var i = 0; i < receiveList.Count; i++)
 			{
-				var t = receiveList[i];
+				var tt = receiveList[i];
+				ConcreteType t = tt as ConcreteType;
+				if (t == null)
+					continue;
+
 				var subclasses = GetSubclasses(inheritance, t.Name);
 				if (subclasses.Count == 0)
 					continue;
@@ -113,7 +117,11 @@ namespace RequirementAnalysis
 			yieldList2 = new List<PaperType>(yieldList);
 			for (int i = 0; i < yieldList.Count; i++)
 			{
-				if (variableMapping.TryGetValue(yieldList[i].Name, out char v))
+				var t = yieldList[i] as ConcreteType;
+				if (t == null)
+					continue;
+
+				if (variableMapping.TryGetValue(t.Name, out char v))
 					yieldList2[i] = new PaperVariable(v.ToString());
 			}
 

@@ -15,18 +15,18 @@ namespace RequirementAnalysis
 	class YieldCollector : REModelBaseVisitor<bool>
 	{
 
-		public static List<ConcreteType> GetYieldList(Dictionary<string, string> localVariables,
+		public static List<PaperType> GetYieldList(Dictionary<string, string> localVariables,
 														ICollection<string> parameters,
 														Dictionary<string, string> classProperties,
 														Dictionary<string, string> globalProperties,
-														List<ConcreteType> receiveList, REModelParser.PostconditionContext context)
+														List<PaperType> receiveList, REModelParser.PostconditionContext context)
 		{
 
 			var post = context.expression();
 			var y = new YieldCollector(localVariables, parameters, classProperties, globalProperties);
 			y.Visit(post);
 
-			List<ConcreteType> yieldList = new List<ConcreteType>(receiveList);
+			List<PaperType> yieldList = new List<PaperType>(receiveList);
 			yieldList.AddRange(y.ElementsAddedModified);
 			foreach (var t in y.PropertiesModified.OrderBy(c => c.Name))
 			{

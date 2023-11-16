@@ -25,7 +25,7 @@ namespace RequirementAnalysis
 		/// <remarks>
 		/// When we meet the same identifier twice, we then know do not add the type twice.
 		/// </remarks>
-		private List<KeyValuePair<string, ConcreteType>> receivedObjects = new List<KeyValuePair<string, ConcreteType>>();
+		private List<KeyValuePair<string, PaperType>> receivedObjects = new List<KeyValuePair<string, PaperType>>();
 
 		public ReceiveCollector(Dictionary<string, string> localVariables,
 								ICollection<string> parameters,
@@ -39,7 +39,7 @@ namespace RequirementAnalysis
 			this.globalProperties = globalProperties;
 		}
 
-		public List<ConcreteType> GetReceiveList()
+		public List<PaperType> GetReceiveList()
 		{
 			return receivedObjects.Select(p => p.Value).ToList();
 		}
@@ -123,7 +123,7 @@ namespace RequirementAnalysis
 					if (localVariables.ContainsKey(obj))
 					{
 						if (receivedObjects.All(p => p.Key != obj))
-							receivedObjects.Add(new KeyValuePair<string, ConcreteType>(obj, localVariables[obj]));
+							receivedObjects.Add(new KeyValuePair<string, PaperType>(obj, new ConcreteType(localVariables[obj])));
 					}
 					else
 						throw new NotImplementedException($"{obj} is to be checked in DB, but it's not defined locally.");
@@ -168,7 +168,15 @@ namespace RequirementAnalysis
 				throw new FormatException($"{key} is undefined.");
 
 			if (receivedObjects.All(p => p.Key != t))
-				receivedObjects.Add(new KeyValuePair<string, ConcreteType>(key, t));
+			{
+				if (t.StartsWith("Set("))
+				{
+					var sequence = new ListType(new ConcreteType(t.Substring(4, t.Length - 5)), PaperStar.Instance);
+					receivedObjects.Add(new KeyValuePair<string, PaperType>(key, sequence));
+				}
+				else
+					receivedObjects.Add(new KeyValuePair<string, PaperType>(key, new ConcreteType(t)));
+			}
 		}
 	}
 }
