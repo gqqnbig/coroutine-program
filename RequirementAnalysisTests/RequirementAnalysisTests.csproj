@@ -18,6 +18,7 @@
     <ProjectReference Include="..\RequirementAnalysis\RequirementAnalysis.csproj" />
 	<EmbeddedResource Include="cocome.remodel" />
 	<EmbeddedResource Include="library.remodel" />
+	<EmbeddedResource Include="loan.remodel" />
   </ItemGroup>
 
 </Project>
