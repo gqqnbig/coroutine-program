@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RequirementAnalysis\RequirementAnalysis.csproj" />
+    <EmbeddedResource Include="atm.remodel" />
 	<EmbeddedResource Include="cocome.remodel" />
 	<EmbeddedResource Include="library.remodel" />
 	<EmbeddedResource Include="loan.remodel" />
