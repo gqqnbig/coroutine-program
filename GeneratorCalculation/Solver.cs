@@ -120,7 +120,8 @@ namespace GeneratorCalculation
 			if (bindings.Count > 0)
 			{
 				var m = from p in bindings
-						select p.Key.ToString() + "=" + p.Value.ToString();
+						select p.Key.ToString() +
+						(p.Value == null ? " is a constant" : ("=" + p.Value.ToString()));
 				Console.WriteLine("where " + string.Join(",\n", m) + "\n.");
 			}
 
