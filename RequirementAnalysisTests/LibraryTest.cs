@@ -90,6 +90,10 @@ namespace RequirementAnalysis.Tests
 				"LibraryManagementSystemSystem::recommendBook",
 				"ListBookHistory::listRecommendBook",
 			};
+			string[] lowPriorityCoroutines =
+			{
+				"ManageUserCRUDService::deleteUser",
+			};
 
 			var bindings = new Dictionary<PaperVariable, PaperWord>();
 			foreach (var g in generators.Where(g => Array.IndexOf(interestedCoroutines, g.Name) != -1))
