@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysis", "Requ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequirementAnalysisTests", "RequirementAnalysisTests\RequirementAnalysisTests.csproj", "{757DEF4C-8700-4F26-B594-01202852A22E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Go", "Go\Go.csproj", "{BC6953FA-ABA3-4C1F-84E0-93C668005336}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{757DEF4C-8700-4F26-B594-01202852A22E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{757DEF4C-8700-4F26-B594-01202852A22E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{757DEF4C-8700-4F26-B594-01202852A22E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC6953FA-ABA3-4C1F-84E0-93C668005336}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC6953FA-ABA3-4C1F-84E0-93C668005336}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC6953FA-ABA3-4C1F-84E0-93C668005336}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC6953FA-ABA3-4C1F-84E0-93C668005336}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
