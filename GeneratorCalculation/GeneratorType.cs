@@ -269,6 +269,10 @@ namespace GeneratorCalculation
 		}
 	}
 
+	/// <summary>
+	/// This is an instance of a coroutine definition.
+	/// A definition turns into an instance by starting the definition.
+	/// </summary>
 	public class CoroutineType : GeneratorType
 	{
 		public PaperVariable Source { get; }
