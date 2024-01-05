@@ -150,13 +150,13 @@ namespace GeneratorCalculation
 		public override string ToString()
 		{
 			if (Condition != null)
-				return $"[{Receive}; {Yield}] where {Condition}";
+				return $"[{Receive}~~{Yield}] where {Condition}";
 			else if (ForbiddenBindings.Count == 0)
-				return $"[{Receive}; {Yield}]";
+				return $"[{Receive}~~{Yield}]";
 			else
 			{
 				string constrain = string.Join(", ", ForbiddenBindings.Select(p => p.Key + " not in {" + string.Join(", ", p.Value) + "}"));
-				return $"[{Receive}; {Yield}] where {constrain}";
+				return $"[{Receive}~~{Yield}] where {constrain}";
 			}
 		}
 
@@ -387,7 +387,7 @@ namespace GeneratorCalculation
 			if (Source == null)
 				return base.ToString();
 			else
-				return Source.ToString() + (CanRestore ? "*" : "") + ": " + base.ToString();
+				return Source.ToString() + (CanRestore ? "*" : "") + "~~" + base.ToString();
 		}
 
 		public override GeneratorType Clone()
