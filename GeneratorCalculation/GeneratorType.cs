@@ -249,9 +249,9 @@ namespace GeneratorCalculation
 			// If any type is CoroutineType, put each flow item on its own line.
 			// This is to improve readability.
 			if (Flow.Any(f => f.Type is CoroutineType))
-				sb.Append(string.Join(";\n", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
+				sb.Append(string.Join("~~\n", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
 			else
-				sb.Append(string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
+				sb.Append(string.Join("~~", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
 			sb.Append("]");
 
 
