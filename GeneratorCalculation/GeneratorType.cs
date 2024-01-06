@@ -464,4 +464,33 @@ namespace GeneratorCalculation
 	//}
 
 
+	public class CoroutineDefinitionType
+	{
+		public Condition Condition { get; }
+
+		public PaperType Yield { get; }
+
+		public PaperType Receive { get; }
+
+		public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
+
+
+
+		public CoroutineDefinitionType(PaperType receive, PaperType @yield, Condition condition = null)
+		{
+			Receive = receive;
+			Yield = yield;
+			Condition = condition;
+		}
+
+		public CoroutineInstanceType Start()
+		{
+			return new CoroutineInstanceType(Receive, Yield);
+		}
+
+		public override string ToString()
+		{
+			return $"~>({Receive}; {Yield})";
+		}
+	}
 }
