@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using GeneratorCalculation;
@@ -23,10 +25,29 @@ namespace Go
 			CoroutineDefinitionCollector v = new CoroutineDefinitionCollector();
 			v.Visit(tree);
 
-
-			GoStatementListener l = new GoStatementListener(v.definitions);
+			Dictionary<string, CoroutineDefinitionType> definitions = v.definitions;
+			GoStatementListener l = new GoStatementListener(definitions);
 			ParseTreeWalker walker = new ParseTreeWalker();
 			walker.Walk(l, tree);
+
+			var instances = l.instanceTypes;
+			Console.WriteLine("This program will create the following coroutine instances:");
+			foreach (var item in l.instanceTypes)
+			{
+				Console.WriteLine(item);
+			}
+
+			if (definitions["main"] != null)
+				instances.Add(definitions["main"].Start());
+
+
+			var gs = from i in instances
+					 select new Generator("", i);
+
+			var result = new Solver().SolveWithBindings(gs.ToList());
+
+			Console.WriteLine("Composition result is " + result);
+
 		}
 	}
 }

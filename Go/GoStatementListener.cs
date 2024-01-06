@@ -3,15 +3,28 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using Antlr4.Runtime.Misc;
+
+using GeneratorCalculation;
 using GoLang.Antlr;
+
 
 namespace Go
 {
 	class GoStatementListener : GoParserBaseListener
 	{
-		int funcCount = 0;
+		int anonymousFuncCount = 0;
 		HashSet<string> coroutines = new HashSet<string>();
 		string container = null;
+
+		private readonly Dictionary<string, CoroutineDefinitionType> definitionTypes;
+		public readonly List<CoroutineInstanceType> instanceTypes=new List<CoroutineInstanceType>();
+
+
+
+		public GoStatementListener(Dictionary<string, CoroutineDefinitionType> definitionTypes)
+		{
+			this.definitionTypes = definitionTypes;
+		}
 
 
 		public override void EnterFunctionDecl([NotNull] GoParser.FunctionDeclContext context)
@@ -32,11 +45,19 @@ namespace Go
 
 			if (methodName == "func")
 			{
-				methodName += (++funcCount) + container;
+				throw new NotImplementedException();
+				methodName += (++anonymousFuncCount) + container;
 			}
 
-			Console.WriteLine($"{methodName}() in {container}() is a coroutine.");
-			coroutines.Add(methodName);
+			if (definitionTypes.TryGetValue(methodName, out var dt))
+			{
+				var it = dt.Start();
+				Console.WriteLine($"Starting definition {dt} gives instance {it}.");
+				instanceTypes.Add(it);
+			}
+
+			//Console.WriteLine($"{methodName}() in {container}() is a coroutine.");
+			//coroutines.Add(methodName);
 
 			base.EnterGoStmt(context);
 		}
