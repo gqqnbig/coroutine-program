@@ -30,9 +30,15 @@ namespace Go
 
 			VisitBlock(context.block());
 
-			if (receiveTypes.Count > 0 || yieldTypes.Count > 0)
+			PaperType r = ConcreteType.Void;
+			if (receiveTypes.Count > 0)
+				r = new SequenceType(receiveTypes);
+			PaperType y = ConcreteType.Void;
+			if (yieldTypes.Count > 0)
+				y = new SequenceType(yieldTypes);
+			if (r != ConcreteType.Void || y != ConcreteType.Void)
 			{
-				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(new SequenceType(receiveTypes), new SequenceType(yieldTypes));
+				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(r, y);
 
 				definitions.Add(context.IDENTIFIER().GetText(), coroutine);
 				//This is coroutine definition.
@@ -54,7 +60,7 @@ namespace Go
 			string type;
 			if (channelTypes.TryGetValue(channel, out type))
 			{
-				Console.WriteLine($"Channel is {channel}:chan {type}");
+				//Console.WriteLine($"Channel is {channel}:chan {type}");
 			}
 			else
 				throw new FormatException();
