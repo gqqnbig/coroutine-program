@@ -7,6 +7,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      - name: Test syntax of Go
+        run: |
+            for file in ./Go/tests/*
+            do
+              go build "$file"
+            done
       - name: Setup .NET Core SDK 
         uses: actions/setup-dotnet@v3
         with:
