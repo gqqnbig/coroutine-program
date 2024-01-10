@@ -492,5 +492,21 @@ namespace GeneratorCalculation
 		{
 			return $"~>({Receive}; {Yield})";
 		}
+
+		// override object.Equals
+		public override bool Equals(object obj)
+		{
+			CoroutineDefinitionType y = obj as CoroutineDefinitionType;
+			if (y == null)
+				return false;
+
+			return Yield.Equals(y.Yield) && Receive.Equals(y.Receive);
+		}
+
+		// override object.GetHashCode
+		public override int GetHashCode()
+		{
+			return Yield.GetHashCode() << 2 + Receive.GetHashCode();
+		}
 	}
 }
