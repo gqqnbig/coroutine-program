@@ -12,7 +12,7 @@ namespace GeneratorCalculation
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
 
-		private readonly List<CoroutineType> compositionOrder = new List<CoroutineType>();
+		private readonly List<CoroutineInstanceType> compositionOrder = new List<CoroutineInstanceType>();
 
 		public readonly Z3.Context z3Ctx;
 		public Z3.EnumSort ConcreteSort { get; private set; }
@@ -152,7 +152,7 @@ namespace GeneratorCalculation
 			logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
 		}
 
-		public CoroutineType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
+		public CoroutineInstanceType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
 		{
 			if (bindings == null)
 				bindings = new Dictionary<PaperVariable, PaperWord>();
@@ -204,7 +204,7 @@ namespace GeneratorCalculation
 
 			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g =>
 			{
-				if (g is CoroutineType cg)
+				if (g is CoroutineInstanceType cg)
 					return string.IsNullOrEmpty(cg.Source?.Name) ? g.ToString() : cg.Source.Name;
 				else
 					return g.ToString();
@@ -241,7 +241,7 @@ namespace GeneratorCalculation
 		}
 
 
-		CoroutineType Solve(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
+		CoroutineInstanceType Solve(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
 		{
 			//find a generator type where the next type is not void.
 			Console.WriteLine();
@@ -268,7 +268,7 @@ namespace GeneratorCalculation
 
 			var yields = new SequenceType(yieldsToOutside).Normalize();
 
-			var result = new CoroutineType(receive, yields);
+			var result = new CoroutineInstanceType(receive, yields);
 			return result;
 		}
 
@@ -330,11 +330,11 @@ namespace GeneratorCalculation
 
 					if (yieldedType is TupleType tTuple)
 					{
-						if (tTuple.Types.All(t => t is CoroutineType))
+						if (tTuple.Types.All(t => t is CoroutineInstanceType))
 						{
 							try
 							{
-								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (CoroutineType)t)).ToList(), bindings);
+								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (CoroutineInstanceType)t)).ToList(), bindings);
 							}
 							catch (DeadLockException e)
 							{
@@ -346,9 +346,9 @@ namespace GeneratorCalculation
 					}
 
 
-					if (yieldedType is CoroutineType)
+					if (yieldedType is CoroutineInstanceType)
 					{
-						pairs.Insert(i + 1, new Generator("", (CoroutineType)yieldedType));
+						pairs.Insert(i + 1, new Generator("", (CoroutineInstanceType)yieldedType));
 					}
 					else if (yieldedType is SequenceType ys)
 					{
@@ -403,7 +403,7 @@ namespace GeneratorCalculation
 
 				for (int j = 0; j < pairs.Count; j++)
 				{
-					Debug.Assert(pendingType is CoroutineType == false);
+					Debug.Assert(pendingType is CoroutineInstanceType == false);
 
 
 					var receiverIndex = Receive(pendingType, pairs, 0);
@@ -455,11 +455,11 @@ namespace GeneratorCalculation
 
 				pairs[i].Type.Flow[0].Type.Pop(ref head, ref remaining);
 
-				if (head is CoroutineType)
+				if (head is CoroutineInstanceType)
 					throw new NotImplementedException();
 				else if (head is ListType l)
 				{
-					if (l.Type is CoroutineType receiveG)
+					if (l.Type is CoroutineInstanceType receiveG)
 					{
 						using (var solver = z3Ctx.MkSolver())
 						{
@@ -578,7 +578,7 @@ namespace GeneratorCalculation
 					{
 						var tmp = coroutine.Clone();
 						tmp.Flow.RemoveAt(0);
-						CoroutineType newGenerator = tmp;
+						CoroutineInstanceType newGenerator = tmp;
 
 						Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 

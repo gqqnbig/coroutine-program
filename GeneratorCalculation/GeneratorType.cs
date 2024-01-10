@@ -9,7 +9,7 @@ using Z3 = Microsoft.Z3;
 namespace GeneratorCalculation
 {
 
-	public class CoroutineType : PaperType, IEquatable<CoroutineType>
+	public class CoroutineInstanceType : PaperType, IEquatable<CoroutineInstanceType>
 	{
 		/// <summary>
 		/// can be null
@@ -41,7 +41,7 @@ namespace GeneratorCalculation
 
 		public bool CanRestore { get; }
 
-		private CoroutineType(PaperType receive, PaperType yield)
+		private CoroutineInstanceType(PaperType receive, PaperType yield)
 		{
 			Flow = new List<DataFlow>();
 			if (receive != ConcreteType.Void)
@@ -67,12 +67,12 @@ namespace GeneratorCalculation
 
 		}
 
-		public CoroutineType(params DataFlow[] flow)
+		public CoroutineInstanceType(params DataFlow[] flow)
 		{
 			Flow = new List<DataFlow>(flow);
 		}
 
-		public CoroutineType(IEnumerable<DataFlow> flow, PaperVariable source, bool canRestore)
+		public CoroutineInstanceType(IEnumerable<DataFlow> flow, PaperVariable source, bool canRestore)
 		{
 			Flow = new List<DataFlow>(flow);
 			Source = source;
@@ -86,14 +86,14 @@ namespace GeneratorCalculation
 		/// <param name="yield"></param>
 		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
 		/// <param name="canRestore"></param>
-		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
+		public CoroutineInstanceType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
 		{
 
 			Source = source;
 			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Condition condition, IEnumerable<DataFlow> flow, PaperVariable source, bool canRestore)
+		public CoroutineInstanceType(Condition condition, IEnumerable<DataFlow> flow, PaperVariable source, bool canRestore)
 		{
 			Condition = condition;
 			Flow = new List<DataFlow>(flow);
@@ -102,7 +102,7 @@ namespace GeneratorCalculation
 		}
 
 
-		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
+		public CoroutineInstanceType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
 		{
 			Condition = condition;
 
@@ -248,7 +248,7 @@ namespace GeneratorCalculation
 			sb.Append("[");
 			// If any type is CoroutineType, put each flow item on its own line.
 			// This is to improve readability.
-			if (Flow.Any(f => f.Type is CoroutineType))
+			if (Flow.Any(f => f.Type is CoroutineInstanceType))
 				sb.Append(string.Join("~~\n", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
 			else
 				sb.Append(string.Join("~~", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
@@ -275,7 +275,7 @@ namespace GeneratorCalculation
 
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (other is CoroutineType another && Flow.Count == another.Flow.Count)
+			if (other is CoroutineInstanceType another && Flow.Count == another.Flow.Count)
 			{
 				Z3.BoolExpr[] exprs = new Z3.BoolExpr[Flow.Count];
 				for (int i = 0; i < Flow.Count; i++)
@@ -300,7 +300,7 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public CoroutineType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
+		public CoroutineInstanceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			List<DataFlow> flow = new List<DataFlow>();
 			foreach (var item in Flow)
@@ -311,7 +311,7 @@ namespace GeneratorCalculation
 
 				flow.Add(new DataFlow(item.Direction, (PaperType)newType));
 			}
-			return new CoroutineType(Condition, flow, Source, CanRestore);
+			return new CoroutineInstanceType(Condition, flow, Source, CanRestore);
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -344,11 +344,11 @@ namespace GeneratorCalculation
 			if (flow.Count == 0)
 				return ConcreteType.Void;
 			else
-				return new CoroutineType(Condition, flow, Source, CanRestore);
+				return new CoroutineInstanceType(Condition, flow, Source, CanRestore);
 		}
 
 
-		public bool Equals([AllowNull] CoroutineType other)
+		public bool Equals([AllowNull] CoroutineInstanceType other)
 		{
 			if (Flow.SequenceEqual(other.Flow) == false)
 				return false;
@@ -373,21 +373,21 @@ namespace GeneratorCalculation
 
 		public override bool Equals(object obj)
 		{
-			if (obj is CoroutineType objGenerator)
+			if (obj is CoroutineInstanceType objGenerator)
 				return Equals(objGenerator);
 			return false;
 		}
 
 		public override int GetHashCode()
 		{
-			throw new NotSupportedException(nameof(CoroutineType) + " cannot be used as key in a hashtable or a dictionary.");
+			throw new NotSupportedException(nameof(CoroutineInstanceType) + " cannot be used as key in a hashtable or a dictionary.");
 			//return 0;
 		}
 
 
-		public virtual CoroutineType Clone()
+		public virtual CoroutineInstanceType Clone()
 		{
-			return new CoroutineType(Condition, Flow, Source, CanRestore);
+			return new CoroutineInstanceType(Condition, Flow, Source, CanRestore);
 		}
 	}
 

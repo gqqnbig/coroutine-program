@@ -45,7 +45,7 @@ namespace GeneratorCalculation
 			{
 				Visit(tt);
 			}
-			else if (t is CoroutineType gt)
+			else if (t is CoroutineInstanceType gt)
 			{
 				Visit(gt);
 			}
@@ -53,7 +53,7 @@ namespace GeneratorCalculation
 				throw new NotImplementedException();
 		}
 
-		public void Visit(CoroutineType type)
+		public void Visit(CoroutineInstanceType type)
 		{
 			foreach (var item in type.Flow)
 			{
