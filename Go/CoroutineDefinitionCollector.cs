@@ -9,7 +9,7 @@ namespace Go
 {
 	class CoroutineDefinitionCollector : GoParserBaseVisitor<bool>
 	{
-		Dictionary<string, string> channelTypes = new Dictionary<string, string>();
+		Dictionary<string, string> channelsInFunc = null;
 		List<PaperType> receiveTypes;
 		List<PaperType> yieldTypes;
 
@@ -17,11 +17,12 @@ namespace Go
 
 		public override bool VisitFunctionDecl([NotNull] GoParser.FunctionDeclContext context)
 		{
+			channelsInFunc = new Dictionary<string, string>();
 			ParameterTypeVisitor v = new ParameterTypeVisitor();
 			v.Visit(context.signature().parameters());
 			foreach (var identifier in v.channelTypes.Keys)
 			{
-				channelTypes.Add(identifier, v.channelTypes[identifier]);
+				channelsInFunc.Add(identifier, v.channelTypes[identifier]);
 			}
 
 
@@ -45,10 +46,6 @@ namespace Go
 				Console.WriteLine(context.IDENTIFIER().GetText() + ": " + coroutine);
 			}
 
-			foreach (var identifier in v.channelTypes.Keys)
-			{
-				channelTypes.Remove(identifier);
-			}
 			return true;
 		}
 
@@ -58,7 +55,7 @@ namespace Go
 		{
 			string channel = context.channel.GetText();
 			string type;
-			if (channelTypes.TryGetValue(channel, out type))
+			if (channelsInFunc.TryGetValue(channel, out type))
 			{
 				//Console.WriteLine($"Channel is {channel}:chan {type}");
 			}
@@ -81,7 +78,7 @@ namespace Go
 				if (v.type != null)
 				{
 					//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
-					channelTypes.Add(variableName, v.type);
+					channelsInFunc.Add(variableName, v.type);
 				}
 			}
 
@@ -94,7 +91,7 @@ namespace Go
 			if (context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
 			{
 				string variableName = context.expression(0).GetText();
-				string type = channelTypes[variableName];
+				string type = channelsInFunc[variableName];
 
 				receiveTypes.Add(new ConcreteType(char.ToUpper(type[0]) + type.Substring(1)));
 			}
