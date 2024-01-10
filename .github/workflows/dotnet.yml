@@ -17,3 +17,9 @@ jobs:
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+      - name: Test syntax of Go
+        run: |
+            for file in ./Go/tests/*
+            do
+              go build "$file"           
+            done
