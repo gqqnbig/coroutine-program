@@ -52,5 +52,23 @@ namespace Go
 				Console.WriteLine("The program requires one additional {0} to complete execution.", result.Receive);
 
 		}
+
+
+		static bool Equals<K, V>(Dictionary<K, V> d1, Dictionary<K, V> d2)
+		{
+			if (d1.Count != d2.Count)
+				return false;
+
+			bool res = d1.All(
+				 d1KV =>
+				 {
+					 V d2Value;
+					 return d2.TryGetValue(d1KV.Key, out d2Value) && (
+										   //d1KV.Value == d2Value ||
+										   d1KV.Value?.Equals(d2Value) == true);
+				 });
+			return res;
+		}
+
 	}
 }
