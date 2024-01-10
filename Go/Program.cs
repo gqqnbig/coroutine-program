@@ -37,7 +37,7 @@ namespace Go
 				Console.WriteLine(item);
 			}
 
-			if (definitions["main"] != null)
+			if (definitions.ContainsKey("main"))
 				instances.Add(definitions["main"].Start());
 
 
