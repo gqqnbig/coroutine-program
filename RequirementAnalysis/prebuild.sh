@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "${ProjectDir}"
-export CLASSPATH=".:${ProjectDir}antlr-4.13.0-complete.jar:${CLASSPATH}"
+export CLASSPATH=".:${ProjectDir}../antlr-4.13.0-complete.jar:${CLASSPATH}"
 # By default, aliases are not expanded when the shell is not interactive.
 shopt -s expand_aliases
 alias antlr4='java org.antlr.v4.Tool'
