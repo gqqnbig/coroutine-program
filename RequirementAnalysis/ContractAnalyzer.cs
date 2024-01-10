@@ -59,11 +59,11 @@ namespace RequirementAnalysis
 			var condition = ReplaceSuperclasses(inheritance, receiveList, yieldList, out receiveList2, out yieldList2);
 
 
-			CoroutineType ct;
+			CoroutineInstanceType ct;
 			if (condition == null)
-				ct = new CoroutineType(new SequenceType(receiveList), new SequenceType(yieldList), $"{className}::{methodName}");
+				ct = new CoroutineInstanceType(new SequenceType(receiveList), new SequenceType(yieldList), $"{className}::{methodName}");
 			else
-				ct = new CoroutineType(condition, new SequenceType(receiveList2), new SequenceType(yieldList2), $"{className}::{methodName}");
+				ct = new CoroutineInstanceType(condition, new SequenceType(receiveList2), new SequenceType(yieldList2), $"{className}::{methodName}");
 
 			var g = new Generator($"{className}::{methodName}", ct);
 			var n = g.Type.Normalize();
