@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using GeneratorCalculation;
 using GoLang.Antlr;
+using System.Collections.ObjectModel;
 
 namespace Go
 {
@@ -14,6 +15,13 @@ namespace Go
 		List<PaperType> yieldTypes;
 
 		public Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
+		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
+
+		public CoroutineDefinitionCollector(Dictionary<string, CoroutineDefinitionType> knownDefinitions)
+		{
+			this.knownDefinitions = new ReadOnlyDictionary<string, CoroutineDefinitionType>(knownDefinitions);
+		}
+
 
 		public override bool VisitFunctionDecl([NotNull] GoParser.FunctionDeclContext context)
 		{
@@ -96,6 +104,21 @@ namespace Go
 				receiveTypes.Add(new ConcreteType(char.ToUpper(type[0]) + type.Substring(1)));
 			}
 			return base.VisitExpression(context);
+		}
+
+		public override bool VisitPrimaryExpr([NotNull] GoParser.PrimaryExprContext context)
+		{
+			if (context.arguments() != null)
+			{
+				string methodName = context.primaryExpr().GetText();
+				if (knownDefinitions.TryGetValue(methodName, out var def))
+				{
+					yieldTypes.Add(new StartFunction(def));
+					//yieldTypes.Add(new FunctionType("Start", new PaperVariable(methodName)));
+				}
+			}
+
+			return base.VisitPrimaryExpr(context);
 		}
 	}
 }
