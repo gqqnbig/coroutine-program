@@ -11,7 +11,7 @@ namespace Go
 	{
 		static void Main(string[] args)
 		{
-			string path = @"E:\GeneratorCalculation\Go\tests\channels.go";
+			string path = @"E:\GeneratorCalculation\Go\tests\channels-deadlock.go";
 			var stream = CharStreams.fromPath(path);
 			GoLang.Antlr.GoLexer lexer = new GoLang.Antlr.GoLexer(stream);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -47,6 +47,9 @@ namespace Go
 			var result = new Solver().SolveWithBindings(gs.ToList());
 
 			Console.WriteLine("Composition result is " + result);
+
+			if (result.Receive != ConcreteType.Void)
+				Console.WriteLine("The program requires one additional {0} to complete execution.", result.Receive);
 
 		}
 	}
