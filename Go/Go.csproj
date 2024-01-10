@@ -8,6 +8,9 @@
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Condition="'$(OS)' == 'Windows_NT'" Command="prebuild.bat" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
     <Exec Condition="'$(OS)' != 'Windows_NT'" Command="./prebuild.sh" EnvironmentVariables="ProjectDir=$(ProjectDir);" />
+	<ItemGroup>
+		<Compile Include="generated/*.cs" KeepDuplicates="false"/>
+	</ItemGroup>
   </Target>
   <Target Name="RemoveGeneratedFiles" BeforeTargets="BeforeClean">
     <RemoveDir Directories="generated"/>
