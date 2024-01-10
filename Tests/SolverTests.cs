@@ -167,12 +167,12 @@ namespace GeneratorCalculationTests
 		public void ComposeTupleOfCoroutines()
 		{
 			var bindings = new Dictionary<PaperVariable, PaperWord>();
-			bindings.Add("r1", new CoroutineType((ConcreteType)"A", (ConcreteType)"B"));
-			bindings.Add("r2", new CoroutineType((ConcreteType)"B", (ConcreteType)"D"));
+			bindings.Add("r1", new CoroutineInstanceType((ConcreteType)"A", (ConcreteType)"B"));
+			bindings.Add("r2", new CoroutineInstanceType((ConcreteType)"B", (ConcreteType)"D"));
 
 			var coroutines = new List<Generator>();
 			coroutines.Add(new Generator("", new GeneratorType(new TupleType((PaperVariable)"r1", (PaperVariable)"r2"), ConcreteType.Void)));
-			coroutines.Add(new Generator("l", new CoroutineType(ConcreteType.Void, (ConcreteType)"A")));
+			coroutines.Add(new Generator("l", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"A")));
 
 
 			var result = new Solver().SolveWithBindings(coroutines, bindings);

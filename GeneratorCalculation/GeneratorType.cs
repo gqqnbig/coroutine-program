@@ -273,7 +273,7 @@ namespace GeneratorCalculation
 	/// This is an instance of a coroutine definition.
 	/// A definition turns into an instance by starting the definition.
 	/// </summary>
-	public class CoroutineType : GeneratorType
+	public class CoroutineInstanceType : GeneratorType
 	{
 		public PaperVariable Source { get; }
 		public bool CanRestore { get; }
@@ -285,19 +285,19 @@ namespace GeneratorCalculation
 		/// <param name="yield"></param>
 		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
 		/// <param name="canRestore"></param>
-		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(yield, receive)
+		public CoroutineInstanceType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(yield, receive)
 		{
 			Source = source;
 			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(forbiddenBindings, receive, yield)
+		public CoroutineInstanceType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(forbiddenBindings, receive, yield)
 		{
 			Source = source;
 			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, yield, receive)
+		public CoroutineInstanceType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, yield, receive)
 		{
 			Source = source;
 			CanRestore = canRestore;
@@ -327,7 +327,7 @@ namespace GeneratorCalculation
 				if (HasForbiddenBindings(conditions))
 					return null;
 
-				newGenerator = new CoroutineType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
+				newGenerator = new CoroutineInstanceType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
 				return conditions;
 			}
 
@@ -356,7 +356,7 @@ namespace GeneratorCalculation
 					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
 					//Forbidden bindings are not needed when the coroutine starts to yield
 					//because all variables have been bound.
-					return new CoroutineType(Receive, remaining, Source, CanRestore);
+					return new CoroutineInstanceType(Receive, remaining, Source, CanRestore);
 				}
 			}
 			else
@@ -368,13 +368,13 @@ namespace GeneratorCalculation
 
 		public override PaperType Normalize()
 		{
-			CoroutineType g;
+			CoroutineInstanceType g;
 			if (Condition != null)
-				g = new CoroutineType(Condition, Receive.Normalize(), Yield.Normalize());
+				g = new CoroutineInstanceType(Condition, Receive.Normalize(), Yield.Normalize());
 			else if (ForbiddenBindings != null)
-				g = new CoroutineType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
+				g = new CoroutineInstanceType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
 			else
-				g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
+				g = new CoroutineInstanceType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
 			
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
 				return ConcreteType.Void;
@@ -392,7 +392,7 @@ namespace GeneratorCalculation
 
 		public override GeneratorType Clone()
 		{
-			return new CoroutineType(ForbiddenBindings, Receive, Yield, Source, CanRestore);
+			return new CoroutineInstanceType(ForbiddenBindings, Receive, Yield, Source, CanRestore);
 		}
 	}
 

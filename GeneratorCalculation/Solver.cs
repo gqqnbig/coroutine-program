@@ -151,7 +151,7 @@ namespace GeneratorCalculation
 
 			Console.WriteLine("\nComposition order:\n" + string.Join(" ->\n", compositionOrder.Select(g =>
 			{
-				if (g is CoroutineType cg)
+				if (g is CoroutineInstanceType cg)
 					return string.IsNullOrEmpty(cg.Source?.Name) ? g.ToString() : cg.Source.Name;
 				else
 					return g.ToString();
