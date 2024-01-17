@@ -71,7 +71,7 @@ namespace RequirementAnalysis
 				return null;
 			else
 			{
-				g.Type = (CoroutineType)n;
+				g.Type = (CoroutineInstanceType)n;
 				return g;
 			}
 		}

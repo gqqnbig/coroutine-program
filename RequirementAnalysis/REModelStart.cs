@@ -17,12 +17,12 @@ namespace RequirementAnalysis
 			List<Generator> generators = new List<Generator>();
 
 			InheritanceCondition ic = new InheritanceCondition((PaperVariable)"a", (ConcreteType)"Animal");
-			generators.Add(new Generator("", new CoroutineType(ic, (PaperVariable)"a", ConcreteType.Void)));
+			generators.Add(new Generator("", new CoroutineInstanceType(ic, (PaperVariable)"a", ConcreteType.Void)));
 
-			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Apple")));
-			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Dog")));
-			generators.Add(new Generator("", new CoroutineType((ConcreteType)"B", (ConcreteType)"A")));
-			generators.Add(new Generator("", new CoroutineType((ConcreteType)"A", (ConcreteType)"B")));
+			generators.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Apple")));
+			generators.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Dog")));
+			generators.Add(new Generator("", new CoroutineInstanceType((ConcreteType)"B", (ConcreteType)"A")));
+			generators.Add(new Generator("", new CoroutineInstanceType((ConcreteType)"A", (ConcreteType)"B")));
 
 			var solver = new Solver();
 			var inheritance = new Dictionary<string, string>();
@@ -35,7 +35,7 @@ namespace RequirementAnalysis
 		}
 
 
-		public static CoroutineType Compose(List<Generator> generators, Dictionary<string, string> inheritance, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
+		public static CoroutineInstanceType Compose(List<Generator> generators, Dictionary<string, string> inheritance, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
 		{
 			List<Generator> filtered;
 			if (interestedCoroutines != null)
@@ -49,7 +49,7 @@ namespace RequirementAnalysis
 
 			var coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("", new CoroutineType(ConcreteType.Void, new TupleType(from b in bindings select b.Key))));
+			coroutines.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, new TupleType(from b in bindings select b.Key))));
 			if (lowPriorityCoroutines != null)
 				coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 
