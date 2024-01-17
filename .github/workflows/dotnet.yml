@@ -16,4 +16,9 @@ jobs:
       - name: Build
         run: dotnet build --no-restore GeneratorCalculation.sln
       - name: Test
-        run: dotnet test --no-restore --verbosity normal GeneratorCalculation.sln
+        run: | 
+          if ! dotnet test --no-restore --verbosity normal GeneratorCalculation.sln; then
+            echo "搜索 [FAIL] 关键字 检索到的行 即是错误的test 这些test导致了本步骤出错. 需要检查对应的报错处 以修复错误"
+            echo "此处的关键词搜索应在右上角的 搜索框 中执行 [注意 ctrl + F 会检索不到]"
+            exit 1
+          fi
