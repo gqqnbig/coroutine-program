@@ -7,50 +7,74 @@ using GeneratorCalculation;
 
 namespace Go
 {
-	class Program
+	public class Program
 	{
+
 		static void Main(string[] args)
 		{
-			string path = @"E:\GeneratorCalculation\Go\tests\channels-deadlock.go";
-			var stream = CharStreams.fromPath(path);
-			GoLang.Antlr.GoLexer lexer = new GoLang.Antlr.GoLexer(stream);
+			string path = @"E:\GeneratorCalculation\GoTests\channels-method.go";
+
+			string code = System.IO.File.ReadAllText(path);
+			CheckDeadlock(code);
+
+		}
+
+
+		public static bool CheckDeadlock(string goCode)
+		{
+			AntlrInputStream inputStream = new AntlrInputStream(goCode);
+
+			GoLang.Antlr.GoLexer lexer = new GoLang.Antlr.GoLexer(inputStream);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			GoLang.Antlr.GoParser parser = new GoLang.Antlr.GoParser(tokens);
+
 
 			var tree = parser.sourceFile();
 
 			//Console.WriteLine(tree.children[1].GetText());
 
+			Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
 
-			CoroutineDefinitionCollector v = new CoroutineDefinitionCollector();
-			v.Visit(tree);
-
-			Dictionary<string, CoroutineDefinitionType> definitions = v.definitions;
-			GoStatementListener l = new GoStatementListener(definitions);
-			ParseTreeWalker walker = new ParseTreeWalker();
-			walker.Walk(l, tree);
-
-			var instances = l.instanceTypes;
-			Console.WriteLine("This program will create the following coroutine instances:");
-			foreach (var item in l.instanceTypes)
+			// repeat and check if definitions update.
+			for (int i = 0; ; i++)
 			{
-				Console.WriteLine(item);
+				CoroutineDefinitionCollector v = new CoroutineDefinitionCollector(definitions);
+				v.Visit(tree);
+
+				if (Equals(v.definitions, definitions))
+					break;
+				definitions = v.definitions;
+
+				Console.WriteLine("Iterate {0} and check convergence", i);
 			}
 
+
+			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
 			if (definitions.ContainsKey("main"))
+			{
 				instances.Add(definitions["main"].Start());
 
+				var bindings = new Bindings();
+				foreach (var d in definitions)
+				{
+					bindings.Add(d.Key, d.Value);
+				}
 
-			var gs = from i in instances
-					 select new Generator("", i);
 
-			var result = new Solver().SolveWithBindings(gs.ToList());
+				var gs = from i in instances
+						 select new Generator("", i);
+				var result = new Solver().SolveWithBindings(gs.ToList(), bindings);
 
-			Console.WriteLine("Composition result is " + result);
+				Console.WriteLine("Composition result is " + result);
 
-			if (result.Receive != ConcreteType.Void)
-				Console.WriteLine("The program requires one additional {0} to complete execution.", result.Receive);
+				if (result.Receive != ConcreteType.Void)
+				{
+					Console.WriteLine("The program requires one additional {0} to complete execution.", result.Receive);
+					return true;
+				}
+			}
 
+			return false;
 		}
 
 
