@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <RootNamespace>Go.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="channels-deadlock.go" />
+    <None Remove="channels-method.go" />
+    <None Remove="channels-method2.go" />
+    <None Remove="channels.go" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="channels-deadlock.go" />
+    <EmbeddedResource Include="channels-method.go" />
+    <EmbeddedResource Include="channels-method2.go" />
+    <EmbeddedResource Include="channels.go" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Go\Go.csproj" />
+  </ItemGroup>
+
+</Project>
