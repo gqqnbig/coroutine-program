@@ -11,7 +11,7 @@ namespace GeneratorCalculation.Tests
 		//[Fact()]
 		//public void CheckTest()
 		//{
-		//	CoroutineType g = new CoroutineType(new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")),
+		//	CoroutineInstanceType g = new CoroutineInstanceType(new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")),
 		//		new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"z"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")));
 
 
@@ -42,7 +42,7 @@ namespace GeneratorCalculation.Tests
 		public void TestConstructor()
 		{
 			var c = new Z3Condition(s => s.z3Ctx.MkTrue());
-			var g = new CoroutineType(condition: c,
+			var g = new CoroutineInstanceType(condition: c,
 				receive: (ConcreteType)"A",
 				yield: (ConcreteType)"B");
 
