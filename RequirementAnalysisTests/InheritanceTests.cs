@@ -15,12 +15,12 @@ namespace RequirementAnalysis.Tests
 			List<Generator> generators = new List<Generator>();
 
 			InheritanceCondition ic = new InheritanceCondition((PaperVariable)"a", (ConcreteType)"Animal");
-			generators.Add(new Generator("", new CoroutineType(ic, (PaperVariable)"a", ConcreteType.Void)));
+			generators.Add(new Generator("", new CoroutineInstanceType(ic, (PaperVariable)"a", ConcreteType.Void)));
 
-			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Apple")));
-			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Dog")));
-			generators.Add(new Generator("", new CoroutineType((ConcreteType)"B", (ConcreteType)"A")));
-			generators.Add(new Generator("", new CoroutineType((ConcreteType)"A", (ConcreteType)"B")));
+			generators.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Apple")));
+			generators.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Dog")));
+			generators.Add(new Generator("", new CoroutineInstanceType((ConcreteType)"B", (ConcreteType)"A")));
+			generators.Add(new Generator("", new CoroutineInstanceType((ConcreteType)"A", (ConcreteType)"B")));
 
 			try
 			{
