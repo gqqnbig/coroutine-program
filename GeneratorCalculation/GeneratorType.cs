@@ -464,7 +464,7 @@ namespace GeneratorCalculation
 	//}
 
 
-	public class CoroutineDefinitionType
+	public class CoroutineDefinitionType : PaperWord
 	{
 		public Condition Condition { get; }
 
@@ -507,6 +507,16 @@ namespace GeneratorCalculation
 		public override int GetHashCode()
 		{
 			return Yield.GetHashCode() << 2 + Receive.GetHashCode();
+		}
+
+		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		{
+			throw new NotImplementedException();
+		}
+
+		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
