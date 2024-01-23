@@ -4,70 +4,80 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Z3 = Microsoft.Z3;
 
 namespace GeneratorCalculation
 {
-	public class Solver
+	public class Solver: IDisposable
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
-		
+
 		private readonly List<GeneratorType> compositionOrder = new List<GeneratorType>();
 
-		public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
+		readonly Z3.Context z3Ctx;
+		internal Z3.EnumSort concreteSort;
+
+		public Solver()
 		{
-			var c = new Dictionary<PaperVariable, PaperWord>();
-
-			for (int i = 0; i < conditions.Count; i++)
-			{
-				c = JoinConditions(c, conditions[i]);
-				if (c == null)
-					return null;
-
-			}
-
-			return c;
+			z3Ctx = new Z3.Context();
 		}
 
 
-		public static Dictionary<PaperVariable, PaperWord> JoinConditions(Dictionary<PaperVariable, PaperWord> x, Dictionary<PaperVariable, PaperWord> y)
-		{
-			if (x == null || y == null)
-				return null;
+		//public static Dictionary<PaperVariable, PaperWord> JoinConditions(List<Dictionary<PaperVariable, PaperWord>> conditions)
+		//{
+		//	var c = new Dictionary<PaperVariable, PaperWord>();
 
-			var k1 = new List<PaperVariable>(x.Keys);
-			var k2 = new List<PaperVariable>(y.Keys);
+		//	for (int i = 0; i < conditions.Count; i++)
+		//	{
+		//		c = JoinConditions(c, conditions[i]);
+		//		if (c == null)
+		//			return null;
 
-			var duplicateKeys = k1.Intersect(k2).ToList();
-			if (duplicateKeys.Count == 0)
-			{
-				//no potential conflicting keys
-				return x.Concat(y).ToDictionary(d => d.Key, d => d.Value);
-			}
+		//	}
+
+		//	return c;
+		//}
 
 
-			List<Dictionary<PaperVariable, PaperWord>> conditions = new List<Dictionary<PaperVariable, PaperWord>>();
-			foreach (var key in duplicateKeys)
-			{
-				var c = x[key].IsCompatibleTo(y[key]);
-				if (c == null)
-					c = y[key].IsCompatibleTo(x[key]);
+		//public static Dictionary<PaperVariable, PaperWord> JoinConditions(Dictionary<PaperVariable, PaperWord> x, Dictionary<PaperVariable, PaperWord> y)
+		//{
+		//	if (x == null || y == null)
+		//		return null;
 
-				conditions.Add(c);
-			}
+		//	var k1 = new List<PaperVariable>(x.Keys);
+		//	var k2 = new List<PaperVariable>(y.Keys);
 
-			var solveDuplication = JoinConditions(conditions);
-			if (solveDuplication == null)
-				return null;
+		//	var duplicateKeys = k1.Intersect(k2).ToList();
+		//	if (duplicateKeys.Count == 0)
+		//	{
+		//		//no potential conflicting keys
+		//		return x.Concat(y).ToDictionary(d => d.Key, d => d.Value);
+		//	}
 
-			foreach (var key in duplicateKeys)
-			{
-				x.Remove(key);
-				y.Remove(key);
-			}
 
-			var c3 = JoinConditions(x, y);
-			return JoinConditions(c3, solveDuplication);
-		}
+		//	List<Dictionary<PaperVariable, PaperWord>> conditions = new List<Dictionary<PaperVariable, PaperWord>>();
+		//	foreach (var key in duplicateKeys)
+		//	{
+		//		var c = x[key].IsCompatibleTo(y[key], TODO);
+		//		if (c == null)
+		//			c = y[key].IsCompatibleTo(x[key], TODO);
+
+		//		conditions.Add(c);
+		//	}
+
+		//	var solveDuplication = JoinConditions(conditions);
+		//	if (solveDuplication == null)
+		//		return null;
+
+		//	foreach (var key in duplicateKeys)
+		//	{
+		//		x.Remove(key);
+		//		y.Remove(key);
+		//	}
+
+		//	var c3 = JoinConditions(x, y);
+		//	return JoinConditions(c3, solveDuplication);
+		//}
 
 
 		public static string FormatCondition(KeyValuePair<PaperVariable, PaperWord> p)
@@ -104,10 +114,22 @@ namespace GeneratorCalculation
 			if (bindings == null)
 				bindings = new Dictionary<PaperVariable, PaperWord>();
 
-			//foreach (var g in coroutines)
-			//{
-			//	g.Type.Check();
-			//}
+			// SolveWithBindings may be recursively called,
+			// so we have to check if concreteSort has been assigned.
+			if (concreteSort == null)
+			{
+				HashSet<string> allTypes = new HashSet<string>();
+				foreach (var g in coroutines)
+				{
+					var c = new ConcreteTypeCollector(bindings);
+					c.Visit(g.Type);
+					allTypes.UnionWith(c.concreteTypes);
+					//g.Type.Check();
+				}
+				allTypes.Remove(ConcreteType.Void.Name);
+				concreteSort = z3Ctx.MkEnumSort("Concrete", allTypes.ToArray());
+				logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
+			}
 
 
 			StringBuilder sb = new StringBuilder();
@@ -343,7 +365,7 @@ namespace GeneratorCalculation
 		}
 
 
-		static bool LoopExternalYield(List<PaperType> yieldsToOutside, List<Generator> pairs)
+		bool LoopExternalYield(List<PaperType> yieldsToOutside, List<Generator> pairs)
 		{
 			Console.WriteLine("Loop external yield: " + string.Join(", ", yieldsToOutside));
 			for (int i = 0; i < yieldsToOutside.Count; i++)
@@ -391,7 +413,7 @@ namespace GeneratorCalculation
 		//}
 
 
-		static bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
+		bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
 		{
 
 			for (var i = 0; i < pairs.Count; i++)
@@ -406,65 +428,76 @@ namespace GeneratorCalculation
 				{
 					if (l.Type is GeneratorType receiveG)
 					{
-						Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
-						List<int> matches = new List<int>();
-						for (int j = 0; j < pairs.Count; j++)
+						using (var solver = z3Ctx.MkSolver())
 						{
-							if (i == j)
-								continue;
-
-							var c = JoinConditions(conditions, receiveG.IsCompatibleTo(pairs[j].Type));
-							if (c != null)
+							List<int> matches = new List<int>();
+							for (int j = 0; j < pairs.Count; j++)
 							{
-								conditions = c;
-								matches.Add(j);
+								if (i == j)
+									continue;
+
+								//solver.Push();
+
+								Z3.BoolExpr eqExpr = receiveG.BuildEquality(pairs[j].Type, this);
+								if (solver.Check(eqExpr) == Z3.Status.SATISFIABLE)
+								{
+									matches.Add(j);
+								}
+								//else
+								//solver.Pop(); // Remove the bad conditions added by IsCompatibleTo.
+
 							}
-						}
 
 
-						if (l.Size is PaperInt pi)
-						{
-							if (matches.Count < pi.Value)
+							if (l.Size is PaperInt pi)
 							{
-								logger.LogInformation($"No enough coroutines to match {receiveG}. Nothing is removed.");
-								conditions = null;
+								if (matches.Count < pi.Value)
+								{
+									logger.LogInformation($"No enough coroutines to match {receiveG}. Nothing is removed.");
+									solver.Add(solver.Context.MkFalse());
+								}
+								else
+									matches = matches.Take(pi.Value).ToList();
+
+							}
+							else if (l.Size is PaperVariable pv)
+							{
+								//Deal with [a;b]^i. 
+								//Variable i must be equal to the number of matches.
+
+								solver.Add(z3Ctx.MkEq(z3Ctx.MkIntConst(pv.Name), z3Ctx.MkInt(matches.Count)));
 							}
 							else
-								matches = matches.Take(pi.Value).ToList();
+								throw new NotImplementedException();
 
-						}
-						else if (l.Size is PaperVariable pv)
-						{
-							conditions = JoinConditions(conditions, new Dictionary<PaperVariable, PaperWord> { { pv.Name, (PaperInt)matches.Count } });
-						}
-						else
-							throw new NotImplementedException();
-
-						if (conditions != null)
-						{
-							try
+							if (solver.Check() == Z3.Status.SATISFIABLE)
 							{
-								//pairs[i].Type.Receive.Pop
-								pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
-								Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-								if (conditions.Count > 0)
+								try
 								{
-									Console.Write(" on the conditions that ");
-									Console.Write(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")));
+									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
+
+									//pairs[i].Type.Receive.Pop
+									pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
+									if (solver.Model.NumConsts > 0)
+									{
+										Console.Write(" on the conditions that ");
+										Console.Write(string.Join(", ", conditions.Select(p => p.Key + "/" + p.Value)));
+									}
+
+									Console.WriteLine(".");
+
+									foreach (int indice in matches.OrderByDescending(v => v))
+										pairs.RemoveAt(indice);
+
+									//Run one more time
+									ReceiveGenerator(pairs, constants);
+									return true;
 								}
-
-								Console.WriteLine(".");
-
-								foreach (int indice in matches.OrderByDescending(v => v))
-									pairs.RemoveAt(indice);
-
-								//Run one more time
-								ReceiveGenerator(pairs, constants);
-								return true;
-							}
-							catch (PaperSyntaxException e)
-							{
-								logger.LogInformation(e.Message);
+								catch (PaperSyntaxException e)
+								{
+									logger.LogInformation(e.Message);
+								}
 							}
 						}
 					}
@@ -482,7 +515,7 @@ namespace GeneratorCalculation
 		/// <param name="constants"></param>
 		/// <param name="startIndex">From which index we start to evaluate</param>
 		/// <returns></returns>
-		static int? Receive(PaperType pendingType, List<Generator> pairs, int startIndex)
+		int? Receive(PaperType pendingType, List<Generator> pairs, int startIndex)
 		{
 			Console.WriteLine();
 
@@ -490,86 +523,98 @@ namespace GeneratorCalculation
 			{
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				GeneratorType newGenerator;
-				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
-				if (conditions != null)
+				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
-					Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
-
-					//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
-					//if (g2 != null)
-					//{
-					//	if (coroutine.Equals(g2) == false)
-					//		throw new FormatException($"{coroutine} and {g2} both can receive, which is not allowed.");
-					//	//TODO: may have to loop and check further receivable.
-					//}
-
-					if (conditions.Count == 0)
+					var exp = coroutine.RunReceive(pendingType, this, out newGenerator);
+					solver.Add(exp);
+					if (solver.Check() == Z3.Status.SATISFIABLE)
 					{
-						Console.WriteLine(".");
-						pairs[(i + startIndex) % pairs.Count].Type = newGenerator;
+						Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
+
+						//var g2 = CheckReceive(pendingType, pairs, (i + from) % pairs.Count + 1);
+						//if (g2 != null)
+						//{
+						//	if (coroutine.Equals(g2) == false)
+						//		throw new FormatException($"{coroutine} and {g2} both can receive, which is not allowed.");
+						//	//TODO: may have to loop and check further receivable.
+						//}
+
+
+						if (solver.Model.NumConsts == 0)
+						{
+							Console.WriteLine(".");
+							pairs[(i + startIndex) % pairs.Count].Type = newGenerator;
+						}
+						else
+						{
+							Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
+							Console.Write(" on the conditions that ");
+							Console.Write(string.Join(", ", conditions.Select(p => p.Key + "/" + p.Value)));
+							Console.WriteLine(".");
+
+							try
+							{
+								var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
+								Console.WriteLine($"Therefore it becomes {resultGenerator}.");
+
+								//if (resultGenerator.Yield == ConcreteType.Void)
+								//{
+								//	if (pairs[i].IsInfinite)
+								//	{
+								//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Reset to original.");
+								//		pairs[i].Type = pairs[i].OriginalType.Clone();
+								//	}
+								//	else
+								//	{
+								//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Remove from the list.");
+								//		pairs[i] = null;
+								//	}
+								//}
+								//else 
+								pairs[(i + startIndex) % pairs.Count].Type = resultGenerator;
+							}
+							catch (PaperSyntaxException e)
+							{
+								Console.WriteLine("But the result doesn't fit the type. " + e.Message);
+								continue;
+							}
+						}
+
+						return (i + startIndex) % pairs.Count;
+
+						//Solve(pairs, constants);
+						//return;
+
 					}
 					else
 					{
-						Console.Write(" on the conditions that ");
-						Console.WriteLine(string.Join(", ", conditions.Select(p => $"{p.Key}/{p.Value}")) + ".");
-
-						try
-						{
-							var resultGenerator = newGenerator.ApplyEquation(conditions.ToList());
-							Console.WriteLine($"Therefore it becomes {resultGenerator}.");
-
-							//if (resultGenerator.Yield == ConcreteType.Void)
-							//{
-							//	if (pairs[i].IsInfinite)
-							//	{
-							//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Reset to original.");
-							//		pairs[i].Type = pairs[i].OriginalType.Clone();
-							//	}
-							//	else
-							//	{
-							//		Console.WriteLine($"{pairs[i].Name} reached the simplest form. Remove from the list.");
-							//		pairs[i] = null;
-							//	}
-							//}
-							//else 
-							pairs[(i + startIndex) % pairs.Count].Type = resultGenerator;
-						}
-						catch (PaperSyntaxException e)
-						{
-							Console.WriteLine("But the result doesn't fit the type. " + e.Message);
-							continue;
-						}
+						Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{pairs[(i + startIndex) % pairs.Count].Type} -- Cannot receive {pendingType}");
 					}
-
-					return (i + startIndex) % pairs.Count;
-
-					//Solve(pairs, constants);
-					//return;
-				}
-				else
-				{
-					Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{pairs[(i + startIndex) % pairs.Count].Type} -- Cannot receive {pendingType}");
 				}
 			}
 
 			return null;
 		}
 
-		static GeneratorType CheckReceive(PaperType pendingType, List<Generator> pairs, int start)
+		//static GeneratorType CheckReceive(PaperType pendingType, List<Generator> pairs, int start)
+		//{
+		//	for (int i = start; i < pairs.Count; i++)
+		//	{
+		//		var coroutine = pairs[i].Type;
+		//		GeneratorType newGenerator;
+		//		Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
+		//		if (conditions != null)
+		//			return coroutine;
+		//	}
+
+		//	return null;
+
+		//}
+
+		public void Dispose()
 		{
-			for (int i = start; i < pairs.Count; i++)
-			{
-				var coroutine = pairs[i].Type;
-				GeneratorType newGenerator;
-				Dictionary<PaperVariable, PaperWord> conditions = coroutine.RunReceive(pendingType, out newGenerator);
-				if (conditions != null)
-					return coroutine;
-			}
-
-			return null;
-
+			z3Ctx.Dispose();
 		}
-
 	}
 
 	public class DeadLockException : Exception
