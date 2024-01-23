@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Z3 = Microsoft.Z3;
 
 namespace GeneratorCalculation
 {
@@ -14,10 +15,10 @@ namespace GeneratorCalculation
 	{
 		/// <summary>
 		/// Check if this type equals to another type for receiving purpose.
+		/// <para>This is looser than object.equals().</para> 
 		/// </summary>
-		/// <param name="t"></param>
-		/// <returns>Returns <c>null</c> if not compatible. Returns a dict of size 0 if it's always compatible.</returns>
-		Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t);
+		/// <param name="other"></param>
+		Z3.BoolExpr BuildEquality(PaperWord other, Solver engine);
 
 		/// <summary>
 		/// Even if the equations do not apply to this word, this method should return itself.
@@ -117,21 +118,40 @@ namespace GeneratorCalculation
 			return this;
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (t is PaperType tType)
+			var ctx = engine.concreteSort.Context;
+			if (other is PaperInt tInt)
+			{
+				return ctx.MkEq(ctx.MkIntConst(Name), ctx.MkInt(tInt.Value));
+			}
+			else if (other is PaperType tType)
 			{
 				tType = tType.Normalize();
+				if (tType == ConcreteType.Void)
+					return engine.concreteSort.Context.MkFalse();
 
-				if (tType is ConcreteType || tType is PaperVariable)
-				{ }
+				if (tType is ConcreteType tConcrete)
+				{
+					var s = engine.concreteSort.Consts.First(c => c.ToString().Equals(tConcrete.Name));
+					return ctx.MkEq(ctx.MkConst(Name, engine.concreteSort), s);
+				}
+				else if (tType is PaperVariable tVariable)
+				{
+					//var s = engine.concreteSort.Consts.First(c => c.ToString().Equals(tVariable.Name));
+					return ctx.MkEq(ctx.MkConst(Name, engine.concreteSort), ctx.MkConst(tVariable.Name, engine.concreteSort));
+				}
 				else
-					return null;
+				{
+					return engine.concreteSort.Context.MkFalse();
+				}
 			}
 
-			var d = new Dictionary<PaperVariable, PaperWord>();
-			d.Add(this, t);
-			return d;
+			logger.LogWarning("Behavior changed. Variable cannot match a structured type.");
+			//var d = new Dictionary<PaperVariable, PaperWord>();
+			//d.Add(this, t);
+			//return d;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -159,12 +179,12 @@ namespace GeneratorCalculation
 			return new PaperInt { Value = n };
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (t is PaperInt tInt && tInt.Value == this.Value)
-				return new Dictionary<PaperVariable, PaperWord>();
+			if (other is PaperInt tInt && tInt.Value == this.Value)
+				return engine.concreteSort.Context.MkTrue();
 
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -204,9 +224,9 @@ namespace GeneratorCalculation
 			return "*";
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -262,26 +282,19 @@ namespace GeneratorCalculation
 			return this;
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord t, Solver engine)
 		{
 			if (t is ConcreteType t2 && t2.Name == this.Name)
-				return new Dictionary<PaperVariable, PaperWord>();
+				return engine.concreteSort.Context.MkTrue();
 
 			if (t is ListType tList)
 			{
-				var condition1 = tList.Size.IsCompatibleTo((PaperInt)1);
-				if (condition1 == null)
-					return null;
-
-				var condition2 = tList.Type.IsCompatibleTo(this);
-				if (condition2 == null)
-					return null;
-
-				var c = Solver.JoinConditions(condition1, condition2);
-				return c;
+				return engine.concreteSort.Context.MkAnd(
+							tList.Size.BuildEquality((PaperInt)1, engine),
+							tList.Type.BuildEquality(this, engine));
 			}
 
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -341,23 +354,27 @@ namespace GeneratorCalculation
 			return "<" + string.Join(", ", Types) + ">";
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
 			//if (Types.Count <= 1)
 			//	throw new ArgumentException();
 
-			if (t is SequenceType tSequence)
+			if (other is SequenceType tSequence)
 			{
 				if (tSequence.Types.Count != Types.Count)
-					return null;
+				{
+					return engine.concreteSort.Context.MkFalse();
+				}
 
-				List<Dictionary<PaperVariable, PaperWord>> conditions = new List<Dictionary<PaperVariable, PaperWord>>(Types.Count);
+
+				Z3.BoolExpr[] args = new Z3.BoolExpr[Types.Count];
 				for (int i = 0; i < Types.Count; i++)
-					conditions.Add(Types[i].IsCompatibleTo(tSequence.Types[i]));
+					args[i] = Types[i].BuildEquality(tSequence.Types[i], engine);
 
-				return Solver.JoinConditions(conditions);
+
+				return engine.concreteSort.Context.MkAnd(args);
 			}
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
@@ -481,20 +498,22 @@ namespace GeneratorCalculation
 			Types = new List<PaperType>(types);
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (t is TupleType tTuple)
+			if (other is TupleType tTuple)
 			{
 				if (Types.Count != tTuple.Types.Count)
-					return null;
+				{
+					return engine.concreteSort.Context.MkFalse();
+				}
 
 
-				var dict = new Dictionary<PaperVariable, PaperWord>();
+				Z3.BoolExpr[] args = new Z3.BoolExpr[Types.Count];
 				for (int i = 0; i < Types.Count; i++)
-					dict = Solver.JoinConditions(dict, Types[i].IsCompatibleTo(tTuple.Types[i]));
-				return dict;
+					args[i] = Types[i].BuildEquality(tTuple.Types[i], engine);
+				return engine.concreteSort.Context.MkAnd(args);
 			}
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -575,9 +594,26 @@ namespace GeneratorCalculation
 			return FunctionName + "(" + string.Join(", ", Arguments) + ")";
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			return null;
+			if (other is FunctionType oFunction)
+			{
+				if (FunctionName != oFunction.FunctionName)
+					return engine.concreteSort.Context.MkFalse();
+
+				if (Arguments.Count != oFunction.Arguments.Count)
+					return engine.concreteSort.Context.MkFalse();
+
+
+				Z3.BoolExpr[] args = new Z3.BoolExpr[Arguments.Count];
+				for (int i = 0; i < Arguments.Count; i++)
+				{
+					args[i] = Arguments[i].BuildEquality(oFunction.Arguments[i], engine);
+				}
+				return engine.concreteSort.Context.MkAnd(args);
+			}
+
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -676,15 +712,16 @@ namespace GeneratorCalculation
 			return Type.ToString() + Size.ToString();
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord other)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
 			if (other is ListType otherList)
 			{
-				var c1 = Type.IsCompatibleTo(otherList.Type);
-				var c2 = Size.IsCompatibleTo(otherList.Size);
-				return Solver.JoinConditions(c1, c2);
+				return engine.concreteSort.Context.MkAnd(
+					Type.BuildEquality(otherList.Type, engine),
+					Size.BuildEquality(otherList.Size, engine));
 			}
-			return null;
+
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
