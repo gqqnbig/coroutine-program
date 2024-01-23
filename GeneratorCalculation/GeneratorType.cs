@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using Z3 = Microsoft.Z3;
+
 namespace GeneratorCalculation
 {
 
@@ -105,45 +107,57 @@ namespace GeneratorCalculation
 		/// <param name="providedType"></param>
 		/// <param name="conditions"></param>
 		/// <returns></returns>
-		public virtual Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
+		public virtual Z3.BoolExpr RunReceive(PaperType providedType, Solver engine, out GeneratorType newGenerator)
 		{
 			newGenerator = null;
-			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
 			if (Receive == ConcreteType.Void)
-				return null;
+			{
+				return engine.concreteSort.Context.MkFalse();
+			}
 
 			PaperType head = null;
 			PaperType remaining = null;
 			if (Receive.Pop(ref head, ref remaining))
 			{
-				var c = head.IsCompatibleTo(providedType);
-				if (c == null)
-					return null;
-
-				conditions = Solver.JoinConditions(conditions, c);
-				if (HasForbiddenBindings(conditions))
-					return null;
-
 				newGenerator = new GeneratorType(ForbiddenBindings, remaining, Yield);
-				return conditions;
+				return engine.concreteSort.Context.MkAnd(
+					head.BuildEquality(providedType, engine),
+					AddConstraints(engine));
 			}
 
 			Debug.Assert(Receive == ConcreteType.Void);
-			return null;
+
+			return engine.concreteSort.Context.MkFalse();
 		}
 
-		protected bool HasForbiddenBindings(Dictionary<PaperVariable, PaperWord> valueMappings)
+		protected Z3.BoolExpr AddConstraints(Solver engine)
 		{
+			Z3.Context ctx = engine.concreteSort.Context;
+			Z3.BoolExpr[] args = new Z3.BoolExpr[ForbiddenBindings.Count];
+			int j = 0;
 			foreach (SequenceType key in ForbiddenBindings.Keys)
 			{
-				var valuedKey = key.ApplyEquation(valueMappings);
+				if (key.Types.Count > 1)
+					throw new NotImplementedException();
+
+				var k = key.Types[0];
 				var forbiddenSet = ForbiddenBindings[key];
 
-				if (forbiddenSet.Select(s => s.ApplyEquation(valueMappings)).Any(s => s.Equals(valuedKey)))
-					return true;
-			}
+				Z3.BoolExpr[] args1 = new Z3.BoolExpr[forbiddenSet.Count];
+				for (int i = 0; i < forbiddenSet.Count; i++)
+				{
+					SequenceType fb = forbiddenSet[i];
+					if (fb.Types.Count > 1)
+						throw new NotImplementedException();
 
-			return false;
+					var v = fb.Types[0];
+
+					args1[i] = ctx.MkNot(k.BuildEquality(v, engine));
+				}
+				args[j] = ctx.MkAnd(args1);
+			}
+			return ctx.MkAnd(args);
 		}
 
 
@@ -168,13 +182,17 @@ namespace GeneratorCalculation
 			return inputVariables.Concat(outputVariables).ToList();
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (t is GeneratorType another)
+			if (other is GeneratorType another)
+			{
 				// TODO: should use full match. IsCompatibleTo only checks the head element.
-				return Solver.JoinConditions(Yield.IsCompatibleTo(another.Yield), Receive.IsCompatibleTo(another.Receive));
+				return engine.concreteSort.Context.MkAnd(
+					Yield.BuildEquality(another.Yield, engine),
+					Receive.BuildEquality(another.Receive, engine));
+			}
 
-			return null;
+			return engine.concreteSort.Context.MkFalse();
 
 		}
 
@@ -308,31 +326,26 @@ namespace GeneratorCalculation
 		/// <param name="providedType"></param>
 		/// <param name="conditions"></param>
 		/// <returns></returns>
-		public override Dictionary<PaperVariable, PaperWord> RunReceive(PaperType providedType, out GeneratorType newGenerator)
+		public override Z3.BoolExpr RunReceive(PaperType providedType, Solver engine, out GeneratorType newGenerator)
 		{
 			newGenerator = null;
-			Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
+			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
 			if (Receive == ConcreteType.Void)
-				return null;
+				return engine.concreteSort.Context.MkFalse();
 
 			PaperType head = null;
 			PaperType remaining = null;
 			if (Receive.Pop(ref head, ref remaining))
 			{
-				var c = head.IsCompatibleTo(providedType);
-				if (c == null)
-					return null;
-
-				conditions = Solver.JoinConditions(conditions, c);
-				if (HasForbiddenBindings(conditions))
-					return null;
-
 				newGenerator = new CoroutineType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
-				return conditions;
+				return engine.concreteSort.Context.MkAnd(
+					head.BuildEquality(providedType, engine),
+					AddConstraints(engine));
 			}
 
 			Debug.Assert(Receive == ConcreteType.Void);
-			return null;
+
+			return engine.concreteSort.Context.MkFalse();
 		}
 
 		/// <summary>
