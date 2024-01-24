@@ -121,9 +121,11 @@ namespace GeneratorCalculation
 			if (Receive.Pop(ref head, ref remaining))
 			{
 				newGenerator = new GeneratorType(ForbiddenBindings, remaining, Yield);
-				return engine.concreteSort.Context.MkAnd(
-					head.BuildEquality(providedType, engine),
-					AddConstraints(engine));
+				var exp1 = AddConstraints(engine);
+				if (exp1 == null)
+					return head.BuildEquality(providedType, engine);
+				else
+					return engine.ConcreteSort.Context.MkAnd(head.BuildEquality(providedType, engine), exp1);
 			}
 
 			Debug.Assert(Receive == ConcreteType.Void);
@@ -131,8 +133,16 @@ namespace GeneratorCalculation
 			return engine.concreteSort.Context.MkFalse();
 		}
 
+		/// <summary>
+		/// Return null if there's no additional conditions.
+		/// </summary>
+		/// <param name="engine"></param>
+		/// <returns></returns>
 		protected Z3.BoolExpr AddConstraints(Solver engine)
 		{
+			if (ForbiddenBindings.Count == 0)
+				return null;
+
 			Z3.Context ctx = engine.concreteSort.Context;
 			Z3.BoolExpr[] args = new Z3.BoolExpr[ForbiddenBindings.Count];
 			int j = 0;
@@ -338,9 +348,11 @@ namespace GeneratorCalculation
 			if (Receive.Pop(ref head, ref remaining))
 			{
 				newGenerator = new CoroutineType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
-				return engine.concreteSort.Context.MkAnd(
-					head.BuildEquality(providedType, engine),
-					AddConstraints(engine));
+				var exp1 = AddConstraints(engine);
+				if (exp1 == null)
+					return head.BuildEquality(providedType, engine);
+				else
+					return engine.ConcreteSort.Context.MkAnd(head.BuildEquality(providedType, engine), exp1);
 			}
 
 			Debug.Assert(Receive == ConcreteType.Void);
@@ -388,7 +400,7 @@ namespace GeneratorCalculation
 				g = new CoroutineType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
 			else
 				g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
-			
+
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
 				return ConcreteType.Void;
 			else
