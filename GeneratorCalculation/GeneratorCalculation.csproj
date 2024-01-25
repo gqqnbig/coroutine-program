@@ -5,10 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 	<PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)'!='Windows_NT'">
-	<!-- Linux and dotnet on Linux are almost always x64. Plus, this repository comes with a Linux x64 lib. -->
-	<PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
+  <Import Project="..\z3.proj" />
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningsAsErrors>NU1605;CS0114</WarningsAsErrors>
@@ -23,12 +20,6 @@
     <PackageReference Include="Microsoft.Z3.x86" Version="4.12.2" Condition="'$(PlatformTarget)'=='x86'" />
     <PackageReference Include="Microsoft.Z3" Version="4.12.2" Condition="'$(PlatformTarget)'=='x64'" />
   </ItemGroup>
-
-	<Target Name="Check Architecture for Z3" BeforeTargets="PreBuildEvent" Condition="'$(PlatformTarget)'!='x64' and '$(PlatformTarget)'!='x86'">
-		<Error Text="The architecture for this project is '$(PlatformTarget)'. This means we let the CS compiler determines the best architecture, but we have to import the architecture-dependent Z3 package before calling the compiler." 
-				Condition="'$(PlatformTarget)'=='' or $(PlatformTarget.ToUpper().Contains('ANYCPU'))" />
-		<Error Text="The architecture for this project is '$(PlatformTarget)', but Z3 is only available for x86 or x64." />
-	</Target>
 
   <ItemGroup>
     <None Update="appsettings.json">

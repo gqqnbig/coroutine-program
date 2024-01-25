@@ -3,7 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>RequirementAnalysis.Tests</RootNamespace>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+  <Import Project="..\z3.proj" />
 
   <ItemGroup>
 	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
