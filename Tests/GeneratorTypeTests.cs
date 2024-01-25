@@ -24,22 +24,18 @@ namespace GeneratorCalculation.Tests
 			Solver solver = new Solver();
 			// Use reflection to access and populate the concreteSort field.
 			// I'm not yet certain of the signature of Solver.RunReceive().
-			var z3CtxField = solver.GetType().GetField("z3Ctx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-			var ctx = (Microsoft.Z3.Context)z3CtxField.GetValue(solver);
-			var concreteSort = ctx.MkEnumSort("Concrete", "A", "B", "X");
-			var concreteSortField = solver.GetType().GetField("concreteSort", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-			concreteSortField.SetValue(solver, concreteSort);
+			var ctx = solver.z3Ctx;
+			var concreteSortProperty = solver.GetType().GetProperty("ConcreteSort");
+			concreteSortProperty.SetValue(solver, ctx.MkEnumSort("Concrete", "A", "B", "X"));
 
-
-			var forbiddenBindings = new Dictionary<SequenceType, List<SequenceType>>();
-			forbiddenBindings[new SequenceType((PaperVariable)"b")] = new List<SequenceType> { new SequenceType((ConcreteType)"B") };
-			GeneratorType g = new GeneratorType(forbiddenBindings, new SequenceType((PaperVariable)"a", (PaperVariable)"b"), (ConcreteType)"X");
+			Condition condition = Condition.NotEqual("b", "B");
+			CoroutineType g = new CoroutineType(condition, new SequenceType((PaperVariable)"a", (PaperVariable)"b"), (ConcreteType)"X");
 
 			GeneratorType ng;
 			var conditions = g.RunReceive((ConcreteType)"A", solver, out ng);
 			Assert.True(conditions != null, "The coroutine should have no problem in receiving A.");
 
-			Assert.Equal(forbiddenBindings, ng.ForbiddenBindings);
+			Assert.Equal(condition, ng.Condition);
 		}
 
 		[Fact]

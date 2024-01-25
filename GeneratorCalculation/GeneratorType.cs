@@ -17,22 +17,22 @@ namespace GeneratorCalculation
 			Receive = receive;
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="forbiddenBindings">
-		/// Key and value both can have <see cref="PaperVariable"/>.
-		/// <code>[(x,y)] = {(String, Path)}</code>
-		/// <code>[(x)] = {(y), (S)}</code>
-		/// </param>
-		/// <param name="receive"></param>
-		/// <param name="yield"></param>
-		public GeneratorType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType @yield)
-		{
-			ForbiddenBindings = forbiddenBindings;
-			Receive = receive;
-			Yield = yield;
-		}
+		///// <summary>
+		///// 
+		///// </summary>
+		///// <param name="forbiddenBindings">
+		///// Key and value both can have <see cref="PaperVariable"/>.
+		///// <code>[(x,y)] = {(String, Path)}</code>
+		///// <code>[(x)] = {(y), (S)}</code>
+		///// </param>
+		///// <param name="receive"></param>
+		///// <param name="yield"></param>
+		//public GeneratorType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType @yield)
+		//{
+		//	ForbiddenBindings = forbiddenBindings;
+		//	Receive = receive;
+		//	Yield = yield;
+		//}
 
 		public GeneratorType(Condition condition, PaperType receive, PaperType @yield)
 		{
@@ -47,7 +47,7 @@ namespace GeneratorCalculation
 
 		public PaperType Receive { get; }
 
-		public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
+		//public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
 
 		public void Check()
 		{
@@ -113,14 +113,14 @@ namespace GeneratorCalculation
 			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
 			if (Receive == ConcreteType.Void)
 			{
-				return engine.concreteSort.Context.MkFalse();
+				return engine.ConcreteSort.Context.MkFalse();
 			}
 
 			PaperType head = null;
 			PaperType remaining = null;
 			if (Receive.Pop(ref head, ref remaining))
 			{
-				newGenerator = new GeneratorType(ForbiddenBindings, remaining, Yield);
+				newGenerator = new GeneratorType(Condition, remaining, Yield);
 				var exp1 = AddConstraints(engine);
 				if (exp1 == null)
 					return head.BuildEquality(providedType, engine);
@@ -130,7 +130,7 @@ namespace GeneratorCalculation
 
 			Debug.Assert(Receive == ConcreteType.Void);
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		/// <summary>
@@ -140,34 +140,35 @@ namespace GeneratorCalculation
 		/// <returns></returns>
 		protected Z3.BoolExpr AddConstraints(Solver engine)
 		{
-			if (ForbiddenBindings.Count == 0)
+			if (Condition != null)
+				return this.Condition.GetExpr(engine);
+			else
 				return null;
 
-			Z3.Context ctx = engine.concreteSort.Context;
-			Z3.BoolExpr[] args = new Z3.BoolExpr[ForbiddenBindings.Count];
-			int j = 0;
-			foreach (SequenceType key in ForbiddenBindings.Keys)
-			{
-				if (key.Types.Count > 1)
-					throw new NotImplementedException();
+			//Z3.BoolExpr[] args = new Z3.BoolExpr[ForbiddenBindings.Count];
+			//int j = 0;
+			//foreach (SequenceType key in ForbiddenBindings.Keys)
+			//{
+			//	if (key.Types.Count > 1)
+			//		throw new NotImplementedException();
 
-				var k = key.Types[0];
-				var forbiddenSet = ForbiddenBindings[key];
+			//	var k = key.Types[0];
+			//	var forbiddenSet = ForbiddenBindings[key];
 
-				Z3.BoolExpr[] args1 = new Z3.BoolExpr[forbiddenSet.Count];
-				for (int i = 0; i < forbiddenSet.Count; i++)
-				{
-					SequenceType fb = forbiddenSet[i];
-					if (fb.Types.Count > 1)
-						throw new NotImplementedException();
+			//	Z3.BoolExpr[] args1 = new Z3.BoolExpr[forbiddenSet.Count];
+			//	for (int i = 0; i < forbiddenSet.Count; i++)
+			//	{
+			//		SequenceType fb = forbiddenSet[i];
+			//		if (fb.Types.Count > 1)
+			//			throw new NotImplementedException();
 
-					var v = fb.Types[0];
+			//		var v = fb.Types[0];
 
-					args1[i] = ctx.MkNot(k.BuildEquality(v, engine));
-				}
-				args[j] = ctx.MkAnd(args1);
-			}
-			return ctx.MkAnd(args);
+			//		args1[i] = ctx.MkNot(k.BuildEquality(v, engine));
+			//	}
+			//	args[j] = ctx.MkAnd(args1);
+			//}
+			//return ctx.MkAnd(args);
 		}
 
 
@@ -175,13 +176,8 @@ namespace GeneratorCalculation
 		{
 			if (Condition != null)
 				return $"[{Receive}; {Yield}] where {Condition}";
-			else if (ForbiddenBindings.Count == 0)
-				return $"[{Receive}; {Yield}]";
 			else
-			{
-				string constrain = string.Join(", ", ForbiddenBindings.Select(p => p.Key + " not in {" + string.Join(", ", p.Value) + "}"));
-				return $"[{Receive}; {Yield}] where {constrain}";
-			}
+				return $"[{Receive}; {Yield}]";
 		}
 
 
@@ -197,12 +193,12 @@ namespace GeneratorCalculation
 			if (other is GeneratorType another)
 			{
 				// TODO: should use full match. IsCompatibleTo only checks the head element.
-				return engine.concreteSort.Context.MkAnd(
+				return engine.ConcreteSort.Context.MkAnd(
 					Yield.BuildEquality(another.Yield, engine),
 					Receive.BuildEquality(another.Receive, engine));
 			}
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 
 		}
 
@@ -222,25 +218,26 @@ namespace GeneratorCalculation
 			var newReceive = Receive.ApplyEquation(equations);
 			if (newYield is PaperType newYieldType && newReceive is PaperType newReceiveType)
 			{
-				var copy = new Dictionary<SequenceType, List<SequenceType>>();
-				foreach (SequenceType key in ForbiddenBindings.Keys)
-				{
-					SequenceType valuedKey = (SequenceType)key.ApplyEquation(equations);
-					var valuedSet = ForbiddenBindings[key].Select(s => (SequenceType)s.ApplyEquation(equations)).ToList();
-					if (valuedSet.Any(s => s.Equals(valuedKey)))
-						return new GeneratorType(ConcreteType.Void, ConcreteType.Void); // This identity element will be nuked.
+				return new GeneratorType(Condition, newReceiveType, newYieldType);
+				//var copy = new Dictionary<SequenceType, List<SequenceType>>();
+				//foreach (SequenceType key in ForbiddenBindings.Keys)
+				//{
+				//	SequenceType valuedKey = (SequenceType)key.ApplyEquation(equations);
+				//	var valuedSet = ForbiddenBindings[key].Select(s => (SequenceType)s.ApplyEquation(equations)).ToList();
+				//	if (valuedSet.Any(s => s.Equals(valuedKey)))
+				//		return new GeneratorType(ConcreteType.Void, ConcreteType.Void); // This identity element will be nuked.
 
-					var c = new List<string>();
-					if (valuedKey.GetVariables().Count == 0 && valuedSet.Sum(s => s.GetVariables().Count) == 0)
-						continue; //Since both sides have no variables, we don't have to add them to ForbiddenBindings.
+				//	var c = new List<string>();
+				//	if (valuedKey.GetVariables().Count == 0 && valuedSet.Sum(s => s.GetVariables().Count) == 0)
+				//		continue; //Since both sides have no variables, we don't have to add them to ForbiddenBindings.
 
-					if (copy.ContainsKey(valuedKey))
-						copy[valuedKey].AddRange(valuedSet);
-					else
-						copy[valuedKey] = valuedSet;
-				}
+				//	if (copy.ContainsKey(valuedKey))
+				//		copy[valuedKey].AddRange(valuedSet);
+				//	else
+				//		copy[valuedKey] = valuedSet;
+				//}
 
-				return new GeneratorType(copy, newReceiveType, newYieldType);
+				//return new GeneratorType(copy, newReceiveType, newYieldType);
 			}
 			else
 				return this;
@@ -262,8 +259,6 @@ namespace GeneratorCalculation
 			GeneratorType g;
 			if (Condition != null)
 				g = new GeneratorType(Condition, Receive.Normalize(), Yield.Normalize());
-			else if (ForbiddenBindings != null)
-				g = new GeneratorType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
 			else
 				g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
 
@@ -293,7 +288,7 @@ namespace GeneratorCalculation
 
 		public virtual GeneratorType Clone()
 		{
-			return new GeneratorType(ForbiddenBindings, Receive, Yield);
+			return new GeneratorType(Condition, Receive, Yield);
 		}
 	}
 
@@ -319,12 +314,6 @@ namespace GeneratorCalculation
 			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(forbiddenBindings, receive, yield)
-		{
-			Source = source;
-			CanRestore = canRestore;
-		}
-
 		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, receive, yield)
 		{
 			Source = source;
@@ -341,13 +330,13 @@ namespace GeneratorCalculation
 			newGenerator = null;
 			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
 			if (Receive == ConcreteType.Void)
-				return engine.concreteSort.Context.MkFalse();
+				return engine.ConcreteSort.Context.MkFalse();
 
 			PaperType head = null;
 			PaperType remaining = null;
 			if (Receive.Pop(ref head, ref remaining))
 			{
-				newGenerator = new CoroutineType(ForbiddenBindings, remaining, Yield, Source, CanRestore);
+				newGenerator = new CoroutineType(Condition, remaining, Yield, Source, CanRestore);
 				var exp1 = AddConstraints(engine);
 				if (exp1 == null)
 					return head.BuildEquality(providedType, engine);
@@ -357,7 +346,7 @@ namespace GeneratorCalculation
 
 			Debug.Assert(Receive == ConcreteType.Void);
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		/// <summary>
@@ -396,8 +385,6 @@ namespace GeneratorCalculation
 			CoroutineType g;
 			if (Condition != null)
 				g = new CoroutineType(Condition, Receive.Normalize(), Yield.Normalize());
-			else if (ForbiddenBindings != null)
-				g = new CoroutineType(ForbiddenBindings, Receive.Normalize(), Yield.Normalize());
 			else
 				g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
 
@@ -417,7 +404,7 @@ namespace GeneratorCalculation
 
 		public override GeneratorType Clone()
 		{
-			return new CoroutineType(ForbiddenBindings, Receive, Yield, Source, CanRestore);
+			return new CoroutineType(Condition, Receive, Yield, Source, CanRestore);
 		}
 	}
 
