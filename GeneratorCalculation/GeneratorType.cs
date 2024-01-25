@@ -297,7 +297,7 @@ namespace GeneratorCalculation
 			CanRestore = canRestore;
 		}
 
-		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, yield, receive)
+		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, receive, yield)
 		{
 			Source = source;
 			CanRestore = canRestore;

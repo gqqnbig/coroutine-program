@@ -31,6 +31,17 @@ namespace GeneratorCalculation.Tests
 
 			Assert.Equal(forbiddenBindings, ng.ForbiddenBindings);
 		}
+
+		[Fact]
+		public void TestConstructor()
+		{
+			var g = new CoroutineType(condition: new InheritanceCondition(),
+				receive: (ConcreteType)"A",
+				yield: (ConcreteType)"B");
+
+			Assert.Equal((ConcreteType)"A", g.Receive);
+			Assert.Equal((ConcreteType)"B", g.Yield);
+		}
 	}
 
 }
