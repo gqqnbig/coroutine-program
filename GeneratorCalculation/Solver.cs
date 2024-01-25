@@ -14,8 +14,8 @@ namespace GeneratorCalculation
 
 		private readonly List<GeneratorType> compositionOrder = new List<GeneratorType>();
 
-		readonly Z3.Context z3Ctx;
-		internal Z3.EnumSort concreteSort;
+		public readonly Z3.Context z3Ctx;
+		public Z3.EnumSort ConcreteSort { get; private set; }
 
 		public Solver()
 		{
@@ -116,7 +116,7 @@ namespace GeneratorCalculation
 
 			// SolveWithBindings may be recursively called,
 			// so we have to check if concreteSort has been assigned.
-			if (concreteSort == null)
+			if (ConcreteSort == null)
 			{
 				HashSet<string> allTypes = new HashSet<string>();
 				foreach (var g in coroutines)
@@ -127,7 +127,7 @@ namespace GeneratorCalculation
 					//g.Type.Check();
 				}
 				allTypes.Remove(ConcreteType.Void.Name);
-				concreteSort = z3Ctx.MkEnumSort("Concrete", allTypes.ToArray());
+				ConcreteSort = z3Ctx.MkEnumSort("Concrete", allTypes.ToArray());
 				logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
 			}
 
@@ -477,7 +477,7 @@ namespace GeneratorCalculation
 									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 
 									//pairs[i].Type.Receive.Pop
-									pairs[i].Type = new GeneratorType(pairs[i].Type.ForbiddenBindings, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+									pairs[i].Type = new GeneratorType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
 									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 									if (solver.Model.NumConsts > 0)
 									{
