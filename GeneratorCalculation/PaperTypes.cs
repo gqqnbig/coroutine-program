@@ -120,7 +120,7 @@ namespace GeneratorCalculation
 
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			var ctx = engine.concreteSort.Context;
+			var ctx = engine.ConcreteSort.Context;
 			if (other is PaperInt tInt)
 			{
 				return ctx.MkEq(ctx.MkIntConst(Name), ctx.MkInt(tInt.Value));
@@ -129,21 +129,21 @@ namespace GeneratorCalculation
 			{
 				tType = tType.Normalize();
 				if (tType == ConcreteType.Void)
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 
 				if (tType is ConcreteType tConcrete)
 				{
-					var s = engine.concreteSort.Consts.First(c => c.ToString().Equals(tConcrete.Name));
-					return ctx.MkEq(ctx.MkConst(Name, engine.concreteSort), s);
+					var s = engine.ConcreteSort.Consts.First(c => c.ToString().Equals(tConcrete.Name));
+					return ctx.MkEq(ctx.MkConst(Name, engine.ConcreteSort), s);
 				}
 				else if (tType is PaperVariable tVariable)
 				{
 					//var s = engine.concreteSort.Consts.First(c => c.ToString().Equals(tVariable.Name));
-					return ctx.MkEq(ctx.MkConst(Name, engine.concreteSort), ctx.MkConst(tVariable.Name, engine.concreteSort));
+					return ctx.MkEq(ctx.MkConst(Name, engine.ConcreteSort), ctx.MkConst(tVariable.Name, engine.ConcreteSort));
 				}
 				else
 				{
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 				}
 			}
 
@@ -151,7 +151,7 @@ namespace GeneratorCalculation
 			//var d = new Dictionary<PaperVariable, PaperWord>();
 			//d.Add(this, t);
 			//return d;
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -182,9 +182,9 @@ namespace GeneratorCalculation
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
 			if (other is PaperInt tInt && tInt.Value == this.Value)
-				return engine.concreteSort.Context.MkTrue();
+				return engine.ConcreteSort.Context.MkTrue();
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -226,7 +226,7 @@ namespace GeneratorCalculation
 
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -285,16 +285,16 @@ namespace GeneratorCalculation
 		public Z3.BoolExpr BuildEquality(PaperWord t, Solver engine)
 		{
 			if (t is ConcreteType t2 && t2.Name == this.Name)
-				return engine.concreteSort.Context.MkTrue();
+				return engine.ConcreteSort.Context.MkTrue();
 
 			if (t is ListType tList)
 			{
-				return engine.concreteSort.Context.MkAnd(
+				return engine.ConcreteSort.Context.MkAnd(
 							tList.Size.BuildEquality((PaperInt)1, engine),
 							tList.Type.BuildEquality(this, engine));
 			}
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -363,7 +363,7 @@ namespace GeneratorCalculation
 			{
 				if (tSequence.Types.Count != Types.Count)
 				{
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 				}
 
 
@@ -372,9 +372,9 @@ namespace GeneratorCalculation
 					args[i] = Types[i].BuildEquality(tSequence.Types[i], engine);
 
 
-				return engine.concreteSort.Context.MkAnd(args);
+				return engine.ConcreteSort.Context.MkAnd(args);
 			}
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public SequenceType ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
@@ -504,16 +504,16 @@ namespace GeneratorCalculation
 			{
 				if (Types.Count != tTuple.Types.Count)
 				{
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 				}
 
 
 				Z3.BoolExpr[] args = new Z3.BoolExpr[Types.Count];
 				for (int i = 0; i < Types.Count; i++)
 					args[i] = Types[i].BuildEquality(tTuple.Types[i], engine);
-				return engine.concreteSort.Context.MkAnd(args);
+				return engine.ConcreteSort.Context.MkAnd(args);
 			}
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -599,10 +599,10 @@ namespace GeneratorCalculation
 			if (other is FunctionType oFunction)
 			{
 				if (FunctionName != oFunction.FunctionName)
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 
 				if (Arguments.Count != oFunction.Arguments.Count)
-					return engine.concreteSort.Context.MkFalse();
+					return engine.ConcreteSort.Context.MkFalse();
 
 
 				Z3.BoolExpr[] args = new Z3.BoolExpr[Arguments.Count];
@@ -610,10 +610,10 @@ namespace GeneratorCalculation
 				{
 					args[i] = Arguments[i].BuildEquality(oFunction.Arguments[i], engine);
 				}
-				return engine.concreteSort.Context.MkAnd(args);
+				return engine.ConcreteSort.Context.MkAnd(args);
 			}
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public virtual PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
@@ -716,12 +716,12 @@ namespace GeneratorCalculation
 		{
 			if (other is ListType otherList)
 			{
-				return engine.concreteSort.Context.MkAnd(
+				return engine.ConcreteSort.Context.MkAnd(
 					Type.BuildEquality(otherList.Type, engine),
 					Size.BuildEquality(otherList.Size, engine));
 			}
 
-			return engine.concreteSort.Context.MkFalse();
+			return engine.ConcreteSort.Context.MkFalse();
 		}
 
 		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
