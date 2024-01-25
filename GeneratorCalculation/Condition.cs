@@ -29,13 +29,16 @@ namespace GeneratorCalculation
 
 	public class Z3Condition : Condition
 	{
-		public Z3Condition(Func<Solver, Z3.BoolExpr> expBuilder)
+
+		public Z3Condition(Func<Solver, Z3.BoolExpr> expBuilder, string informalDescription = null)
 		{
 			this.expBuilder = expBuilder;
+			InformalDescription = informalDescription;
 		}
 
 		Func<Solver, Z3.BoolExpr> expBuilder;
 
+		public string InformalDescription { get; }
 
 		public override Z3.BoolExpr GetExpr(Solver s)
 		{
@@ -44,12 +47,22 @@ namespace GeneratorCalculation
 
 			return expr;
 		}
+
+		public override string ToString()
+		{
+			if (string.IsNullOrEmpty(InformalDescription) == false)
+				return InformalDescription;
+			else if (expr != null)
+				return expr.ToString();
+			else
+				return base.ToString();
+		}
 	}
 
 	public class EqualCondition : Condition
 	{
-		private PaperWord x;
-		private PaperWord y;
+		public PaperWord X { get; private set; }
+		public PaperWord Y { get; private set; }
 
 		public EqualCondition(string x, string y)
 		{
@@ -59,47 +72,62 @@ namespace GeneratorCalculation
 				throw new ArgumentException("y cannot be null or empty.");
 
 			if (char.IsLower(x[0]))
-				this.x = new PaperVariable(x);
+				this.X = new PaperVariable(x);
 			else
-				this.x = new ConcreteType(x);
+				this.X = new ConcreteType(x);
 
 
 			if (char.IsLower(y[0]))
-				this.y = new PaperVariable(y);
+				this.Y = new PaperVariable(y);
 			else
-				this.y = new ConcreteType(y);
+				this.Y = new ConcreteType(y);
 		}
 
 		public EqualCondition(PaperWord x, PaperWord y)
 		{
-			this.x = x;
-			this.y = y;
+			this.X = x;
+			this.Y = y;
 		}
 
 		public override Z3.BoolExpr GetExpr(Solver s)
 		{
 			if (expr == null)
-				expr = x.BuildEquality(y, s);
+				expr = X.BuildEquality(Y, s);
 			return expr;
+		}
+
+		public override string ToString()
+		{
+			return $"{X} == {Y}";
 		}
 	}
 
 	public class NotCondition : Condition
 	{
-		private EqualCondition equalCondition;
+		private Condition condition;
 
-		public NotCondition(EqualCondition equalCondition)
+		public NotCondition(Condition equalCondition)
 		{
-			this.equalCondition = equalCondition;
+			this.condition = equalCondition;
 		}
 
 		public override Z3.BoolExpr GetExpr(Solver s)
 		{
 			if (expr == null)
-				expr = s.z3Ctx.MkNot(equalCondition.GetExpr(s));
+				expr = s.z3Ctx.MkNot(condition.GetExpr(s));
 
 			return expr;
 		}
+
+		public override string ToString()
+		{
+			EqualCondition ec = condition as EqualCondition;
+			if (ec != null)
+				return $"{ec.X} != {ec.Y}";
+			else
+				return $"NOT({condition})";
+		}
+
 	}
 
 
