@@ -131,22 +131,6 @@ namespace GeneratorCalculation
 	}
 
 
-	public class InheritanceCondition : Condition
-	{
-		public PaperType Subclass { get; set; }
-		public PaperType Superclass { get; set; }
-
-		public override Z3.BoolExpr GetExpr(Solver s)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override string ToString()
-		{
-			return $"{Subclass}: {Superclass}";
-		}
-	}
-
 	public class AndCondition : Condition
 	{
 		public Condition Condition1;

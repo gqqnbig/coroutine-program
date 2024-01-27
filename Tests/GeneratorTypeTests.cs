@@ -41,7 +41,8 @@ namespace GeneratorCalculation.Tests
 		[Fact]
 		public void TestConstructor()
 		{
-			var g = new CoroutineType(condition: new InheritanceCondition(),
+			var c = new Z3Condition(s => s.z3Ctx.MkTrue());
+			var g = new CoroutineType(condition: c,
 				receive: (ConcreteType)"A",
 				yield: (ConcreteType)"B");
 
