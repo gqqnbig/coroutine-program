@@ -109,6 +109,32 @@ namespace GeneratorCalculation
 			return availableConstants.ToList();
 		}
 
+		/// <summary>
+		/// Collect ConcreteTypes in coroutines and their conditions.
+		/// </summary>
+		/// <param name="coroutines"></param>
+		/// <param name="bindings"></param>
+		/// <param name="additionalTypes"></param>
+		public void CollectConcreteTypes(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings, IEnumerable<string> additionalTypes = null)
+		{
+			if (bindings == null)
+				bindings = new Dictionary<PaperVariable, PaperWord>();
+
+			HashSet<string> allTypes = new HashSet<string>();
+			foreach (var g in coroutines)
+			{
+				var c = new ConcreteTypeCollector(bindings);
+				c.Visit(g.Type);
+				allTypes.UnionWith(c.concreteTypes);
+				//g.Type.Check();
+			}
+			allTypes.Remove(ConcreteType.Void.Name);
+			if (additionalTypes != null)
+				allTypes.UnionWith(additionalTypes);
+			ConcreteSort = z3Ctx.MkEnumSort("Concrete", allTypes.ToArray());
+			logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
+		}
+
 		public GeneratorType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
 		{
 			if (bindings == null)
@@ -117,19 +143,7 @@ namespace GeneratorCalculation
 			// SolveWithBindings may be recursively called,
 			// so we have to check if concreteSort has been assigned.
 			if (ConcreteSort == null)
-			{
-				HashSet<string> allTypes = new HashSet<string>();
-				foreach (var g in coroutines)
-				{
-					var c = new ConcreteTypeCollector(bindings);
-					c.Visit(g.Type);
-					allTypes.UnionWith(c.concreteTypes);
-					//g.Type.Check();
-				}
-				allTypes.Remove(ConcreteType.Void.Name);
-				ConcreteSort = z3Ctx.MkEnumSort("Concrete", allTypes.ToArray());
-				logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
-			}
+				CollectConcreteTypes(coroutines, bindings);
 
 
 			StringBuilder sb = new StringBuilder();
