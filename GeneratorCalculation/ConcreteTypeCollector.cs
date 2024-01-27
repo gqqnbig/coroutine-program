@@ -4,17 +4,22 @@ using System.Text;
 
 namespace GeneratorCalculation
 {
-	class ConcreteTypeCollector
+	public class ConcreteTypeCollector
 	{
 		public HashSet<string> concreteTypes = new HashSet<string>();
 		private Dictionary<PaperVariable, PaperWord> bindings;
+
+		public ConcreteTypeCollector()
+		{
+			this.bindings = new Dictionary<PaperVariable, PaperWord>();
+		}
 
 		public ConcreteTypeCollector(Dictionary<PaperVariable, PaperWord> bindings)
 		{
 			this.bindings = bindings;
 		}
 
-		private void Visit(PaperType t)
+		public void Visit(PaperType t)
 		{
 			if (t is ConcreteType ct)
 			{
