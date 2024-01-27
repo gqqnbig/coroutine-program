@@ -15,27 +15,24 @@ namespace RequirementAnalysis
 		{
 
 			// Step 1: Load the file content into a string.
-			string path = @"D:\rm2pt\CaseStudies\CoCoME\RequirementsModel\cocome.remodel";
+			string path = @"E:\GeneratorCalculation\RequirementAnalysisTests\library.remodel";
+
 
 			string[] interestedCoroutines =
 			{
-				"CoCoMESystem::openStore",
-				"CoCoMESystem::openCashDesk",
-				"ProcessSaleService::makeNewSale",
-				"ProcessSaleService::enterItem",
-				"ManageStoreCRUDService::createStore",
-				"ManageCashDeskCRUDService::createCashDesk",
-				"ManageItemCRUDService::createItem",
-
-				"ProcessSaleService::makeCashPayment",
-				//"ProcessSaleService::makeCardPayment",
+				"ManageBookCRUDService::createBook",
+				"ManageBookCopyCRUDService::addBookCopy",
+				"ManageUserCRUDService::createStudent",
+				"LibraryManagementSystemSystem::makeReservation",
+				"LibraryManagementSystemSystem::borrowBook",
+				"LibraryManagementSystemSystem::returnBook",
 
 			};
 			string[] lowPriorityCoroutines =
 			{
-				"ManageItemCRUDService::deleteItem",
-				"ManageStoreCRUDService::deleteStore",
-				"ManageCashDeskCRUDService::deleteCashDesk",
+				"ManageUserCRUDService::deleteUser",
+				"ManageBookCRUDService::deleteBook",
+				"ManageBookCopyCRUDService::deleteBookCopy",
 			};
 
 			List<Generator> generators = FindTypes(path);
