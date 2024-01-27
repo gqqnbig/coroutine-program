@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Z3 = Microsoft.Z3;
 
 namespace GeneratorCalculation
@@ -24,6 +25,8 @@ namespace GeneratorCalculation
 		/// <param name="s"></param>
 		/// <returns></returns>
 		public abstract Z3.BoolExpr GetExpr(Solver s);
+
+		public abstract void GetConcreteTypes(HashSet<string> set);
 
 	}
 
@@ -56,6 +59,10 @@ namespace GeneratorCalculation
 				return expr.ToString();
 			else
 				return base.ToString();
+		}
+
+		public override void GetConcreteTypes(HashSet<string> set)
+		{
 		}
 	}
 
@@ -100,6 +107,23 @@ namespace GeneratorCalculation
 		{
 			return $"{X} == {Y}";
 		}
+
+		public override void GetConcreteTypes(HashSet<string> set)
+		{
+			if (X is PaperType xt)
+			{
+				var c1 = new ConcreteTypeCollector(new Dictionary<PaperVariable, PaperWord>());
+				c1.Visit(xt);
+				set.UnionWith(c1.concreteTypes);
+			}
+
+			if (Y is PaperType yt)
+			{
+				var c1 = new ConcreteTypeCollector(new Dictionary<PaperVariable, PaperWord>());
+				c1.Visit(yt);
+				set.UnionWith(c1.concreteTypes);
+			}
+		}
 	}
 
 	public class NotCondition : Condition
@@ -109,6 +133,11 @@ namespace GeneratorCalculation
 		public NotCondition(Condition equalCondition)
 		{
 			this.condition = equalCondition;
+		}
+
+		public override void GetConcreteTypes(HashSet<string> set)
+		{
+			condition.GetConcreteTypes(set);
 		}
 
 		public override Z3.BoolExpr GetExpr(Solver s)
@@ -135,6 +164,12 @@ namespace GeneratorCalculation
 	{
 		public Condition Condition1;
 		public Condition Condition2;
+
+		public override void GetConcreteTypes(HashSet<string> set)
+		{
+			Condition1.GetConcreteTypes(set);
+			Condition2.GetConcreteTypes(set);
+		}
 
 		public override Z3.BoolExpr GetExpr(Solver s)
 		{
