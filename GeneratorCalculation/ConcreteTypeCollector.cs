@@ -57,6 +57,8 @@ namespace GeneratorCalculation
 		{
 			Visit(type.Receive);
 			Visit(type.Yield);
+			if (type.Condition != null)
+				type.Condition.GetConcreteTypes(concreteTypes);
 		}
 
 
