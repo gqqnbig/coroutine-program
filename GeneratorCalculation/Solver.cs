@@ -17,9 +17,26 @@ namespace GeneratorCalculation
 		public readonly Z3.Context z3Ctx;
 		public Z3.EnumSort ConcreteSort { get; private set; }
 
+		private Dictionary<string, Z3.FuncDecl> functionHeads = new Dictionary<string, Z3.FuncDecl>();
+		private Dictionary<string, Z3.BoolExpr> functionBodies = new Dictionary<string, Z3.BoolExpr>();
+
 		public Solver()
 		{
 			z3Ctx = new Z3.Context();
+		}
+
+		public void AddZ3Function(Z3.FuncDecl head, Z3.BoolExpr body)
+		{
+			functionHeads.Add(head.Name.ToString(), head);
+			functionBodies.Add(head.Name.ToString(), body);
+		}
+
+		public Z3.FuncDecl GetFunctionHead(string name)
+		{
+			if (functionHeads.TryGetValue(name, out var value))
+				return value;
+			else
+				throw new NotSupportedException($"Function {name} is not found. Did you call AddZ3Function()?");
 		}
 
 
@@ -444,6 +461,7 @@ namespace GeneratorCalculation
 					{
 						using (var solver = z3Ctx.MkSolver())
 						{
+							solver.Add(functionBodies.Values.ToList());
 							List<int> matches = new List<int>();
 							for (int j = 0; j < pairs.Count; j++)
 							{
@@ -539,6 +557,7 @@ namespace GeneratorCalculation
 				GeneratorType newGenerator;
 				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
+					solver.Add(functionBodies.Values.ToList());
 					var exp = coroutine.RunReceive(pendingType, this, out newGenerator);
 					solver.Add(exp);
 					if (solver.Check() == Z3.Status.SATISFIABLE)
