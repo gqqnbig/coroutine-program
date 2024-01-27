@@ -14,7 +14,7 @@ namespace RequirementAnalysis.Tests
 		{
 			List<Generator> generators = new List<Generator>();
 
-			InheritanceCondition ic = new InheritanceCondition { Subclass = (PaperVariable)"a", Superclass = (ConcreteType)"Animal" };
+			InheritanceCondition ic = new InheritanceCondition((PaperVariable)"a", (ConcreteType)"Animal");
 			generators.Add(new Generator("", new CoroutineType(ic, (PaperVariable)"a", ConcreteType.Void)));
 
 			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Apple")));
@@ -24,12 +24,19 @@ namespace RequirementAnalysis.Tests
 
 			try
 			{
-				var result = new Solver().SolveWithBindings(generators);
+				var solver = new Solver();
+				var inheritance = new Dictionary<string, string>();
+				inheritance.Add("Dog", "Animal");
+				solver.CollectConcreteTypes(generators, null);
+				InheritanceCondition.BuildFunction(solver, inheritance, out var func, out var funcBody);
+				solver.AddZ3Function(func, funcBody);
+
+				var result = solver.SolveWithBindings(generators);
 				Assert.True(false, "DeadLockException is expected.");
 			}
 			catch (DeadLockException e)
 			{
-				Assert.True(e.YieldsToOutside.Count > 0, 
+				Assert.True(e.YieldsToOutside.Count > 0,
 							"Dog is Animal, so it will be received. \"Apple\" should be yielded to the outside.");
 				Assert.Equal(e.YieldsToOutside[0], (ConcreteType)"Apple");
 			}

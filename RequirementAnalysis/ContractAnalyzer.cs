@@ -130,11 +130,11 @@ namespace RequirementAnalysis
 			if (em.MoveNext() == false)
 				return null;
 
-			Condition c = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) };
+			Condition c = new InheritanceCondition(subclass: new PaperVariable(em.Current.Value.ToString()), superclass: new ConcreteType(em.Current.Key));
 			if (em.MoveNext() == false)
 				return c;
 
-			Condition c2 = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) };
+			Condition c2 = new InheritanceCondition(subclass: new PaperVariable(em.Current.Value.ToString()), superclass: new ConcreteType(em.Current.Key));
 			c = new AndCondition { Condition1 = c, Condition2 = c2 };
 			if (em.MoveNext() == false)
 				return c;
@@ -144,7 +144,7 @@ namespace RequirementAnalysis
 				c = new AndCondition
 				{
 					Condition1 = c,
-					Condition2 = new InheritanceCondition { Subclass = new PaperVariable(em.Current.Value.ToString()), Superclass = new ConcreteType(em.Current.Key) }
+					Condition2 = new InheritanceCondition(subclass: new PaperVariable(em.Current.Value.ToString()), superclass: new ConcreteType(em.Current.Key))
 				};
 
 			} while (em.MoveNext());
