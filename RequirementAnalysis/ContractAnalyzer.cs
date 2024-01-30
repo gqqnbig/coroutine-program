@@ -71,7 +71,7 @@ namespace RequirementAnalysis
 				return null;
 			else
 			{
-				g.Type = (GeneratorType)n;
+				g.Type = (CoroutineType)n;
 				return g;
 			}
 		}

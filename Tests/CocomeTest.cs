@@ -38,7 +38,7 @@ namespace GeneratorCalculation.Tests
 			bindings.Add("createItem", new CoroutineType(ConcreteType.Void, new SequenceType("Item")));
 
 			var coroutines = new List<Generator>();
-			coroutines.Add(new Generator("", new GeneratorType(new TupleType((PaperVariable)"openStore", (PaperVariable)"openCashDesk", (PaperVariable)"makeNewSale", (PaperVariable)"enterItem", (PaperVariable)"createStore", (PaperVariable)"createCashDesk", (PaperVariable)"createItem"), ConcreteType.Void)));
+			coroutines.Add(new Generator("", new CoroutineType(ConcreteType.Void, new TupleType((PaperVariable)"openStore", (PaperVariable)"openCashDesk", (PaperVariable)"makeNewSale", (PaperVariable)"enterItem", (PaperVariable)"createStore", (PaperVariable)"createCashDesk", (PaperVariable)"createItem"))));
 			coroutines.Add(new Generator("deleteItem", new CoroutineType(new SequenceType("Item"), ConcreteType.Void)));
 
 
