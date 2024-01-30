@@ -6,6 +6,7 @@ using Antlr4.Runtime;
 using DiffSyntax.Antlr;
 using System.Linq;
 using GeneratorCalculation;
+using Z3 = Microsoft.Z3;
 
 namespace RequirementAnalysis
 {
@@ -13,48 +14,28 @@ namespace RequirementAnalysis
 	{
 		static void Main(string[] args)
 		{
+			List<Generator> generators = new List<Generator>();
 
-			// Step 1: Load the file content into a string.
-			string path = @"E:\GeneratorCalculation\RequirementAnalysisTests\library.remodel";
+			InheritanceCondition ic = new InheritanceCondition((PaperVariable)"a", (ConcreteType)"Animal");
+			generators.Add(new Generator("", new CoroutineType(ic, (PaperVariable)"a", ConcreteType.Void)));
 
+			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Apple")));
+			generators.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Dog")));
+			generators.Add(new Generator("", new CoroutineType((ConcreteType)"B", (ConcreteType)"A")));
+			generators.Add(new Generator("", new CoroutineType((ConcreteType)"A", (ConcreteType)"B")));
 
-			string[] interestedCoroutines =
-			{
-				"ManageBookCRUDService::createBook",
-				"ManageBookCopyCRUDService::addBookCopy",
-				"ManageUserCRUDService::createStudent",
-				"LibraryManagementSystemSystem::makeReservation",
-				"LibraryManagementSystemSystem::borrowBook",
-				"LibraryManagementSystemSystem::returnBook",
+			var solver = new Solver();
+			var inheritance = new Dictionary<string, string>();
+			inheritance.Add("Dog", "Animal");
+			solver.CollectConcreteTypes(generators, null);
+			InheritanceCondition.BuildFunction(solver, inheritance, out var func, out var funcBody);
+			solver.AddZ3Function(func, funcBody);
 
-			};
-			string[] lowPriorityCoroutines =
-			{
-				"ManageUserCRUDService::deleteUser",
-				"ManageBookCRUDService::deleteBook",
-				"ManageBookCopyCRUDService::deleteBookCopy",
-			};
-
-			List<Generator> generators = FindTypes(path);
-
-			foreach (var g in generators)
-				Console.WriteLine($"{g.Name}:\t{g.Type}");
-
-			Console.WriteLine("\nNow, let's compose interested coroutines.");
-			GeneratorType result = Compose(generators, interestedCoroutines, lowPriorityCoroutines);
-			Console.WriteLine(result);
+			var result = solver.SolveWithBindings(generators);
 		}
 
-		public static List<Generator> FindTypes(string remodelPath)
-		{
-			string content = File.ReadAllText(remodelPath);
 
-
-			var inheritance = GetObjectInheritance(content);
-			return GetAllGenerators(content, inheritance);
-		}
-
-		public static GeneratorType Compose(List<Generator> generators, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
+		public static GeneratorType Compose(List<Generator> generators, Dictionary<string, string> inheritance, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
 		{
 			List<Generator> filtered;
 			if (interestedCoroutines != null)
@@ -73,7 +54,19 @@ namespace RequirementAnalysis
 				coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 
 
-			return new Solver().SolveWithBindings(coroutines, bindings);
+			var solver = new Solver();
+			List<string> typesInInheritance = new List<string>();
+			foreach (var item in inheritance)
+			{
+				typesInInheritance.Add(item.Key);
+				typesInInheritance.Add(item.Value);
+			}
+
+			solver.CollectConcreteTypes(coroutines, bindings, typesInInheritance);
+			InheritanceCondition.BuildFunction(solver, inheritance, out var func, out var funcBody);
+			solver.AddZ3Function(func, funcBody);
+
+			return solver.SolveWithBindings(coroutines, bindings);
 		}
 
 		/// <summary>
