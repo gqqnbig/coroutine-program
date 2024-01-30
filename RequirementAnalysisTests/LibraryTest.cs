@@ -59,8 +59,11 @@ namespace RequirementAnalysis.Tests
 			coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 
 
-
-			var result = new Solver().SolveWithBindings(coroutines, bindings);
+			var solver = new Solver();
+			solver.CollectConcreteTypes(generators, null);
+			InheritanceCondition.BuildFunction(solver, inheritance, out var func, out var funcBody);
+			solver.AddZ3Function(func, funcBody);
+			var result = solver.SolveWithBindings(coroutines, bindings);
 			Console.WriteLine(result);
 		}
 
@@ -105,8 +108,11 @@ namespace RequirementAnalysis.Tests
 
 			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
 
-
-			var result = new Solver().SolveWithBindings(coroutines, bindings);
+			var solver = new Solver();
+			solver.CollectConcreteTypes(generators, null);
+			InheritanceCondition.BuildFunction(solver, inheritance, out var func, out var funcBody);
+			solver.AddZ3Function(func, funcBody);
+			var result = solver.SolveWithBindings(coroutines, bindings);
 			Console.WriteLine(result);
 		}
 	}
