@@ -555,12 +555,12 @@ namespace GeneratorCalculation
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				if (coroutine.Flow.Count == 0 || coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {pendingType}");
 					continue;
 				}
 
 				var acceptor = coroutine.Flow[0].Type;
-				Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(yieldedType);
+				Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(pendingType);
 				if (conditions != null)
 				{
 					var tmp = coroutine.Clone();
