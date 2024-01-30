@@ -8,7 +8,7 @@ using Z3 = Microsoft.Z3;
 
 namespace GeneratorCalculation
 {
-	public class Solver: IDisposable
+	public class Solver : IDisposable
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
 
@@ -302,6 +302,7 @@ namespace GeneratorCalculation
 				// because it may yield coroutines.
 
 
+				var coroutine = pairs[i].Type;
 
 				PaperType yieldedType = null;
 				ReceiveGenerator(pairs, constants);
@@ -321,7 +322,7 @@ namespace GeneratorCalculation
 					canWrap = true;
 
 
-					pairs[i].Type = g;
+					pairs[i].Type = coroutine;
 
 					if (yieldedType is TupleType tTuple)
 					{
@@ -505,11 +506,11 @@ namespace GeneratorCalculation
 								{
 									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 
-								//pairs[i].Type.Receive.Pop
-							pairs[i].Type.Flow.RemoveAt(0);
-							pairs[i].Type = pairs[i].Type.ApplyEquation(conditions);
-							
-								Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
+									//pairs[i].Type.Receive.Pop
+									pairs[i].Type.Flow.RemoveAt(0);
+									pairs[i].Type = pairs[i].Type.ApplyEquation(conditions);
+
+									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 									if (solver.Model.NumConsts > 0)
 									{
 										Console.Write(" on the conditions that ");
@@ -555,17 +556,19 @@ namespace GeneratorCalculation
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				if (coroutine.Flow.Count == 0 || coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {yieldedType}");
+					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {pendingType}");
 					continue;
 				}
 
-				var acceptor = coroutine.Flow[0].Type;
-				Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(yieldedType);
-				if (conditions != null)
+				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
-					var tmp = coroutine.Clone();
-					tmp.Flow.RemoveAt(0);
-					GeneratorType newGenerator = tmp.ApplyEquation(conditions);
+					var acceptor = coroutine.Flow[0].Type;
+					Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(pendingType);
+					if (conditions != null)
+					{
+						var tmp = coroutine.Clone();
+						tmp.Flow.RemoveAt(0);
+						CoroutineType newGenerator = tmp.ApplyEquation(conditions);
 
 						Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 
@@ -633,6 +636,8 @@ namespace GeneratorCalculation
 
 			return null;
 		}
+
+
 
 		//static GeneratorType CheckReceive(PaperType pendingType, List<Generator> pairs, int start)
 		//{
