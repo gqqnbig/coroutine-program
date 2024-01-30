@@ -8,46 +8,43 @@ using Z3 = Microsoft.Z3;
 namespace GeneratorCalculation
 {
 
-	[Obsolete]
-	public class GeneratorType : PaperType
+	public class CoroutineType : PaperType
 	{
-		public GeneratorType(PaperType @yield, PaperType receive)
-		{
-			Yield = yield;
-			Receive = receive;
-		}
-
-		///// <summary>
-		///// 
-		///// </summary>
-		///// <param name="forbiddenBindings">
-		///// Key and value both can have <see cref="PaperVariable"/>.
-		///// <code>[(x,y)] = {(String, Path)}</code>
-		///// <code>[(x)] = {(y), (S)}</code>
-		///// </param>
-		///// <param name="receive"></param>
-		///// <param name="yield"></param>
-		//public GeneratorType(Dictionary<SequenceType, List<SequenceType>> forbiddenBindings, PaperType receive, PaperType @yield)
-		//{
-		//	ForbiddenBindings = forbiddenBindings;
-		//	Receive = receive;
-		//	Yield = yield;
-		//}
-
-		public GeneratorType(Condition condition, PaperType receive, PaperType @yield)
-		{
-			Condition = condition;
-			Receive = receive;
-			Yield = yield;
-		}
-
 		public Condition Condition { get; }
 
 		public PaperType Yield { get; }
 
 		public PaperType Receive { get; }
 
-		//public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
+		public PaperVariable Source { get; }
+
+		public bool CanRestore { get; }
+
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="receive"></param>
+		/// <param name="yield"></param>
+		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
+		/// <param name="canRestore"></param>
+		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
+		{
+			Receive = receive;
+			Yield = yield;
+			Source = source;
+			CanRestore = canRestore;
+		}
+
+		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
+		{
+			Condition = condition;
+			Receive = receive;
+			Yield = yield;
+			Source = source;
+			CanRestore = canRestore;
+		}
+
 
 		public void Check()
 		{
@@ -77,7 +74,7 @@ namespace GeneratorCalculation
 		/// <param name="g"></param>
 		/// <param name="yieldedType"></param>
 		/// <returns></returns>
-		public virtual GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
+		public virtual CoroutineType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
 		{
 			if (Receive != ConcreteType.Void)
 				return null;
@@ -91,7 +88,7 @@ namespace GeneratorCalculation
 					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
 					//Forbidden bindings are not needed when the coroutine starts to yield
 					//because all variables have been bound.
-					return new GeneratorType(remaining, Receive);
+					return new CoroutineType(Receive, remaining, Source, CanRestore);
 				}
 			}
 			else
@@ -107,20 +104,18 @@ namespace GeneratorCalculation
 		/// <param name="providedType"></param>
 		/// <param name="conditions"></param>
 		/// <returns></returns>
-		public virtual Z3.BoolExpr RunReceive(PaperType providedType, Solver engine, out GeneratorType newGenerator)
+		public virtual Z3.BoolExpr RunReceive(PaperType providedType, Solver engine, out CoroutineType newGenerator)
 		{
 			newGenerator = null;
 			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
 			if (Receive == ConcreteType.Void)
-			{
 				return engine.ConcreteSort.Context.MkFalse();
-			}
 
 			PaperType head = null;
 			PaperType remaining = null;
 			if (Receive.Pop(ref head, ref remaining))
 			{
-				newGenerator = new GeneratorType(Condition, remaining, Yield);
+				newGenerator = new CoroutineType(Condition, remaining, Yield, Source, CanRestore);
 				var exp1 = AddConstraints(engine);
 				if (exp1 == null)
 					return head.BuildEquality(providedType, engine);
@@ -174,10 +169,16 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
+			string str;
 			if (Condition != null)
-				return $"[{Receive}; {Yield}] where {Condition}";
+				str = $"[{Receive}; {Yield}] where {Condition}";
 			else
-				return $"[{Receive}; {Yield}]";
+				str = $"[{Receive}; {Yield}]";
+
+			if (Source != null)
+				return Source.ToString() + (CanRestore ? "*" : "") + ": " + str;
+			else
+				return str;
 		}
 
 
@@ -190,7 +191,7 @@ namespace GeneratorCalculation
 
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
-			if (other is GeneratorType another)
+			if (other is CoroutineType another)
 			{
 				// TODO: should use full match. IsCompatibleTo only checks the head element.
 				return engine.ConcreteSort.Context.MkAnd(
@@ -212,13 +213,13 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="equations"></param>
 		/// <returns></returns>
-		public GeneratorType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public CoroutineType ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
 		{
 			var newYield = Yield.ApplyEquation(equations);
 			var newReceive = Receive.ApplyEquation(equations);
 			if (newYield is PaperType newYieldType && newReceive is PaperType newReceiveType)
 			{
-				return new GeneratorType(Condition, newReceiveType, newYieldType);
+				return new CoroutineType(Condition, newReceiveType, newYieldType);
 				//var copy = new Dictionary<SequenceType, List<SequenceType>>();
 				//foreach (SequenceType key in ForbiddenBindings.Keys)
 				//{
@@ -256,11 +257,11 @@ namespace GeneratorCalculation
 
 		public virtual PaperType Normalize()
 		{
-			GeneratorType g;
+			CoroutineType g;
 			if (Condition != null)
-				g = new GeneratorType(Condition, Receive.Normalize(), Yield.Normalize());
+				g = new CoroutineType(Condition, Receive.Normalize(), Yield.Normalize());
 			else
-				g = new GeneratorType(Yield.Normalize(), Receive.Normalize());
+				g = new CoroutineType(Receive.Normalize(), Yield.Normalize());
 
 			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
 				return ConcreteType.Void;
@@ -272,7 +273,7 @@ namespace GeneratorCalculation
 		// override object.Equals
 		public override bool Equals(object obj)
 		{
-			if (obj is GeneratorType objGenerator)
+			if (obj is CoroutineType objGenerator)
 			{
 				return Receive.Equals(objGenerator.Receive) && Yield.Equals(objGenerator.Yield);
 			}
@@ -286,123 +287,7 @@ namespace GeneratorCalculation
 			return Receive.GetHashCode() ^ Yield.GetHashCode();
 		}
 
-		public virtual GeneratorType Clone()
-		{
-			return new GeneratorType(Condition, Receive, Yield);
-		}
-	}
-
-	/// <summary>
-	/// This is an instance of a coroutine definition.
-	/// A definition turns into an instance by starting the definition.
-	/// </summary>
-	public class CoroutineType : GeneratorType
-	{
-		public PaperVariable Source { get; }
-		public bool CanRestore { get; }
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="receive"></param>
-		/// <param name="yield"></param>
-		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
-		/// <param name="canRestore"></param>
-		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(yield, receive)
-		{
-			Source = source;
-			CanRestore = canRestore;
-		}
-
-		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : base(condition, receive, yield)
-		{
-			Source = source;
-			CanRestore = canRestore;
-		}
-		/// <summary>
-		/// Check whether this generator can receive the given type.
-		/// </summary>
-		/// <param name="providedType"></param>
-		/// <param name="conditions"></param>
-		/// <returns></returns>
-		public override Z3.BoolExpr RunReceive(PaperType providedType, Solver engine, out GeneratorType newGenerator)
-		{
-			newGenerator = null;
-			//Dictionary<PaperVariable, PaperWord> conditions = new Dictionary<PaperVariable, PaperWord>();
-			if (Receive == ConcreteType.Void)
-				return engine.ConcreteSort.Context.MkFalse();
-
-			PaperType head = null;
-			PaperType remaining = null;
-			if (Receive.Pop(ref head, ref remaining))
-			{
-				newGenerator = new CoroutineType(Condition, remaining, Yield, Source, CanRestore);
-				var exp1 = AddConstraints(engine);
-				if (exp1 == null)
-					return head.BuildEquality(providedType, engine);
-				else
-					return engine.ConcreteSort.Context.MkAnd(head.BuildEquality(providedType, engine), exp1);
-			}
-
-			Debug.Assert(Receive == ConcreteType.Void);
-
-			return engine.ConcreteSort.Context.MkFalse();
-		}
-
-		/// <summary>
-		/// If it can yield, return the new type. Otherwise return null.
-		/// </summary>
-		/// <param name="constants"></param>
-		/// <param name="g"></param>
-		/// <param name="yieldedType"></param>
-		/// <returns></returns>
-		public override GeneratorType RunYield(Dictionary<PaperVariable, PaperWord> bindings, ref PaperType yieldedType)
-		{
-			if (Receive != ConcreteType.Void)
-				return null;
-
-
-			if (Yield.GetVariables().Except(bindings.Keys.ToList()).Any() == false)
-			{
-				PaperType remaining = null;
-				if (Yield.Pop(ref yieldedType, ref remaining))
-				{
-					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings.ToList());
-					//Forbidden bindings are not needed when the coroutine starts to yield
-					//because all variables have been bound.
-					return new CoroutineType(Receive, remaining, Source, CanRestore);
-				}
-			}
-			else
-				Console.WriteLine("Unable to yield due to unbound variables");
-
-
-			return null;
-		}
-
-		public override PaperType Normalize()
-		{
-			CoroutineType g;
-			if (Condition != null)
-				g = new CoroutineType(Condition, Receive.Normalize(), Yield.Normalize());
-			else
-				g = new CoroutineType(Receive.Normalize(), Yield.Normalize(), Source, CanRestore);
-
-			if (g.Yield == ConcreteType.Void && g.Receive == ConcreteType.Void)
-				return ConcreteType.Void;
-			else
-				return g;
-		}
-
-		public override string ToString()
-		{
-			if (Source == null)
-				return base.ToString();
-			else
-				return Source.ToString() + (CanRestore ? "*" : "") + ": " + base.ToString();
-		}
-
-		public override GeneratorType Clone()
+		public virtual CoroutineType Clone()
 		{
 			return new CoroutineType(Condition, Receive, Yield, Source, CanRestore);
 		}

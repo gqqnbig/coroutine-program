@@ -12,7 +12,7 @@ namespace GeneratorCalculation
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(Solver));
 
-		private readonly List<GeneratorType> compositionOrder = new List<GeneratorType>();
+		private readonly List<CoroutineType> compositionOrder = new List<CoroutineType>();
 
 		public readonly Z3.Context z3Ctx;
 		public Z3.EnumSort ConcreteSort { get; private set; }
@@ -152,7 +152,7 @@ namespace GeneratorCalculation
 			logger.LogInformation("Basic variables can take values {0}", string.Join(", ", allTypes));
 		}
 
-		public GeneratorType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
+		public CoroutineType SolveWithBindings(List<Generator> coroutines, Dictionary<PaperVariable, PaperWord> bindings = null, int steps = 500)
 		{
 			if (bindings == null)
 				bindings = new Dictionary<PaperVariable, PaperWord>();
@@ -241,7 +241,7 @@ namespace GeneratorCalculation
 		}
 
 
-		GeneratorType Solve(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
+		CoroutineType Solve(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
 		{
 			//find a generator type where the next type is not void.
 			Console.WriteLine();
@@ -266,7 +266,7 @@ namespace GeneratorCalculation
 
 			var yields = new SequenceType(yieldsToOutside).Normalize();
 
-			var result = new GeneratorType(yields, receive);
+			var result = new CoroutineType(receive, yields);
 			return result;
 		}
 
@@ -306,7 +306,7 @@ namespace GeneratorCalculation
 				PaperType yieldedType = null;
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
-				GeneratorType g = coroutine.RunYield(bindings, ref yieldedType);
+				CoroutineType g = coroutine.RunYield(bindings, ref yieldedType);
 				if (g != null)
 				{
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
@@ -332,11 +332,11 @@ namespace GeneratorCalculation
 
 					if (yieldedType is TupleType tTuple)
 					{
-						if (tTuple.Types.All(t => t is GeneratorType))
+						if (tTuple.Types.All(t => t is CoroutineType))
 						{
 							try
 							{
-								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), bindings);
+								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (CoroutineType)t)).ToList(), bindings);
 							}
 							catch (DeadLockException e)
 							{
@@ -348,9 +348,9 @@ namespace GeneratorCalculation
 					}
 
 
-					if (yieldedType is GeneratorType)
+					if (yieldedType is CoroutineType)
 					{
-						pairs.Insert(i + 1, new Generator("", (GeneratorType)yieldedType));
+						pairs.Insert(i + 1, new Generator("", (CoroutineType)yieldedType));
 					}
 					else if (yieldedType is SequenceType ys)
 					{
@@ -405,7 +405,7 @@ namespace GeneratorCalculation
 
 				for (int j = 0; j < pairs.Count; j++)
 				{
-					Debug.Assert(pendingType is GeneratorType == false);
+					Debug.Assert(pendingType is CoroutineType == false);
 
 
 					var receiverIndex = Receive(pendingType, pairs, 0);
@@ -453,11 +453,11 @@ namespace GeneratorCalculation
 				PaperType remaining = null;
 				pairs[i].Type.Receive.Pop(ref head, ref remaining);
 
-				if (head is GeneratorType)
+				if (head is CoroutineType)
 					throw new NotImplementedException();
 				else if (head is ListType l)
 				{
-					if (l.Type is GeneratorType receiveG)
+					if (l.Type is CoroutineType receiveG)
 					{
 						using (var solver = z3Ctx.MkSolver())
 						{
@@ -509,7 +509,7 @@ namespace GeneratorCalculation
 									Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 
 									//pairs[i].Type.Receive.Pop
-									pairs[i].Type = new GeneratorType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
+									pairs[i].Type = new CoroutineType(pairs[i].Type.Condition, remaining, pairs[i].Type.Yield).ApplyEquation(conditions.ToList());
 									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
 									if (solver.Model.NumConsts > 0)
 									{
@@ -554,7 +554,7 @@ namespace GeneratorCalculation
 			for (var i = 0; i < pairs.Count; i++)
 			{
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
-				GeneratorType newGenerator;
+				CoroutineType newGenerator;
 				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
 					solver.Add(functionBodies.Values.ToList());
