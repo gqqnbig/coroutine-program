@@ -241,7 +241,7 @@ namespace GeneratorCalculation
 					if (RemoveVoid(pairs))
 						continue;
 
-					if (ReceiveGenerator(pairs, constants.Keys.Select(v => v.Name).ToList()))
+					if (ReceiveGenerator(pairs))
 						continue;
 				}
 				// Even if pairs.Count == 1, we have to continue executing the yielding part 
@@ -391,7 +391,7 @@ namespace GeneratorCalculation
 		//}
 
 
-		static bool ReceiveGenerator(List<Generator> pairs, List<string> constants)
+		static bool ReceiveGenerator(List<Generator> pairs)
 		{
 
 			for (var i = 0; i < pairs.Count; i++)
@@ -459,7 +459,7 @@ namespace GeneratorCalculation
 									pairs.RemoveAt(indice);
 
 								//Run one more time
-								ReceiveGenerator(pairs, constants);
+									ReceiveGenerator(pairs);
 								return true;
 							}
 							catch (PaperSyntaxException e)
