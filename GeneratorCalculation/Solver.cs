@@ -217,7 +217,7 @@ namespace GeneratorCalculation
 			return result;
 		}
 
-		private List<PaperType> SolveWithinSteps(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> constants, int steps)
+		private List<PaperType> SolveWithinSteps(List<Generator> pairs, Dictionary<PaperVariable, PaperWord> bindings, int steps)
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			int i = 0;
@@ -253,7 +253,7 @@ namespace GeneratorCalculation
 				PaperType yieldedType = null;
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
-				GeneratorType g = coroutine.RunYield(constants, ref yieldedType);
+				GeneratorType g = coroutine.RunYield(bindings, ref yieldedType);
 				if (g != null)
 				{
 					Debug.Assert(coroutine.Receive == ConcreteType.Void);
@@ -283,7 +283,7 @@ namespace GeneratorCalculation
 						{
 							try
 							{
-								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), constants);
+								yieldedType = SolveWithBindings(tTuple.Types.Select(t => new Generator("", (GeneratorType)t)).ToList(), bindings);
 							}
 							catch (DeadLockException e)
 							{
