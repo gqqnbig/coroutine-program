@@ -55,8 +55,11 @@ namespace GeneratorCalculation
 
 		public void Visit(CoroutineType type)
 		{
-			Visit(type.Receive);
-			Visit(type.Yield);
+			foreach (var item in type.Flow)
+			{
+				Visit(item.Type);
+			}
+
 			if (type.Condition != null)
 				type.Condition.GetConcreteTypes(concreteTypes);
 		}
