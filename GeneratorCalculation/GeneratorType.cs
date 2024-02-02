@@ -37,6 +37,32 @@ namespace GeneratorCalculation
 
 		public bool CanRestore { get; }
 
+		private CoroutineType(PaperType receive, PaperType yield)
+		{
+			Flow = new List<DataFlow>();
+			if (receive != ConcreteType.Void)
+			{
+				if (receive is SequenceType sReceive)
+				{
+					foreach (var item in sReceive.Types)
+						Flow.Add(new DataFlow(Direction.Resuming, item));
+				}
+				else
+					Flow.Add(new DataFlow(Direction.Resuming, receive));
+			}
+			if (yield != ConcreteType.Void)
+			{
+				if (yield is SequenceType sYield)
+				{
+					foreach (var item in sYield.Types)
+						Flow.Add(new DataFlow(Direction.Yielding, item));
+				}
+				else
+					Flow.Add(new DataFlow(Direction.Yielding, yield));
+			}
+
+		}
+
 		public CoroutineType(params DataFlow[] flow)
 		{
 			Flow = new List<DataFlow>(flow);
@@ -56,11 +82,8 @@ namespace GeneratorCalculation
 		/// <param name="yield"></param>
 		/// <param name="source">This parameter is for information purpose. Only when canRestore is true, the solver then looks up the source in the bindings.</param>
 		/// <param name="canRestore"></param>
-		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
+		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
 		{
-			Flow = new List<DataFlow>();
-			Flow.Add(new DataFlow(Direction.Resuming, receive));
-			Flow.Add(new DataFlow(Direction.Yielding, yield));
 
 			Source = source;
 			CanRestore = canRestore;
@@ -75,13 +98,10 @@ namespace GeneratorCalculation
 		}
 
 
-		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
+		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false) : this(receive, yield)
 		{
 			Condition = condition;
 
-			Flow = new List<DataFlow>();
-			Flow.Add(new DataFlow(Direction.Resuming, receive));
-			Flow.Add(new DataFlow(Direction.Yielding, yield));
 			Source = source;
 			CanRestore = canRestore;
 		}
