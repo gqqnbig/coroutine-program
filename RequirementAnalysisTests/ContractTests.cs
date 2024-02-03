@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace RequirementAnalysis.Tests
@@ -32,14 +33,9 @@ namespace RequirementAnalysis.Tests
 			serviceDefinitions.Add("System", systemService);
 
 			var generator = ContractAnalyzer.GetGenerator(serviceDefinitions, code, new Dictionary<string, string>());
-			var count = CountStringOccurrence(generator.Type.Yield.ToString(), "CurrentSale");
-			Assert.True(count == 1, "makeCashPayment should only yield CurrentSale once.");
-		}
 
-		static int CountStringOccurrence(string content, string needle)
-		{
-			var s2 = content.Replace(needle, "");
-			return (content.Length - s2.Length) / needle.Length;
+			var count = generator.Type.Flow.Count(f => f.Direction == GeneratorCalculation.Direction.Yielding && f.Type.ToString().Equals("CurrentSale"));
+			Assert.True(count == 1, "makeCashPayment should only yield CurrentSale once.");
 		}
 	}
 }
