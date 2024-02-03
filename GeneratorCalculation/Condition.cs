@@ -28,6 +28,22 @@ namespace GeneratorCalculation
 
 		public abstract void GetConcreteTypes(HashSet<string> set);
 
+		public override bool Equals(object obj)
+		{
+			if (obj == this)
+				return true;
+
+			if (obj is Condition objC)
+				throw new NotSupportedException("Equality of Condition cannot be tested.");
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			throw new NotSupportedException(nameof(Condition) + " cannot be used as key in a hashtable or a dictionary.");
+			//return 0;
+		}
 	}
 
 	public class Z3Condition : Condition
