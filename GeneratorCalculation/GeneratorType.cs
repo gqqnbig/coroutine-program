@@ -347,22 +347,13 @@ namespace GeneratorCalculation
 		}
 
 
-		//// override object.Equals
-		//public override bool Equals(object obj)
-		//{
-		//	if (obj is CoroutineType objGenerator)
-		//	{
-		//		return Receive.Equals(objGenerator.Receive) && Yield.Equals(objGenerator.Yield);
-		//	}
 
-		//	return false;
-		//}
+		public override int GetHashCode()
+		{
+			throw new NotSupportedException(nameof(CoroutineType) + " cannot be used as key in a hashtable or a dictionary.");
+			//return 0;
+		}
 
-		//// override object.GetHashCode
-		//public override int GetHashCode()
-		//{
-		//	return Receive.GetHashCode() ^ Yield.GetHashCode();
-		//}
 
 		public virtual CoroutineType Clone()
 		{
