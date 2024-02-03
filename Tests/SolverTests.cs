@@ -18,7 +18,9 @@ namespace GeneratorCalculationTests
 
 			var result = new Solver().SolveWithBindings(coroutines);
 
-			Assert.Equal(new SequenceType((ConcreteType)"C", (ConcreteType)"B"), result.Yield);
+			Assert.True(result.Flow.TrueForAll(f => f.Direction == Direction.Yielding), "This coroutine should have no receiving item.");
+			Assert.True(result.Flow.Find(f => f.Type.Equals((ConcreteType)"B")) != null, "This coroutine has one yielding item B");
+			Assert.True(result.Flow.Find(f => f.Type.Equals((ConcreteType)"C")) != null, "This coroutine has one yielding item C");
 		}
 
 		[Fact]
@@ -178,9 +180,9 @@ namespace GeneratorCalculationTests
 
 
 			var result = new Solver().SolveWithBindings(coroutines, bindings);
-			Assert.Equal(ConcreteType.Void, result.Receive);
-			Assert.Equal((ConcreteType)"D", result.Yield);
-
+			Assert.True(result.Flow.TrueForAll(f => f.Direction == Direction.Yielding), "This coroutine should have no receiving item.");
+			Assert.Single(result.Flow);
+			Assert.Equal((ConcreteType)"D", result.Flow[0].Type);
 		}
 
 	}

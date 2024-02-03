@@ -262,8 +262,9 @@ namespace GeneratorCalculation
 				lockedCoroutines[0].Type.Flow.InsertRange(0, yieldsToOutside.Select(y => new DataFlow(Direction.Yielding, y)));
 				return lockedCoroutines[0].Type;
 			}
+			Debug.Assert(lockedCoroutines.Count == 0);
 
-			PaperType receive = lockedCoroutines.Count == 1 ? lockedCoroutines[0].Type.Receive : ConcreteType.Void;
+			PaperType receive = ConcreteType.Void;
 
 			var yields = new SequenceType(yieldsToOutside).Normalize();
 
@@ -305,15 +306,18 @@ namespace GeneratorCalculation
 				var coroutine = pairs[i].Type;
 
 				PaperType yieldedType = null;
-				ReceiveGenerator(pairs, constants);
+				ReceiveGenerator(pairs);
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
 
-				if (coroutine.Flow[0].Direction == Direction.Yielding)
+				if (coroutine.Flow.Count > 0 && coroutine.Flow[0].Direction == Direction.Yielding)
 				{
 					yieldedType = coroutine.Flow[0].Type;
 
-					//yieldedType = yieldedType.Normalize();
+					if (yieldedType is SequenceType)
+						logger.LogWarning($"SequenceType {yieldedType} is not supported for receiving.");
+
+					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings);
 
 					coroutine.Flow.RemoveAt(0);
 					compositionOrder.Add(pairs[i].Type);
@@ -563,12 +567,15 @@ namespace GeneratorCalculation
 				using (Z3.Solver solver = z3Ctx.MkSolver())
 				{
 					var acceptor = coroutine.Flow[0].Type;
-					Dictionary<PaperVariable, PaperWord> conditions = acceptor.IsCompatibleTo(pendingType);
-					if (conditions != null)
+
+					solver.Add(functionBodies.Values.ToList());
+					var exp = acceptor.BuildEquality(pendingType, this);
+					solver.Add(exp);
+					if (solver.Check() == Z3.Status.SATISFIABLE)
 					{
 						var tmp = coroutine.Clone();
 						tmp.Flow.RemoveAt(0);
-						CoroutineType newGenerator = tmp.ApplyEquation(conditions);
+						CoroutineType newGenerator = tmp;
 
 						Console.Write($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} can receive {pendingType}");
 

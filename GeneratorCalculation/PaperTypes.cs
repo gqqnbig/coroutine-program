@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Z3 = Microsoft.Z3;
@@ -55,7 +56,7 @@ namespace GeneratorCalculation
 	}
 
 
-	public class PaperVariable : PaperWord, PaperType
+	public class PaperVariable : PaperWord, PaperType, IEquatable<PaperVariable>
 	{
 		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(PaperVariable));
 
@@ -82,16 +83,33 @@ namespace GeneratorCalculation
 		}
 
 		/// <summary>
+		/// Equaltiy is needed for variable binding.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		public bool Equals([AllowNull] PaperVariable other)
+		{
+			if (other == null)
+				return false;
+			return other.Name == Name;
+		}
+
+		/// <summary>
 		/// It's textual equality, not syntactic equality.
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <returns></returns>
 		public override bool Equals(object obj)
 		{
-			return obj is PaperVariable objVariable && objVariable.Name == Name;
+			return obj is PaperVariable objVariable && Equals(objVariable);
 		}
 
-		// override object.GetHashCode
+
+		/// <summary>
+		/// Hash code is needed for variable binding.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
 		public override int GetHashCode()
 		{
 			return Name.GetHashCode();
