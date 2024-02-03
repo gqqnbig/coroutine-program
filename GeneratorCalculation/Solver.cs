@@ -511,7 +511,7 @@ namespace GeneratorCalculation
 									pairs[i].Type = pairs[i].Type.ApplyEquation(conditions);
 
 									Console.Write($"{pairs[i].Name} becomes {pairs[i].Type}");
-									if (solver.Model.NumConsts > 0)
+									if (conditions.Count > 0)
 									{
 										Console.Write(" on the conditions that ");
 										Console.Write(string.Join(", ", conditions.Select(p => p.Key + "/" + p.Value)));
