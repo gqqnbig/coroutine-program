@@ -22,7 +22,8 @@ namespace GeneratorCalculation.Tests
 
 
 			var result = new Solver().SolveWithBindings(coroutines);
-			Assert.Equal(ConcreteType.Void, result.Receive);
+			Assert.True(result.Flow.TrueForAll(f => f.Direction == Direction.Yielding), "This coroutine should have no receiving item.");
+
 		}
 
 		[Fact]
@@ -43,8 +44,9 @@ namespace GeneratorCalculation.Tests
 
 
 			var result = new Solver().SolveWithBindings(coroutines, bindings);
-			Assert.Equal(ConcreteType.Void, result.Receive);
-			Assert.DoesNotContain((ConcreteType)"Item", ((SequenceType)result.Yield).Types);
+			Assert.True(result.Flow.TrueForAll(f => f.Direction == Direction.Yielding), "This coroutine should have no receiving item.");
+
+			Assert.True(result.Flow.TrueForAll(f => f.Type.Equals((ConcreteType)"Item") == false), "This coroutine shouldn't contain Item because it is deleted.");
 		}
 
 	}

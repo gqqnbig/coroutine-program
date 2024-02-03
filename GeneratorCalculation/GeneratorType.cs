@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Z3 = Microsoft.Z3;
@@ -8,8 +9,11 @@ using Z3 = Microsoft.Z3;
 namespace GeneratorCalculation
 {
 
-	public class CoroutineType : PaperType
+	public class CoroutineType : PaperType, IEquatable<CoroutineType>
 	{
+		/// <summary>
+		/// can be null
+		/// </summary>
 		public Condition Condition { get; }
 
 		public List<DataFlow> Flow { get; }
@@ -242,15 +246,12 @@ namespace GeneratorCalculation
 			}
 
 			sb.Append("[");
-			foreach (var item in Flow)
-			{
-				if (item.Direction == Direction.Yielding)
-					sb.Append("+");
-				else
-					sb.Append("-");
-				sb.Append(item.Type);
-				sb.Append("; ");
-			}
+			// If any type is CoroutineType, put each flow item on its own line.
+			// This is to improve readability.
+			if (Flow.Any(f => f.Type is CoroutineType))
+				sb.Append(string.Join(";\n", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
+			else
+				sb.Append(string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)));
 			sb.Append("]");
 
 
@@ -347,6 +348,35 @@ namespace GeneratorCalculation
 		}
 
 
+		public bool Equals([AllowNull] CoroutineType other)
+		{
+			if (Flow.SequenceEqual(other.Flow) == false)
+				return false;
+
+			if (Source == null && other.Source != null)
+				return false;
+			else if (Source == null && other.Source == null)
+			{ }
+			else if (Source.Equals(other.Source) == false)
+				return false;
+
+			if (Condition == null && other.Condition != null)
+				return false;
+			else if (Condition == null && other.Condition == null)
+			{ }
+			else if (Condition.Equals(other.Condition) == false)
+				return false;
+
+
+			return CanRestore == other.CanRestore;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is CoroutineType objGenerator)
+				return Equals(objGenerator);
+			return false;
+		}
 
 		public override int GetHashCode()
 		{
