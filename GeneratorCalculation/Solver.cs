@@ -571,6 +571,9 @@ namespace GeneratorCalculation
 					solver.Add(functionBodies.Values.ToList());
 					var exp = acceptor.BuildEquality(pendingType, this);
 					solver.Add(exp);
+					exp = coroutine.AddConstraints(this);
+					if (exp != null)
+						solver.Add(exp);
 					if (solver.Check() == Z3.Status.SATISFIABLE)
 					{
 						var tmp = coroutine.Clone();

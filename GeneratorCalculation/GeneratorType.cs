@@ -198,7 +198,7 @@ namespace GeneratorCalculation
 		/// </summary>
 		/// <param name="engine"></param>
 		/// <returns></returns>
-		protected Z3.BoolExpr AddConstraints(Solver engine)
+		internal Z3.BoolExpr AddConstraints(Solver engine)
 		{
 			if (Condition != null)
 				return this.Condition.GetExpr(engine);
