@@ -464,7 +464,7 @@ namespace GeneratorCalculation
 	//}
 
 
-	public class CoroutineDefinitionType : PaperWord
+	public class CoroutineDefinitionType : PaperType
 	{
 		public Condition Condition { get; }
 
@@ -490,7 +490,7 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			return $"~>({Receive}; {Yield})";
+			return $"~>[{Receive}; {Yield}]";
 		}
 
 		// override object.Equals
@@ -515,6 +515,29 @@ namespace GeneratorCalculation
 		}
 
 		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
+		{
+			throw new NotImplementedException();
+		}
+
+		public List<PaperVariable> GetVariables()
+		{
+			var list = Yield.GetVariables();
+			list.AddRange(Receive.GetVariables());
+			return list;
+		}
+
+		public bool Pop(ref PaperType yielded, ref PaperType remaining)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
+		{
+			Receive.ReplaceWithConstant(availableConstants, usedConstants);
+			Yield.ReplaceWithConstant(availableConstants, usedConstants);
+		}
+
+		public PaperType Normalize()
 		{
 			throw new NotImplementedException();
 		}

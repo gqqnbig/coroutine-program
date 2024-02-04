@@ -21,36 +21,65 @@ namespace GeneratorCalculation
 
 		public void Visit(PaperType t)
 		{
-			if (t is ConcreteType ct)
+			switch (t)
 			{
-				Visit(ct);
+				case ConcreteType ct:
+					Visit(ct);
+					break;
+				case FunctionType ct:
+					Visit(ct);
+					break;
+				case ListType ct:
+					Visit(ct);
+					break;
+				case PaperVariable ct:
+					Visit(ct);
+					break;
+				case SequenceType ct:
+					Visit(ct);
+					break;
+				case TupleType ct:
+					Visit(ct);
+					break;
+				case CoroutineInstanceType ct:
+					Visit(ct);
+					break;
+				case CoroutineDefinitionType ct:
+					Visit(ct);
+					break;
+				default:
+					throw new NotImplementedException();
 			}
-			else if (t is FunctionType ft)
-			{
-				Visit(ft);
-			}
-			else if (t is ListType lt)
-			{
-				Visit(lt);
-			}
-			else if (t is PaperVariable vt)
-			{
-				Visit(vt);
-			}
-			else if (t is SequenceType st)
-			{
-				Visit(st);
-			}
-			else if (t is TupleType tt)
-			{
-				Visit(tt);
-			}
-			else if (t is CoroutineInstanceType gt)
-			{
-				Visit(gt);
-			}
-			else
-				throw new NotImplementedException();
+
+			//if (t is ConcreteType ct)
+			//{
+			//}
+			//else if (t is FunctionType ft)
+			//{
+			//	Visit(ft);
+			//}
+			//else if (t is ListType lt)
+			//{
+			//	Visit(lt);
+			//}
+			//else if (t is PaperVariable vt)
+			//{
+			//	Visit(vt);
+			//}
+			//else if (t is SequenceType st)
+			//{
+			//	Visit(st);
+			//}
+			//else if (t is TupleType tt)
+			//{
+			//	Visit(tt);
+			//}
+			//else if (t is CoroutineInstanceType gt)
+			//{
+			//	Visit(gt);
+			//}
+			//else
+			//	throw new NotImplementedException();
 		}
 
 		public void Visit(CoroutineInstanceType type)
@@ -105,9 +134,12 @@ namespace GeneratorCalculation
 				Visit(item);
 			}
 		}
-		//private void Visit(CoroutineDefinitionType t)
-		//{
 
-		//}
+
+		private void Visit(CoroutineDefinitionType t)
+		{
+			Visit(t.Receive);
+			Visit(t.Yield);
+		}
 	}
 }
