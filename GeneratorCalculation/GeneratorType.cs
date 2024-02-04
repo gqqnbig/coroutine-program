@@ -509,12 +509,12 @@ namespace GeneratorCalculation
 			return Yield.GetHashCode() << 2 + Receive.GetHashCode();
 		}
 
-		public Dictionary<PaperVariable, PaperWord> IsCompatibleTo(PaperWord t)
+		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
 		{
 			throw new NotImplementedException();
 		}
 
-		public PaperWord ApplyEquation(List<KeyValuePair<PaperVariable, PaperWord>> equations)
+		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
 			throw new NotImplementedException();
 		}
