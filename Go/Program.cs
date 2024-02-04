@@ -54,7 +54,7 @@ namespace Go
 			{
 				instances.Add(definitions["main"].Start());
 
-				var bindings = new Bindings();
+				var bindings = new Dictionary<PaperVariable, PaperWord>();
 				foreach (var d in definitions)
 				{
 					bindings.Add(d.Key, d.Value);
@@ -67,9 +67,10 @@ namespace Go
 
 				Console.WriteLine("Composition result is " + result);
 
-				if (result.Receive != ConcreteType.Void)
+				var additional = result.Flow.FirstOrDefault(f => f.Direction == Direction.Resuming);
+				if (additional != null)
 				{
-					Console.WriteLine("The program requires one additional {0} to complete execution.", result.Receive);
+					Console.WriteLine("The program requires {0} to complete execution.", additional.Type);
 					return true;
 				}
 			}
