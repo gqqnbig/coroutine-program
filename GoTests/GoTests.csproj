@@ -13,10 +13,11 @@
 
 
   <ItemGroup>
+    <EmbeddedResource Include="basic-receiveInFunction-extra.go" />
+    <EmbeddedResource Include="basic-receiveInFunction.go" />
     <EmbeddedResource Include="basic.go" />
     <EmbeddedResource Include="basic3receive.go" />
     <EmbeddedResource Include="channels-deadlock.go" />
-    <EmbeddedResource Include="channels-method.go" />
     <EmbeddedResource Include="channels-method2.go" />
   </ItemGroup>
 

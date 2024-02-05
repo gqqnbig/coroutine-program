@@ -40,6 +40,24 @@ namespace Go.Tests
 			Assert.True(Program.CheckDeadlock(code));
 		}
 
+
+		[Fact]
+		public static void TestBasicReceiveInFunction()
+		{
+			string code = GetEmbeddedFile("basic-receiveInFunction.go");
+
+			Assert.False(Program.CheckDeadlock(code));
+		}
+
+
+		[Fact]
+		public static void TestBasicReceiveInFunctionExtra()
+		{
+			string code = GetEmbeddedFile("basic-receiveInFunction-extra.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 	}
 
 }
