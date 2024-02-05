@@ -13,7 +13,7 @@ namespace Go
 
 		public override PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			return new StartFunction((CoroutineDefinitionType)Arguments[0]).Evaluate();
+			return new StartFunction((CoroutineDefinitionType)Arguments[0].ApplyEquation(equations)).Evaluate();
 		}
 
 		public override PaperWord Evaluate()
