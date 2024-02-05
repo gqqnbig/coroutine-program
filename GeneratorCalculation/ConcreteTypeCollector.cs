@@ -138,8 +138,8 @@ namespace GeneratorCalculation
 
 		private void Visit(CoroutineDefinitionType t)
 		{
-			Visit(t.Receive);
-			Visit(t.Yield);
+			foreach (var item in t.Flow)
+				Visit(item.Type);
 		}
 	}
 }

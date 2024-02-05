@@ -464,49 +464,63 @@ namespace GeneratorCalculation
 	//}
 
 
-	public class CoroutineDefinitionType : PaperType
+	public class CoroutineDefinitionType : PaperType, IEquatable<CoroutineDefinitionType>
 	{
 		public Condition Condition { get; }
+		public List<DataFlow> Flow { get; }
 
-		public PaperType Yield { get; }
-
-		public PaperType Receive { get; }
 
 		public Dictionary<SequenceType, List<SequenceType>> ForbiddenBindings { get; } = new Dictionary<SequenceType, List<SequenceType>>();
 
 
 
-		public CoroutineDefinitionType(PaperType receive, PaperType @yield, Condition condition = null)
+		public CoroutineDefinitionType(IEnumerable<DataFlow> flow, Condition condition = null)
 		{
-			Receive = receive;
-			Yield = yield;
+			Flow = new List<DataFlow>(flow);
 			Condition = condition;
 		}
 
 		public CoroutineInstanceType Start()
 		{
-			return new CoroutineInstanceType(Receive, Yield);
+			return new CoroutineInstanceType(Flow, null, false);
 		}
 
 		public override string ToString()
 		{
-			return $"~>[{Receive}; {Yield}]";
+			return "~>[" + string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)) + "]";
 		}
 
 		// override object.Equals
 		public override bool Equals(object obj)
 		{
-			CoroutineDefinitionType y = obj as CoroutineDefinitionType;
-			if (y == null)
+			if (obj is CoroutineDefinitionType objGenerator)
+				return Equals(objGenerator);
+			return false;
+		}
+
+
+		public bool Equals([AllowNull] CoroutineDefinitionType other)
+		{
+			if (other == null)
 				return false;
 
-			return Yield.Equals(y.Yield) && Receive.Equals(y.Receive);
+			if (Flow.SequenceEqual(other.Flow) == false)
+				return false;
+
+			if (Condition == null && other.Condition != null)
+				return false;
+			else if (Condition == null && other.Condition == null)
+			{ }
+			else if (Condition.Equals(other.Condition) == false)
+				return false;
+
+			return true;
 		}
 
 		// override object.GetHashCode
 		public override int GetHashCode()
 		{
-			return Yield.GetHashCode() << 2 + Receive.GetHashCode();
+			throw new NotSupportedException(nameof(CoroutineDefinitionType) + " cannot be used as key in a hashtable or a dictionary.");
 		}
 
 		public Z3.BoolExpr BuildEquality(PaperWord other, Solver engine)
@@ -521,9 +535,7 @@ namespace GeneratorCalculation
 
 		public List<PaperVariable> GetVariables()
 		{
-			var list = Yield.GetVariables();
-			list.AddRange(Receive.GetVariables());
-			return list;
+			return Flow.SelectMany(f => f.Type.GetVariables()).ToList();
 		}
 
 		public bool Pop(ref PaperType yielded, ref PaperType remaining)
@@ -533,8 +545,8 @@ namespace GeneratorCalculation
 
 		public void ReplaceWithConstant(List<string> availableConstants, Dictionary<PaperVariable, PaperWord> usedConstants)
 		{
-			Receive.ReplaceWithConstant(availableConstants, usedConstants);
-			Yield.ReplaceWithConstant(availableConstants, usedConstants);
+			foreach (var item in Flow)
+				item.Type.ReplaceWithConstant(availableConstants, usedConstants);
 		}
 
 		public PaperType Normalize()
