@@ -1,7 +1,6 @@
 ﻿using Antlr4.Runtime.Misc;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using GeneratorCalculation;
 using GoLang.Antlr;
 using System.Collections.ObjectModel;
@@ -11,8 +10,7 @@ namespace Go
 	class CoroutineDefinitionCollector : GoParserBaseVisitor<bool>
 	{
 		Dictionary<string, string> channelsInFunc = null;
-		List<PaperType> receiveTypes;
-		List<PaperType> yieldTypes;
+		List<DataFlow> flow;
 
 		public Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
 		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
@@ -33,21 +31,13 @@ namespace Go
 				channelsInFunc.Add(identifier, v.channelTypes[identifier]);
 			}
 
-
-			receiveTypes = new List<PaperType>();
-			yieldTypes = new List<PaperType>();
+			flow = new List<DataFlow>();
 
 			VisitBlock(context.block());
 
-			PaperType r = ConcreteType.Void;
-			if (receiveTypes.Count > 0)
-				r = new SequenceType(receiveTypes);
-			PaperType y = ConcreteType.Void;
-			if (yieldTypes.Count > 0)
-				y = new SequenceType(yieldTypes);
-			if (r != ConcreteType.Void || y != ConcreteType.Void)
+			if (flow.Count > 0)
 			{
-				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(r, y);
+				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(flow);
 
 				definitions.Add(context.IDENTIFIER().GetText(), coroutine);
 				//This is coroutine definition.
@@ -71,7 +61,7 @@ namespace Go
 				throw new FormatException();
 
 			//to title case
-			yieldTypes.Add(new ConcreteType(char.ToUpper(type[0]) + type.Substring(1)));
+			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
 			return true;
 			//return base.VisitSendStmt(context);
 		}
@@ -101,7 +91,7 @@ namespace Go
 				string variableName = context.expression(0).GetText();
 				string type = channelsInFunc[variableName];
 
-				receiveTypes.Add(new ConcreteType(char.ToUpper(type[0]) + type.Substring(1)));
+				flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
 			}
 			return base.VisitExpression(context);
 		}
@@ -113,7 +103,7 @@ namespace Go
 				string methodName = context.primaryExpr().GetText();
 				if (knownDefinitions.TryGetValue(methodName, out var def))
 				{
-					yieldTypes.Add(new StartFunction(def));
+					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
 					//yieldTypes.Add(new FunctionType("Start", new PaperVariable(methodName)));
 				}
 			}
