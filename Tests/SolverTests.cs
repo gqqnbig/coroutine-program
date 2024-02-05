@@ -12,8 +12,8 @@ namespace GeneratorCalculationTests
 		{
 			var coroutines = new List<Generator>
 			{
-				new Generator("",new CoroutineType(ConcreteType.Void, new SequenceType((ConcreteType)"A",(ConcreteType)"B"))),
-				new Generator("",new CoroutineType((ConcreteType)"A", (ConcreteType)"C"))
+				new Generator("",new CoroutineInstanceType(ConcreteType.Void, new SequenceType((ConcreteType)"A",(ConcreteType)"B"))),
+				new Generator("",new CoroutineInstanceType((ConcreteType)"A", (ConcreteType)"C"))
 			};
 
 			var result = new Solver().SolveWithBindings(coroutines);
@@ -28,9 +28,9 @@ namespace GeneratorCalculationTests
 		{
 			var coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("a", new CoroutineType((ConcreteType)"S", (ConcreteType)"T")));
-			coroutines.Add(new Generator("b", new CoroutineType(ConcreteType.Void, (ConcreteType)"S")));
-			coroutines.Add(new Generator("c", new CoroutineType((ConcreteType)"S", (ConcreteType)"U")));
+			coroutines.Add(new Generator("a", new CoroutineInstanceType((ConcreteType)"S", (ConcreteType)"T")));
+			coroutines.Add(new Generator("b", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"S")));
+			coroutines.Add(new Generator("c", new CoroutineInstanceType((ConcreteType)"S", (ConcreteType)"U")));
 
 			var result = new Solver().SolveWithBindings(coroutines);
 		}
@@ -48,8 +48,8 @@ namespace GeneratorCalculationTests
 
 				List<Generator> list = new List<Generator>();
 
-				list.Add(new Generator("a", true, new CoroutineType(ConcreteType.Void, (ConcreteType)"X")));
-				list.Add(new Generator("b", true, new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
+				list.Add(new Generator("a", true, new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"X")));
+				list.Add(new Generator("b", true, new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Y")));
 				Assert.Throws<StepLimitExceededException>(() => new Solver().SolveWithBindings(list, steps: 100));
 			}
 			finally
@@ -62,7 +62,7 @@ namespace GeneratorCalculationTests
 		public void SolveSingle()
 		{
 			var list = new List<Generator>();
-			list.Add(new Generator("", new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
+			list.Add(new Generator("", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Y")));
 			var g = new Solver().SolveWithBindings(list);
 
 			Assert.Single(g.Flow);
@@ -73,13 +73,13 @@ namespace GeneratorCalculationTests
 		public void SolveDeadlock()
 		{
 			var list = new List<Generator>();
-			var g1 = new CoroutineType((ConcreteType)"B", (ConcreteType)"A");
+			var g1 = new CoroutineInstanceType((ConcreteType)"B", (ConcreteType)"A");
 			list.Add(new Generator("g1", g1));
 
-			var g2 = new CoroutineType(ConcreteType.Void, (ConcreteType)"C");
+			var g2 = new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"C");
 			list.Add(new Generator("g2", g2));
 
-			var g3 = new CoroutineType((ConcreteType)"E", (ConcreteType)"D");
+			var g3 = new CoroutineInstanceType((ConcreteType)"E", (ConcreteType)"D");
 			list.Add(new Generator("g3", g3));
 
 			Assert.Throws<DeadLockException>(() => new Solver().SolveWithBindings(list));
@@ -89,14 +89,14 @@ namespace GeneratorCalculationTests
 		public void SingleRemainingNoLock()
 		{
 			var list = new List<Generator>();
-			var g1 = new CoroutineType((ConcreteType)"B", (ConcreteType)"A");
+			var g1 = new CoroutineInstanceType((ConcreteType)"B", (ConcreteType)"A");
 			list.Add(new Generator("g1", g1));
 
-			var g2 = new CoroutineType(ConcreteType.Void, (ConcreteType)"C");
+			var g2 = new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"C");
 			list.Add(new Generator("g2", g2));
 
 
-			var result = new CoroutineType(
+			var result = new CoroutineInstanceType(
 				new DataFlow(Direction.Yielding, (ConcreteType)"C"),
 				new DataFlow(Direction.Resuming, (ConcreteType)"B"),
 				new DataFlow(Direction.Yielding, (ConcreteType)"A"));
@@ -107,13 +107,13 @@ namespace GeneratorCalculationTests
 		public void Interleave()
 		{
 			var coroutines = new List<Generator>();
-			coroutines.Add(new Generator("oc1", new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
-			coroutines.Add(new Generator("oc2", new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
-			coroutines.Add(new Generator("fr1", new CoroutineType((ConcreteType)"Y", new ListType((ConcreteType)"S", PaperStar.Instance))));
-			coroutines.Add(new Generator("fr2", new CoroutineType((ConcreteType)"Y", new ListType((ConcreteType)"S", PaperStar.Instance))));
+			coroutines.Add(new Generator("oc1", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Y")));
+			coroutines.Add(new Generator("oc2", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Y")));
+			coroutines.Add(new Generator("fr1", new CoroutineInstanceType((ConcreteType)"Y", new ListType((ConcreteType)"S", PaperStar.Instance))));
+			coroutines.Add(new Generator("fr2", new CoroutineInstanceType((ConcreteType)"Y", new ListType((ConcreteType)"S", PaperStar.Instance))));
 
 
-			CoroutineType interleave = new CoroutineType(new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")), 
+			CoroutineInstanceType interleave = new CoroutineInstanceType(new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")), 
 				new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"y"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")));
 			coroutines.Add(new Generator("interleave", interleave));
 
@@ -128,8 +128,8 @@ namespace GeneratorCalculationTests
 		{
 
 			var coroutines = new List<Generator>();
-			coroutines.Add(new Generator("a", new CoroutineType(ConcreteType.Void, (ConcreteType)"Y")));
-			coroutines.Add(new Generator("b", new CoroutineType((PaperVariable)"a", (PaperVariable)"a")));
+			coroutines.Add(new Generator("a", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"Y")));
+			coroutines.Add(new Generator("b", new CoroutineInstanceType((PaperVariable)"a", (PaperVariable)"a")));
 
 
 			var result = new Solver().SolveWithBindings(coroutines);
@@ -142,8 +142,8 @@ namespace GeneratorCalculationTests
 		public void PopReceive()
 		{
 			var coroutines = new List<Generator>();
-			coroutines.Add(new Generator("a", new CoroutineType(ConcreteType.Void, (ConcreteType)"A")));
-			coroutines.Add(new Generator("b", new CoroutineType((ConcreteType)"A", new SequenceType((ConcreteType)"B", (ConcreteType)"C"))));
+			coroutines.Add(new Generator("a", new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"A")));
+			coroutines.Add(new Generator("b", new CoroutineInstanceType((ConcreteType)"A", new SequenceType((ConcreteType)"B", (ConcreteType)"C"))));
 
 			var result = new Solver().SolveWithBindings(coroutines);
 
@@ -155,9 +155,9 @@ namespace GeneratorCalculationTests
 		public void ReceiveCoroutine()
 		{
 			var coroutines = new List<Generator>();
-			var g = new CoroutineType(ConcreteType.Void, (ConcreteType)"A");
+			var g = new CoroutineInstanceType(ConcreteType.Void, (ConcreteType)"A");
 			coroutines.Add(new Generator("a", g));
-			coroutines.Add(new Generator("b", new CoroutineType(new SequenceType(new ListType(g.Clone(), (PaperInt)1)), (ConcreteType)"B")));
+			coroutines.Add(new Generator("b", new CoroutineInstanceType(new SequenceType(new ListType(g.Clone(), (PaperInt)1)), (ConcreteType)"B")));
 
 			var result = new Solver().SolveWithBindings(coroutines);
 
