@@ -27,11 +27,18 @@ namespace Go.Tests
 		[Fact]
 		public static void TestBasic()
 		{
-			string code = GetEmbeddedFile("channels.go");
+			string code = GetEmbeddedFile("basic.go");
 
 			Assert.False(Program.CheckDeadlock(code));
 		}
 
+		[Fact]
+		public static void TestBasic3Receive()
+		{
+			string code = GetEmbeddedFile("basic3receive.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
 
 	}
 
