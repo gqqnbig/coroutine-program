@@ -7,6 +7,10 @@ namespace Go
 {
 	class StartFunction : FunctionType
 	{
+		public StartFunction(string variable) : base("Start", (PaperVariable)variable)
+		{
+		}
+
 		public StartFunction(CoroutineDefinitionType definition) : base("Start", definition)
 		{
 		}
