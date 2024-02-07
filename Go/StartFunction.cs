@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Go
 {
-	class StartFunction : FunctionType
+	public class StartFunction : FunctionType
 	{
 		public StartFunction(string variable) : base("Start", (PaperVariable)variable)
 		{
