@@ -528,9 +528,23 @@ namespace GeneratorCalculation
 			throw new NotImplementedException();
 		}
 
+		/// <summary>
+		/// Never returns null
+		/// </summary>
+		/// <param name="equations"></param>
+		/// <returns></returns>
 		public PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			throw new NotImplementedException();
+			List<DataFlow> flow = new List<DataFlow>();
+			foreach (var item in Flow)
+			{
+				var newType = item.Type.ApplyEquation(equations);
+				if (newType is PaperType == false)
+					throw new PaperSyntaxException($"{item} would be evaluated to {newType} which is incompatible with this position.");
+
+				flow.Add(new DataFlow(item.Direction, (PaperType)newType));
+			}
+			return new CoroutineDefinitionType(flow, Condition);
 		}
 
 		public List<PaperVariable> GetVariables()

@@ -4,20 +4,23 @@ using System.Collections.Generic;
 using GeneratorCalculation;
 using GoLang.Antlr;
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.Logging;
 
 namespace Go
 {
 	class CoroutineDefinitionCollector : GoParserBaseVisitor<bool>
 	{
+		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(CoroutineDefinitionCollector));
+
 		Dictionary<string, string> channelsInFunc = null;
 		List<DataFlow> flow;
 
 		public Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
-		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
+		//ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 
 		public CoroutineDefinitionCollector(Dictionary<string, CoroutineDefinitionType> knownDefinitions)
 		{
-			this.knownDefinitions = new ReadOnlyDictionary<string, CoroutineDefinitionType>(knownDefinitions);
+			this.definitions = new Dictionary<string, CoroutineDefinitionType>(knownDefinitions);
 		}
 
 
@@ -39,7 +42,7 @@ namespace Go
 			{
 				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(flow);
 
-				definitions.Add(context.IDENTIFIER().GetText(), coroutine);
+				definitions[context.IDENTIFIER().GetText()] = coroutine;
 				//This is coroutine definition.
 				Console.WriteLine(context.IDENTIFIER().GetText() + ": " + coroutine);
 			}
@@ -47,6 +50,11 @@ namespace Go
 			return true;
 		}
 
+		public override bool VisitFunctionLit([NotNull] GoParser.FunctionLitContext context)
+		{
+			logger.LogWarning("FunctionLit should be handled by FunctionLitCollector: " + context.GetText());
+			return false;
+		}
 
 
 		public override bool VisitSendStmt([NotNull] GoParser.SendStmtContext context)
@@ -77,10 +85,42 @@ namespace Go
 				{
 					//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
 					channelsInFunc.Add(variableName, v.type);
+					return true;
 				}
+
+
+				// If this statement defines an inline function, save the function to definitions.
+				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				if (def != null)
+				{
+					definitions[variableName] = def;
+					return true;
+				}
+
 			}
 
 			return base.VisitShortVarDecl(context);
+		}
+
+		public override bool VisitAssignment([NotNull] GoParser.AssignmentContext context)
+		{
+			var variableName = context.expressionList(0).GetText();
+			if (variableName.Contains(",") == false)
+			{
+				// If this statement defines an inline function, save the function to definitions.
+				var def = FunctionLitCollector.Collect(context.expressionList(1), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				if (def != null)
+				{
+					definitions[variableName] = def;
+					return true;
+				}
+			}
+			return base.VisitAssignment(context);
+		}
+
+		public override bool VisitGoStmt([NotNull] GoParser.GoStmtContext context)
+		{
+			return base.VisitGoStmt(context);
 		}
 
 
@@ -101,10 +141,18 @@ namespace Go
 			if (context.arguments() != null)
 			{
 				string methodName = context.primaryExpr().GetText();
-				if (knownDefinitions.TryGetValue(methodName, out var def))
+				if (definitions.ContainsKey(methodName))
 				{
 					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
 					//yieldTypes.Add(new FunctionType("Start", new PaperVariable(methodName)));
+					return true;
+				}
+
+				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				if (def != null)
+				{
+					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(def)));
+					return true;
 				}
 			}
 
