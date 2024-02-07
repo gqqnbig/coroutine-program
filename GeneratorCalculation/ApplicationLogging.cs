@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GeneratorCalculation
 {
-	class ApplicationLogging
+	public class ApplicationLogging
 	{
 		public static readonly ILoggerFactory LoggerFactory;
 
