@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 using GeneratorCalculation;
 
 namespace Go
@@ -12,15 +11,15 @@ namespace Go
 
 		static void Main(string[] args)
 		{
-			string path = @"E:\GeneratorCalculation\GoTests\channels-method.go";
+			string path = @"E:\GeneratorCalculation\GoTests\inline-func.go";
+			path = @"E:\GeneratorCalculation\GoTests\basic.go";
 
 			string code = System.IO.File.ReadAllText(path);
 			CheckDeadlock(code);
 
 		}
 
-
-		public static bool CheckDeadlock(string goCode)
+		public static Dictionary<string, CoroutineDefinitionType> GetDefinitions(string goCode)
 		{
 			AntlrInputStream inputStream = new AntlrInputStream(goCode);
 
@@ -48,7 +47,19 @@ namespace Go
 				Console.WriteLine("Iterate {0} and check convergence", i);
 			}
 
+			return definitions;
+		}
 
+
+		public static bool CheckDeadlock(string goCode)
+		{
+			Dictionary<string, CoroutineDefinitionType> definitions = GetDefinitions(goCode);
+			return CheckDeadlock(definitions);
+		}
+
+
+		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions)
+		{
 			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
 			if (definitions.ContainsKey("main"))
 			{
