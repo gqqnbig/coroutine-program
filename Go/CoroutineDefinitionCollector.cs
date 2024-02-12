@@ -102,6 +102,50 @@ namespace Go
 			return base.VisitShortVarDecl(context);
 		}
 
+		public override bool VisitVarDecl([NotNull] GoParser.VarDeclContext context)
+		{
+			foreach (var spec in context.varSpec())
+			{
+				var variableName = spec.identifierList().GetText();
+				if (variableName.Contains(","))
+					continue; // TODO: deal with comma separated variable assignments.
+
+				if (spec.type_() != null)
+				{
+					string t = ParameterTypeVisitor.GetChannelType(spec.type_());
+					if (t != null)
+					{
+						channelsInFunc.Add(variableName, t);
+						continue;
+					}
+				}
+
+				if (spec.expressionList() != null)
+				{
+
+					MakeChannelVisitor v = new MakeChannelVisitor();
+					v.Visit(spec.expressionList());
+					if (v.type != null)
+					{
+						//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
+						channelsInFunc.Add(variableName, v.type);
+						continue;
+					}
+
+
+					// If this statement defines an inline function, save the function to definitions.
+					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
+					if (def != null)
+					{
+						definitions[variableName] = def;
+						continue;
+					}
+				}
+
+			}
+			return true;
+		}
+
 		public override bool VisitAssignment([NotNull] GoParser.AssignmentContext context)
 		{
 			var variableName = context.expressionList(0).GetText();
