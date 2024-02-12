@@ -29,5 +29,12 @@ namespace Go.Tests
 
 			Assert.False(Program.CheckDeadlock(definitions));
 		}
+
+		[Fact]
+		public static void TestInlineFuncVarOutside()
+		{
+			string code = GoCompositionTests.GetEmbeddedFile("inline-func-varOutside.go");
+			Assert.False(Program.CheckDeadlock(code));
+		}
 	}
 }
