@@ -9,9 +9,11 @@ namespace Go
 {
 	class FunctionLitCollector : GoParserBaseVisitor<bool>
 	{
-		public static CoroutineDefinitionType Collect([NotNull] Antlr4.Runtime.Tree.IParseTree context, ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions)
+		public static CoroutineDefinitionType Collect([NotNull] Antlr4.Runtime.Tree.IParseTree context, 
+			ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions,
+			Dictionary<string, string> knownChannels)
 		{
-			var c = new FunctionLitCollector(knownDefinitions);
+			var c = new FunctionLitCollector(knownDefinitions, knownChannels);
 			c.Visit(context);
 
 			if (c.flow != null && c.flow.Count > 0)
@@ -28,15 +30,17 @@ namespace Go
 		List<DataFlow> flow;
 
 		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
+		private readonly Dictionary<string, string> knownChannels;
 
-		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions)
+		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions, Dictionary<string, string> knownChannels)
 		{
 			this.knownDefinitions = knownDefinitions;
+			this.knownChannels = knownChannels;
 		}
 
 		public override bool VisitFunctionLit([NotNull] GoParser.FunctionLitContext context)
 		{
-			channelsInFunc = new Dictionary<string, string>();
+			channelsInFunc = new Dictionary<string, string>(knownChannels);
 			ParameterTypeVisitor v = new ParameterTypeVisitor();
 			v.Visit(context.signature().parameters());
 			foreach (var identifier in v.channelTypes.Keys)
@@ -62,7 +66,7 @@ namespace Go
 				//Console.WriteLine($"Channel is {channel}:chan {type}");
 			}
 			else
-				throw new FormatException();
+				throw new FormatException($"Channel {channel} is unknown.");
 
 			//to title case
 			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
