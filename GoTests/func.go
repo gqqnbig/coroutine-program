@@ -27,5 +27,6 @@ func main() {
 	// Block here until a value is received by
 	// the channel "done".
 	<-done
+	<-done // This one is unmatched.
 	fmt.Println("bye")
 }
