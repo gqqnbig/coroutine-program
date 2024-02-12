@@ -58,6 +58,14 @@ namespace Go.Tests
 			Assert.True(Program.CheckDeadlock(code));
 		}
 
+		[Fact]
+		public static void TestFunc()
+		{
+			string code = GetEmbeddedFile("func.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 	}
 
 }
