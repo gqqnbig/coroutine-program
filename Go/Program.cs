@@ -74,14 +74,23 @@ namespace Go
 
 				var gs = from i in instances
 						 select new Generator("", i);
-				var result = new Solver().SolveWithBindings(gs.ToList(), bindings);
 
-				Console.WriteLine("Composition result is " + result);
-
-				var additional = result.Flow.FirstOrDefault(f => f.Direction == Direction.Resuming);
-				if (additional != null)
+				try
 				{
-					Console.WriteLine("The program requires {0} to complete execution.", additional.Type);
+					var result = new Solver().SolveWithBindings(gs.ToList(), bindings);
+
+					Console.WriteLine("Composition result is " + result);
+
+					var additional = result.Flow.FirstOrDefault(f => f.Direction == Direction.Resuming);
+					if (additional != null)
+					{
+						Console.WriteLine("The program requires {0} to complete execution.", additional.Type);
+						return true;
+					}
+				}
+				catch (DeadLockException ex)
+				{
+					Console.WriteLine(ex.Message);
 					return true;
 				}
 			}
