@@ -17,6 +17,11 @@
     <EmbeddedResource Include="basic-receiveInFunction.go" />
     <EmbeddedResource Include="basic.go" />
     <EmbeddedResource Include="basic3receive.go" />
+    <EmbeddedResource Include="Examples\YumaInaura\NoLiveGoroutines.go" />
+    <EmbeddedResource Include="Examples\YumaInaura\NoReceiver.go" />
+    <EmbeddedResource Include="Examples\YumaInaura\NoSender.go" />
+    <EmbeddedResource Include="Examples\YumaInaura\SleepingReceiver.go" />
+    <EmbeddedResource Include="Examples\YumaInaura\SleepingSender.go" />
     <EmbeddedResource Include="func.go" />
     <EmbeddedResource Include="inline-func-varOutside.go" />
     <EmbeddedResource Include="inline-func.go" />
