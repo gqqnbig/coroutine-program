@@ -90,7 +90,7 @@ namespace Go
 
 
 				// If this statement defines an inline function, save the function to definitions.
-				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
 				if (def != null)
 				{
 					definitions[variableName] = def;
@@ -108,7 +108,7 @@ namespace Go
 			if (variableName.Contains(",") == false)
 			{
 				// If this statement defines an inline function, save the function to definitions.
-				var def = FunctionLitCollector.Collect(context.expressionList(1), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				var def = FunctionLitCollector.Collect(context.expressionList(1), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
 				if (def != null)
 				{
 					definitions[variableName] = def;
@@ -148,7 +148,7 @@ namespace Go
 					return true;
 				}
 
-				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions));
+				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
 				if (def != null)
 				{
 					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(def)));
