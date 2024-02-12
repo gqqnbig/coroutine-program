@@ -66,6 +66,27 @@ namespace Go.Tests
 			Assert.True(Program.CheckDeadlock(code));
 		}
 
+		[Theory]
+		[InlineData("NoLiveGoroutines.go")]
+		//[InlineData("NoReceiver.go", Skip = "This case requires balanced yielding and receiving.")]
+		[InlineData("NoSender.go")]
+		public static void TestYumaInauraBlock(string fileName)
+		{
+			string code = GetEmbeddedFile(fileName);
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
+		[Theory]
+		[InlineData("SleepingReceiver.go")]
+		[InlineData("SleepingSender.go")]
+		public static void TestYumaInauraFinish(string fileName)
+		{
+			string code = GetEmbeddedFile(fileName);
+
+			Assert.False(Program.CheckDeadlock(code));
+		}
+
 	}
 
 }
