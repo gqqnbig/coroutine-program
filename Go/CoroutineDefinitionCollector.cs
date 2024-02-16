@@ -1,10 +1,14 @@
-﻿using Antlr4.Runtime.Misc;
+﻿
 using System;
 using System.Collections.Generic;
-using GeneratorCalculation;
-using GoLang.Antlr;
+using System.Linq;
+
+using Antlr4.Runtime.Misc;
 using System.Collections.ObjectModel;
 using Microsoft.Extensions.Logging;
+
+using GeneratorCalculation;
+using GoLang.Antlr;
 
 namespace Go
 {
@@ -15,12 +19,12 @@ namespace Go
 		Dictionary<string, string> channelsInFunc = null;
 		List<DataFlow> flow;
 
-		public Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
+		public Dictionary<string, FuncInfo> definitions = new Dictionary<string, FuncInfo>();
 		//ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 
-		public CoroutineDefinitionCollector(Dictionary<string, CoroutineDefinitionType> knownDefinitions)
+		public CoroutineDefinitionCollector(Dictionary<string, FuncInfo> knownDefinitions)
 		{
-			this.definitions = new Dictionary<string, CoroutineDefinitionType>(knownDefinitions);
+			this.definitions = new Dictionary<string, FuncInfo>(knownDefinitions);
 		}
 
 
@@ -34,18 +38,34 @@ namespace Go
 				channelsInFunc.Add(identifier, v.channelTypes[identifier]);
 			}
 
-			flow = new List<DataFlow>();
+			var returnType = context.signature().result();
+			if (returnType != null)
+			{
+				string channelType = ParameterTypeVisitor.GetChannelType(returnType.type_());
+				if (channelType != null)
+					definitions[context.IDENTIFIER().GetText()] = new FuncInfo { ChannelType = channelType };
+			}
+			// Gather return type before going into the body because the body may recursively call this method.
 
+			flow = new List<DataFlow>();
 			VisitBlock(context.block());
+
 
 			if (flow.Count > 0)
 			{
 				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(flow);
 
-				definitions[context.IDENTIFIER().GetText()] = coroutine;
+				var key = context.IDENTIFIER().GetText();
+				if (definitions.ContainsKey(key))
+					definitions[key].CoroutineType = coroutine;
+				else
+					definitions[key] = new FuncInfo { CoroutineType = coroutine };
 				//This is coroutine definition.
 				Console.WriteLine(context.IDENTIFIER().GetText() + ": " + coroutine);
 			}
+
+
+
 
 			return true;
 		}
@@ -90,10 +110,14 @@ namespace Go
 
 
 				// If this statement defines an inline function, save the function to definitions.
-				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
+				var dic = new Dictionary<string, CoroutineDefinitionType>();
+				foreach (var item in definitions)
+					dic.Add(item.Key, item.Value.CoroutineType);
+
+				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
 				if (def != null)
 				{
-					definitions[variableName] = def;
+					definitions[variableName].CoroutineType = def;
 					return true;
 				}
 
@@ -104,6 +128,7 @@ namespace Go
 
 		public override bool VisitVarDecl([NotNull] GoParser.VarDeclContext context)
 		{
+			//TODO: the var statement can appear outside a function, when channelsInFunc is null.
 			foreach (var spec in context.varSpec())
 			{
 				var variableName = spec.identifierList().GetText();
@@ -134,10 +159,13 @@ namespace Go
 
 
 					// If this statement defines an inline function, save the function to definitions.
-					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
+					var dic = new Dictionary<string, CoroutineDefinitionType>();
+					foreach (var item in definitions)
+						dic.Add(item.Key, item.Value.CoroutineType);
+					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
 					if (def != null)
 					{
-						definitions[variableName] = def;
+						definitions[variableName].CoroutineType = def;
 						continue;
 					}
 				}
@@ -152,10 +180,12 @@ namespace Go
 			if (variableName.Contains(",") == false)
 			{
 				// If this statement defines an inline function, save the function to definitions.
-				var def = FunctionLitCollector.Collect(context.expressionList(1), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
+
+				var def = FunctionLitCollector.Collect(context.expressionList(1), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i => i.Key, i => i.Value.CoroutineType)),
+														channelsInFunc);
 				if (def != null)
 				{
-					definitions[variableName] = def;
+					definitions[variableName].CoroutineType = def;
 					return true;
 				}
 			}
@@ -173,8 +203,25 @@ namespace Go
 			if (context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
 			{
 				string variableName = context.expression(0).GetText();
+				string methodName = null;
+				int p = variableName.IndexOf("(");
+				FuncInfo fInfo = null;
+				if (p != -1)
+				{
+					//variableName has (), so it is a function call.
+					methodName = variableName.Substring(0, p);
+					definitions.TryGetValue(variableName.Substring(0, variableName.IndexOf("(")), out fInfo);
+				}
 
-				if (channelsInFunc.TryGetValue(variableName, out string type))
+				if (methodName != null && fInfo != null)
+				{
+					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
+
+					var type = fInfo.ChannelType;
+					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
+					return true;
+				}
+				else if (channelsInFunc.TryGetValue(variableName, out string type))
 				{
 					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
 					return true;
@@ -197,7 +244,8 @@ namespace Go
 					return true;
 				}
 
-				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions), channelsInFunc);
+				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i => i.Key, i => i.Value.CoroutineType)),
+														channelsInFunc);
 				if (def != null)
 				{
 					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(def)));
