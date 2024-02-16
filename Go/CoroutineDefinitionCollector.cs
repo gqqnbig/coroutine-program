@@ -173,9 +173,14 @@ namespace Go
 			if (context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
 			{
 				string variableName = context.expression(0).GetText();
-				string type = channelsInFunc[variableName];
 
-				flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
+				if (channelsInFunc.TryGetValue(variableName, out string type))
+				{
+					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
+					return true;
+				}
+				else
+					logger.LogInformation($"{variableName} seems to be a channel, but its type is unknown.");
 			}
 			return base.VisitExpression(context);
 		}
