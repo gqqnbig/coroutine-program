@@ -115,8 +115,11 @@ namespace GeneratorCalculation
 		{
 			if (bindings.TryGetValue(t, out PaperWord value))
 			{
+				//A variable can point to a type that contains itself.
+				bindings.Remove(t);
 				if (value is PaperType vType)
 					Visit(vType);
+				bindings.Add(t, value);
 			}
 
 		}
