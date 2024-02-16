@@ -276,9 +276,8 @@ namespace GeneratorCalculation
 		{
 			List<PaperType> yieldsToOutside = new List<PaperType>();
 			int i = 0;
-			int s = 0;
 			bool canWrap = false;
-			while (pairs.Count > 0 && s++ < steps)
+			while (pairs.Count > 0 && steps-- > 0)
 			{
 				if (i >= pairs.Count)
 				{
@@ -387,7 +386,7 @@ namespace GeneratorCalculation
 				}
 			}
 
-			if (s >= steps)
+			if (steps <= 0)
 				throw new StepLimitExceededException();
 
 			return yieldsToOutside;
