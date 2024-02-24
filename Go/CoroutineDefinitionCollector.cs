@@ -132,8 +132,10 @@ namespace Go
 			foreach (var spec in context.varSpec())
 			{
 				var variableName = spec.identifierList().GetText();
+				// In top 5 Go repositories, 1 out of 463 channel creation is assigned with comma.
+				// Therefore we choose not to analyze comma assignments.
 				if (variableName.Contains(","))
-					continue; // TODO: deal with comma separated variable assignments.
+					continue;
 
 				if (spec.type_() != null)
 				{
