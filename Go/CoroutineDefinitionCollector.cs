@@ -117,7 +117,10 @@ namespace Go
 				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
 				if (def != null)
 				{
-					definitions[variableName].CoroutineType = def;
+					if (definitions.ContainsKey(variableName))
+						definitions[variableName].CoroutineType = def;
+					else
+						definitions[variableName] = new FuncInfo { CoroutineType = def };
 					return true;
 				}
 
