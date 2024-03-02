@@ -41,7 +41,7 @@ namespace Go
 				v.Visit(tree);
 
 				if (Equals(v.definitions, definitions))
-					break;
+					break; // We reach invariant point.
 				definitions = v.definitions;
 
 				Console.WriteLine("Iterate {0} and check convergence", i);
