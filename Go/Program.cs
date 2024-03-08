@@ -11,8 +11,11 @@ namespace Go
 
 		static void Main(string[] args)
 		{
-			string path = @"E:\GeneratorCalculation\GoTests\inline-func.go";
-			path = @"E:\GeneratorCalculation\GoTests\basic.go";
+			string path = null;
+			if (args.Length > 0)
+				path = args[args.Length - 1];
+
+			//path = @"E:\GeneratorCalculation\GoTests\basic.go";
 
 			string code = System.IO.File.ReadAllText(path);
 			CheckDeadlock(code);
@@ -32,7 +35,7 @@ namespace Go
 
 			//Console.WriteLine(tree.children[1].GetText());
 
-			Dictionary<string, CoroutineDefinitionType> definitions = new Dictionary<string, CoroutineDefinitionType>();
+			var definitions = new Dictionary<string, FuncInfo>();
 
 			// repeat and check if definitions update.
 			for (int i = 0; ; i++)
@@ -47,7 +50,7 @@ namespace Go
 				Console.WriteLine("Iterate {0} and check convergence", i);
 			}
 
-			return definitions;
+			return definitions.ToDictionary(i => i.Key, i => i.Value.CoroutineType);
 		}
 
 
@@ -77,7 +80,7 @@ namespace Go
 
 				try
 				{
-					var result = new Solver().SolveWithBindings(gs.ToList(), bindings);
+					var result = new Solver().SolveWithBindings(gs.ToList(), bindings, 50);
 
 					Console.WriteLine("Composition result is " + result);
 
