@@ -66,6 +66,14 @@ namespace Go.Tests
 			Assert.True(Program.CheckDeadlock(code));
 		}
 
+		[Fact]
+		public static void TestOutOfOrder()
+		{
+			string code = GetEmbeddedFile("out-of-order.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 		[Theory]
 		[InlineData("NoLiveGoroutines.go")]
 		//[InlineData("NoReceiver.go", Skip = "This case requires balanced yielding and receiving.")]
