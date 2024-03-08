@@ -80,7 +80,9 @@ namespace Go
 
 				try
 				{
-					var result = new Solver().SolveWithBindings(gs.ToList(), bindings, 50);
+					Solver solver = new Solver();
+					solver.CanLoopExternalYield = false;
+					var result = solver.SolveWithBindings(gs.ToList(), bindings, 50);
 
 					Console.WriteLine("Composition result is " + result);
 
