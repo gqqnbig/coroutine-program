@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
 	<TargetFramework>netcoreapp3.1</TargetFramework>
     <PlatformTarget>x86</PlatformTarget>
+    <AssemblyName>GoAnalysis</AssemblyName>
   </PropertyGroup>
   <Import Project="..\z3.proj" />
 
