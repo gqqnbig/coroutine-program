@@ -20,6 +20,6 @@ func main() {
 	y:= <-c
 	z:= <-c
 
-	fmt.Println(x, y, x+y)
+	fmt.Println(x, y, z)
 }
 
