@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace Go
 {
-	class FunctionLitCollector : GoParserBaseVisitor<bool>
+	class FunctionLitCollector : FunctionBodyCollector
 	{
 		public static CoroutineDefinitionType Collect([NotNull] Antlr4.Runtime.Tree.IParseTree context, 
 			ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions,
@@ -67,6 +67,8 @@ namespace Go
 			}
 			else
 				throw new FormatException($"Channel {channel} is unknown.");
+
+			VisitExpression(context.expression(1));
 
 			//to title case
 			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
@@ -133,19 +135,6 @@ namespace Go
 				}
 			}
 			return true;
-		}
-
-
-		public override bool VisitExpression([NotNull] GoParser.ExpressionContext context)
-		{
-			if (channelsInFunc != null && context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
-			{
-				string variableName = context.expression(0).GetText();
-				string type = channelsInFunc[variableName];
-
-				flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
-			}
-			return base.VisitExpression(context);
 		}
 
 		public override bool VisitPrimaryExpr([NotNull] GoParser.PrimaryExprContext context)
