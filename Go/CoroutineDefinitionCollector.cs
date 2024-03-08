@@ -12,15 +12,8 @@ using GoLang.Antlr;
 
 namespace Go
 {
-	class CoroutineDefinitionCollector : GoParserBaseVisitor<bool>
+	class CoroutineDefinitionCollector : FunctionBodyCollector
 	{
-		private static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(CoroutineDefinitionCollector));
-
-		Dictionary<string, string> channelsInFunc = null;
-		List<DataFlow> flow;
-
-		public Dictionary<string, FuncInfo> definitions = new Dictionary<string, FuncInfo>();
-		//ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 
 		public CoroutineDefinitionCollector(Dictionary<string, FuncInfo> knownDefinitions)
 		{
@@ -87,6 +80,8 @@ namespace Go
 			}
 			else
 				throw new FormatException();
+
+			VisitExpression(context.expression(1));
 
 			//to title case
 			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
@@ -202,40 +197,6 @@ namespace Go
 			return base.VisitGoStmt(context);
 		}
 
-
-		public override bool VisitExpression([NotNull] GoParser.ExpressionContext context)
-		{
-			if (context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
-			{
-				string variableName = context.expression(0).GetText();
-				string methodName = null;
-				int p = variableName.IndexOf("(");
-				FuncInfo fInfo = null;
-				if (p != -1)
-				{
-					//variableName has (), so it is a function call.
-					methodName = variableName.Substring(0, p);
-					definitions.TryGetValue(variableName.Substring(0, variableName.IndexOf("(")), out fInfo);
-				}
-
-				if (methodName != null && fInfo != null)
-				{
-					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
-
-					var type = fInfo.ChannelType;
-					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
-					return true;
-				}
-				else if (channelsInFunc.TryGetValue(variableName, out string type))
-				{
-					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
-					return true;
-				}
-				else
-					logger.LogInformation($"{variableName} seems to be a channel, but its type is unknown.");
-			}
-			return base.VisitExpression(context);
-		}
 
 		public override bool VisitPrimaryExpr([NotNull] GoParser.PrimaryExprContext context)
 		{
