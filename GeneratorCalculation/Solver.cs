@@ -16,6 +16,7 @@ namespace GeneratorCalculation
 
 		public readonly Z3.Context z3Ctx;
 		public Z3.EnumSort ConcreteSort { get; private set; }
+		public bool CanLoopExternalYield { get; set; } = true;
 
 		private Dictionary<string, Z3.FuncDecl> functionHeads = new Dictionary<string, Z3.FuncDecl>();
 		private Dictionary<string, Z3.BoolExpr> functionBodies = new Dictionary<string, Z3.BoolExpr>();
@@ -322,7 +323,7 @@ namespace GeneratorCalculation
 
 				i++;
 
-				if (i >= pairs.Count)
+				if (CanLoopExternalYield && i >= pairs.Count)
 				{
 					if (LoopExternalYield(yieldsToOutside, pairs))
 						canWrap = true;
