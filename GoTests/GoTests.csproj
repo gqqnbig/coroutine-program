@@ -25,6 +25,7 @@
     <EmbeddedResource Include="func.go" />
     <EmbeddedResource Include="inline-func-varOutside.go" />
     <EmbeddedResource Include="inline-func.go" />
+    <EmbeddedResource Include="out-of-order.go" />
   </ItemGroup>
 
   <ItemGroup>
