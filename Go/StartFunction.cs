@@ -17,6 +17,7 @@ namespace Go
 
 		public override PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
+			// Arguments[0] may be PaperVariable. We have to replace it by CoroutineDefinitionType.
 			return new StartFunction((CoroutineDefinitionType)Arguments[0].ApplyEquation(equations)).Evaluate();
 		}
 
