@@ -192,34 +192,5 @@ namespace Go
 			return base.VisitAssignment(context);
 		}
 
-		public override bool VisitGoStmt([NotNull] GoParser.GoStmtContext context)
-		{
-			return base.VisitGoStmt(context);
-		}
-
-
-		public override bool VisitPrimaryExpr([NotNull] GoParser.PrimaryExprContext context)
-		{
-			if (context.arguments() != null)
-			{
-				string methodName = context.primaryExpr().GetText();
-				if (definitions.ContainsKey(methodName))
-				{
-					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
-					//yieldTypes.Add(new FunctionType("Start", new PaperVariable(methodName)));
-					return true;
-				}
-
-				var def = FunctionLitCollector.Collect(context.primaryExpr(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i => i.Key, i => i.Value.CoroutineType)),
-														channelsInFunc);
-				if (def != null)
-				{
-					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(def)));
-					return true;
-				}
-			}
-
-			return base.VisitPrimaryExpr(context);
-		}
 	}
 }

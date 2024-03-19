@@ -7,6 +7,10 @@ namespace Go
 {
 	public class StartFunction : FunctionType
 	{
+		public StartFunction(PaperVariable variable) : base("Start", variable)
+		{
+		}
+
 		public StartFunction(string variable) : base("Start", (PaperVariable)variable)
 		{
 		}
