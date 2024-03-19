@@ -17,6 +17,7 @@ namespace GeneratorCalculation
 		public readonly Z3.Context z3Ctx;
 		public Z3.EnumSort ConcreteSort { get; private set; }
 		public bool CanLoopExternalYield { get; set; } = true;
+		public string MainCoroutine { get; set; }
 
 		private Dictionary<string, Z3.FuncDecl> functionHeads = new Dictionary<string, Z3.FuncDecl>();
 		private Dictionary<string, Z3.BoolExpr> functionBodies = new Dictionary<string, Z3.BoolExpr>();
@@ -157,7 +158,7 @@ namespace GeneratorCalculation
 			return result;
 		}
 
-		static bool RemoveVoid(List<Generator> pairs)
+		bool RemoveVoid(List<Generator> pairs)
 		{
 			bool isProcessed = false;
 			for (int i = 0; i < pairs.Count; i++)
@@ -170,6 +171,12 @@ namespace GeneratorCalculation
 					{
 						logger.LogInformation($"{gx.Name} reached the simplest form. Reset to original.");
 						gx.Type = gx.OriginalType.Clone();
+					}
+					else if (MainCoroutine != null && MainCoroutine.Equals(gx.Name))
+					{
+						logger.LogInformation($"The main coroutine {gx.Name} exits. Kill all remaining ones.");
+						pairs.Clear();
+						return true;
 					}
 					else
 					{
