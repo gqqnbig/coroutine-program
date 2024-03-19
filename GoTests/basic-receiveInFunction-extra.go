@@ -17,6 +17,7 @@ func main() {
     go sum(s[:len(s)/2], c)
     go sum(s[len(s)/2:], c)
 
+	// Calling a function could be an Inline function.
     report(c)
     report(c)
 }
