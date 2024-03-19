@@ -18,7 +18,7 @@ namespace Go
 			//path = @"E:\GeneratorCalculation\GoTests\basic.go";
 
 			string code = System.IO.File.ReadAllText(path);
-			CheckDeadlock(code);
+			CheckDeadlock(code, "main");
 
 		}
 
