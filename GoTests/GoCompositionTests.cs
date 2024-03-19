@@ -1,8 +1,11 @@
+
+using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using System.IO;
 
 using Xunit;
+using GeneratorCalculation;
 
 namespace Go.Tests
 {
@@ -55,7 +58,31 @@ namespace Go.Tests
 		{
 			string code = GetEmbeddedFile("basic-receiveInFunction-extra.go");
 
-			Assert.True(Program.CheckDeadlock(code));
+			Dictionary<string, CoroutineDefinitionType> definitions = Program.GetDefinitions(code);
+
+			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
+
+			var m = definitions["main"].Start("main");
+			instances.Add(m);
+
+			var bindings = new Dictionary<PaperVariable, PaperWord>();
+			foreach (var d in definitions)
+				bindings.Add(d.Key, d.Value);
+
+
+			var gs = from i in instances
+					 select new Generator(i.Source.ToString(), i);
+
+			Solver solver = new Solver();
+			solver.CanLoopExternalYield = false;
+			solver.MainCoroutine = "main";
+			var result = solver.SolveWithBindings(gs.ToList(), bindings, 50);
+
+			//Console.WriteLine("Composition result is " + result);
+
+			Assert.Equal(2, result.Flow.Count);
+			Assert.Equal(new DataFlow(Direction.Resuming, (ConcreteType)"Int"), result.Flow[0]);
+			Assert.Equal(new DataFlow(Direction.Resuming, (ConcreteType)"Int"), result.Flow[1]);
 		}
 
 		[Fact]
