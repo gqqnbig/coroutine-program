@@ -80,7 +80,7 @@ namespace Go.Tests
 			// If the main goroutine exits, there will be no deadlock, whether or not other goroutines are locking or running.
 			string code = GetEmbeddedFile("main-exit.go");
 
-			Assert.False(Program.CheckDeadlock(code));
+			Assert.False(Program.CheckDeadlock(code, "main"));
 		}
 
 
