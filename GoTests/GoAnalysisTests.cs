@@ -13,7 +13,7 @@ namespace Go.Tests
 
 			var definitions = Program.GetDefinitions(code);
 
-			var main = definitions["main"];
+			Assert.True(definitions.TryGetValue("main", out var main));
 			Assert.NotNull(main);
 
 			Assert.Equal(Direction.Yielding, main.Flow[0].Direction);
