@@ -485,6 +485,12 @@ namespace GeneratorCalculation
 			return new CoroutineInstanceType(Flow, null, false);
 		}
 
+
+		public CoroutineInstanceType Start(PaperVariable source)
+		{
+			return new CoroutineInstanceType(Flow, source, false);
+		}
+
 		public override string ToString()
 		{
 			return "~>[" + string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)) + "]";
