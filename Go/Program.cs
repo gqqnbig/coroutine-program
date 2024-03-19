@@ -54,19 +54,20 @@ namespace Go
 		}
 
 
-		public static bool CheckDeadlock(string goCode)
+		public static bool CheckDeadlock(string goCode, string mainCoroutine = null)
 		{
 			Dictionary<string, CoroutineDefinitionType> definitions = GetDefinitions(goCode);
-			return CheckDeadlock(definitions);
+			return CheckDeadlock(definitions, mainCoroutine);
 		}
 
 
-		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions)
+		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions, string mainCoroutine = null)
 		{
 			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
 			if (definitions.ContainsKey("main"))
 			{
-				instances.Add(definitions["main"].Start());
+				var m = definitions["main"].Start("main");
+				instances.Add(m);
 
 				var bindings = new Dictionary<PaperVariable, PaperWord>();
 				foreach (var d in definitions)
@@ -76,12 +77,13 @@ namespace Go
 
 
 				var gs = from i in instances
-						 select new Generator("", i);
+						 select new Generator(i.Source.ToString(), i);
 
 				try
 				{
 					Solver solver = new Solver();
 					solver.CanLoopExternalYield = false;
+					solver.MainCoroutine = mainCoroutine;
 					var result = solver.SolveWithBindings(gs.ToList(), bindings, 50);
 
 					Console.WriteLine("Composition result is " + result);
