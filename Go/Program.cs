@@ -66,7 +66,8 @@ namespace Go
 			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
 			if (definitions.ContainsKey("main"))
 			{
-				instances.Add(definitions["main"].Start());
+				var m = definitions["main"].Start("main");
+				instances.Add(m);
 
 				var bindings = new Dictionary<PaperVariable, PaperWord>();
 				foreach (var d in definitions)
@@ -76,7 +77,7 @@ namespace Go
 
 
 				var gs = from i in instances
-						 select new Generator("", i);
+						 select new Generator(i.Source.ToString(), i);
 
 				try
 				{
