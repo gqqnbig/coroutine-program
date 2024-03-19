@@ -255,18 +255,29 @@ namespace GeneratorCalculation
 
 				var coroutine = pairs[i].Type;
 
+				//TODO: why call ReceiveGenerator again?
 				ReceiveGenerator(pairs);
+
+				if (coroutine.Flow.Count > 0)
+					while (coroutine.Flow[0].Type is InlineFunction inline)
+					{
+						// The direction of inline operation doesn't seem to matter.
+						coroutine.Flow.RemoveAt(0);
+						InlineFunction x = (InlineFunction)inline.ApplyEquation(bindings);
+						coroutine.Flow.InsertRange(0, x.EvaluateFlow());
+					}
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
 
 				if (coroutine.Flow.Count > 0 && coroutine.Flow[0].Direction == Direction.Yielding)
 				{
 					PaperType yieldedType = coroutine.Flow[0].Type;
+					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings);
 
 					if (yieldedType is SequenceType)
 						logger.LogWarning($"SequenceType {yieldedType} is not supported for receiving.");
 
-					yieldedType = (PaperType)yieldedType.ApplyEquation(bindings);
+
 
 					coroutine.Flow.RemoveAt(0);
 					compositionOrder.Add(pairs[i].Type);
