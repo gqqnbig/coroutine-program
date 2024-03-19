@@ -255,14 +255,13 @@ namespace GeneratorCalculation
 
 				var coroutine = pairs[i].Type;
 
-				PaperType yieldedType = null;
 				ReceiveGenerator(pairs);
 
 				Console.Write($"{pairs[i].Name}:\t{coroutine} ");
 
 				if (coroutine.Flow.Count > 0 && coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					yieldedType = coroutine.Flow[0].Type;
+					PaperType yieldedType = coroutine.Flow[0].Type;
 
 					if (yieldedType is SequenceType)
 						logger.LogWarning($"SequenceType {yieldedType} is not supported for receiving.");
