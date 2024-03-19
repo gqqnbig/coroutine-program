@@ -137,20 +137,6 @@ namespace Go
 			return true;
 		}
 
-		public override bool VisitPrimaryExpr([NotNull] GoParser.PrimaryExprContext context)
-		{
-			if (context.arguments() != null)
-			{
-				string methodName = context.primaryExpr().GetText();
-				if (knownDefinitions.TryGetValue(methodName, out var def))
-				{
-					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
-					//yieldTypes.Add(new FunctionType("Start", new PaperVariable(methodName)));
-				}
-			}
-
-			return base.VisitPrimaryExpr(context);
-		}
 
 	}
 }
