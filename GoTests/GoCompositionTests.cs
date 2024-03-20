@@ -96,9 +96,34 @@ namespace Go.Tests
 		[Fact]
 		public static void TestOutOfOrder()
 		{
+			// disable External yield?
+			// However, if we analyze a partial file, we don't have to disable External Yield
+			// because the code can yield to its caller.
 			string code = GetEmbeddedFile("out-of-order.go");
 
-			Assert.True(Program.CheckDeadlock(code));
+			Dictionary<string, CoroutineDefinitionType> definitions = Program.GetDefinitions(code);
+			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
+
+			var m = definitions["main"].Start("main");
+			instances.Add(m);
+
+			var bindings = new Dictionary<PaperVariable, PaperWord>();
+			foreach (var d in definitions)
+				bindings.Add(d.Key, d.Value);
+
+
+			var gs = from i in instances
+					 select new Generator(i.Source.ToString(), i);
+
+
+			Solver solver = new Solver();
+			solver.CanLoopExternalYield = false;
+			solver.MainCoroutine = "main";
+			var result = solver.SolveWithBindings(gs.ToList(), bindings, 50);
+
+			Assert.True(result.Flow.Count > 0);
+			Assert.Equal(Direction.Yielding, result.Flow[0].Direction);
+			Assert.Equal((ConcreteType)"String", result.Flow[0].Type);
 		}
 
 		[Fact]
@@ -107,7 +132,7 @@ namespace Go.Tests
 			// If the main goroutine exits, there will be no deadlock, whether or not other goroutines are locking or running.
 			string code = GetEmbeddedFile("main-exit.go");
 
-			Assert.False(Program.CheckDeadlock(code, "main"));
+			Assert.False(Program.CheckDeadlock(code));
 		}
 
 
