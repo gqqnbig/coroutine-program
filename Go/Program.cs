@@ -18,7 +18,7 @@ namespace Go
 			//path = @"E:\GeneratorCalculation\GoTests\basic.go";
 
 			string code = System.IO.File.ReadAllText(path);
-			CheckDeadlock(code, "main");
+			CheckDeadlock(code);
 
 		}
 
@@ -54,14 +54,14 @@ namespace Go
 		}
 
 
-		public static bool CheckDeadlock(string goCode, string mainCoroutine = null)
+		public static bool CheckDeadlock(string goCode)
 		{
 			Dictionary<string, CoroutineDefinitionType> definitions = GetDefinitions(goCode);
-			return CheckDeadlock(definitions, mainCoroutine);
+			return CheckDeadlock(definitions);
 		}
 
 
-		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions, string mainCoroutine = null)
+		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions)
 		{
 			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
 			if (definitions.ContainsKey("main"))
@@ -83,7 +83,7 @@ namespace Go
 				{
 					Solver solver = new Solver();
 					solver.CanLoopExternalYield = false;
-					solver.MainCoroutine = mainCoroutine;
+					solver.MainCoroutine = "main";
 					var result = solver.SolveWithBindings(gs.ToList(), bindings, 50);
 
 					Console.WriteLine("Composition result is " + result);
