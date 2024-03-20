@@ -12,8 +12,8 @@ jobs:
         with:
           dotnet-version: 3.1.x
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore GeneratorCalculation.sln
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore GeneratorCalculation.sln
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --no-restore --verbosity normal GeneratorCalculation.sln
