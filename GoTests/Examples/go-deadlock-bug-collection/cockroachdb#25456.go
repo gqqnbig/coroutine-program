@@ -14,6 +14,6 @@ func ShouldQuiesce() <-chan struct{} {
 
 // pkg/storage/consistency_queue.go:107
 func main() {
-	c:=ShouldQuiesce()
+	c := ShouldQuiesce()
 	<-c // Deadlock, channel is not closed, and no value will ever be sent
 }
