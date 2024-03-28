@@ -28,6 +28,7 @@ namespace Go
 			}
 			else if (text != null && definitions.TryGetValue(text, out var funcInfo) && funcInfo.ChannelType != null)
 			{
+				//This case is a function call. An Inline operation is needed.
 				type = funcInfo.ChannelType;
 				return true;
 			}
