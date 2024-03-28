@@ -8,6 +8,10 @@ namespace Go
 	class FuncInfo
 	{
 		public CoroutineDefinitionType CoroutineType { get; set; }
+
+		/// <summary>
+		/// The return value of a function can be a channel.
+		/// </summary>
 		public string ChannelType { get; set; }
 
 		public override bool Equals(object obj)

@@ -81,7 +81,7 @@ namespace Go
 			var variableName = context.identifierList().GetText();
 			if (channelsInFunc != null && variableName.Contains(",") == false)
 			{
-				MakeChannelVisitor v = new MakeChannelVisitor();
+				MakeChannelVisitor v = new MakeChannelVisitor(definitions);
 				v.Visit(context.expressionList());
 				if (v.type != null)
 				{
@@ -116,7 +116,7 @@ namespace Go
 				if (spec.expressionList() != null)
 				{
 
-					MakeChannelVisitor v = new MakeChannelVisitor();
+					MakeChannelVisitor v = new MakeChannelVisitor(definitions);
 					v.Visit(spec.expressionList());
 					if (v.type != null)
 					{
