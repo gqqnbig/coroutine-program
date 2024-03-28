@@ -36,5 +36,16 @@ namespace Go.Tests
 			string code = GoCompositionTests.GetEmbeddedFile("inline-func-varOutside.go");
 			Assert.False(Program.CheckDeadlock(code));
 		}
+
+
+		[Fact]
+		public static void TestReturnChannel()
+		{
+			// If the main goroutine exits, there will be no deadlock, whether or not other goroutines are locking or running.
+			string code = GoCompositionTests.GetEmbeddedFile("return-channel.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 	}
 }
