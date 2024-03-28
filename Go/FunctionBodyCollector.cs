@@ -36,7 +36,7 @@ namespace Go
 
 				if (methodName != null && fInfo != null)
 				{
-					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(methodName)));
+					flow.Add(new DataFlow(Direction.Yielding, new InlineFunction(methodName)));
 
 					var type = fInfo.ChannelType;
 					flow.Add(new DataFlow(Direction.Resuming, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
