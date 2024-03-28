@@ -27,6 +27,7 @@
     <EmbeddedResource Include="inline-func.go" />
     <EmbeddedResource Include="main-exit.go" />
     <EmbeddedResource Include="out-of-order.go" />
+    <EmbeddedResource Include="return-channel.go" />
   </ItemGroup>
 
   <ItemGroup>
