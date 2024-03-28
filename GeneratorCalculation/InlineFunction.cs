@@ -17,10 +17,17 @@ namespace GeneratorCalculation
 
 		public override PaperWord ApplyEquation(Dictionary<PaperVariable, PaperWord> equations)
 		{
-			return new InlineFunction((CoroutineDefinitionType)Arguments[0].ApplyEquation(equations));
+			// Arguments cannot be constants.
+			var v = Arguments[0].ApplyEquation(equations);
+			if (v is CoroutineDefinitionType vd)
+				return new InlineFunction(vd);
+			else if (v is PaperVariable)
+			{
+				// The argument is likely to be a function that returns a channel, with no sending or receiving operation.
+				return new InlineFunction(new CoroutineDefinitionType(new List<DataFlow>()));
+			}
 
 			throw new NotImplementedException();
-			//return new StartFunction((CoroutineDefinitionType)Arguments[0].ApplyEquation(equations)).Evaluate();
 		}
 
 		public override PaperWord Evaluate()
