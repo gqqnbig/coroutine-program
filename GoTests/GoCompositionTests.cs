@@ -157,6 +157,14 @@ namespace Go.Tests
 			Assert.False(Program.CheckDeadlock(code));
 		}
 
+		[Theory]
+		[InlineData("cockroachdb#25456.go")]
+		public static void TestJorgeGCoelhoCollection(string fileName)
+		{
+			string code = GetEmbeddedFile(fileName);
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 	}
 
 }

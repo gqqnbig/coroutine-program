@@ -17,6 +17,7 @@
     <EmbeddedResource Include="basic-receiveInFunction.go" />
     <EmbeddedResource Include="basic.go" />
     <EmbeddedResource Include="basic3receive.go" />
+    <EmbeddedResource Include="Examples\go-deadlock-bug-collection\cockroachdb#25456.go" />
     <EmbeddedResource Include="Examples\YumaInaura\NoLiveGoroutines.go" />
     <EmbeddedResource Include="Examples\YumaInaura\NoReceiver.go" />
     <EmbeddedResource Include="Examples\YumaInaura\NoSender.go" />
