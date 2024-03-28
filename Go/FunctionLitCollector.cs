@@ -26,8 +26,6 @@ namespace Go
 		}
 
 
-		Dictionary<string, string> channelsInFunc = null;
-		List<DataFlow> flow;
 
 		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 		private readonly Dictionary<string, string> knownChannels;
