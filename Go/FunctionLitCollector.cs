@@ -85,6 +85,7 @@ namespace Go
 				{
 					//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
 					channelsInFunc.Add(variableName, v.type);
+					return Visit(context.expressionList());
 				}
 			}
 
@@ -120,6 +121,7 @@ namespace Go
 					{
 						//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
 						channelsInFunc.Add(variableName, v.type);
+						Visit(spec.expressionList());
 						continue;
 					}
 
