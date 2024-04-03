@@ -9,9 +9,9 @@ namespace Go
 {
 	class FunctionLitCollector : FunctionBodyCollector
 	{
-		public static CoroutineDefinitionType Collect([NotNull] Antlr4.Runtime.Tree.IParseTree context, 
+		public static CoroutineDefinitionType Collect([NotNull] Antlr4.Runtime.Tree.IParseTree context,
 			ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions,
-			Dictionary<string, string> knownChannels)
+			LayeredDictionary<string, string> knownChannels)
 		{
 			var c = new FunctionLitCollector(knownDefinitions, knownChannels);
 			c.Visit(context);
@@ -28,35 +28,40 @@ namespace Go
 
 
 		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
-		private readonly Dictionary<string, string> knownChannels;
+		//private readonly Dictionary<string, string> knownChannels;
 
-		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions, Dictionary<string, string> knownChannels)
+		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions, LayeredDictionary<string, string> knownChannels)
 		{
 			this.knownDefinitions = knownDefinitions;
-			this.knownChannels = knownChannels;
+			this.channelsInFunc = knownChannels;
 		}
 
 		public override bool VisitFunctionLit([NotNull] GoParser.FunctionLitContext context)
 		{
-			channelsInFunc = new Dictionary<string, string>(knownChannels);
-			ParameterTypeVisitor v = new ParameterTypeVisitor();
-			v.Visit(context.signature().parameters());
-			foreach (var identifier in v.channelTypes.Keys)
+			try
 			{
-				channelsInFunc.Add(identifier, v.channelTypes[identifier]);
-			}
-			flow = new List<DataFlow>();
+				channelsInFunc.AddLayer();
+				//channelsInFunc = new Dictionary<string, string>(knownChannels);
+				ParameterTypeVisitor v = new ParameterTypeVisitor();
+				v.Visit(context.signature().parameters());
+				foreach (var identifier in v.channelTypes.Keys)
+				{
+					channelsInFunc.Add(identifier, v.channelTypes[identifier]);
+				}
+				flow = new List<DataFlow>();
 
-			return VisitBlock(context.block());
+				return VisitBlock(context.block());
+			}
+			finally
+			{
+				channelsInFunc.RemoveLayer();
+			}
 		}
 
 
 
 		public override bool VisitSendStmt([NotNull] GoParser.SendStmtContext context)
 		{
-			if (channelsInFunc == null)
-				return false;
-
 			string channel = context.channel.GetText();
 			string type;
 			if (channelsInFunc.TryGetValue(channel, out type))
@@ -77,7 +82,7 @@ namespace Go
 		public override bool VisitShortVarDecl([NotNull] GoParser.ShortVarDeclContext context)
 		{
 			var variableName = context.identifierList().GetText();
-			if (channelsInFunc != null && variableName.Contains(",") == false)
+			if (variableName.Contains(",") == false)
 			{
 				MakeChannelVisitor v = new MakeChannelVisitor(definitions);
 				v.Visit(context.expressionList());
