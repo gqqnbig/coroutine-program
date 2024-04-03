@@ -23,6 +23,7 @@ namespace GeneratorCalculation
 
 		/// <summary>
 		/// Even if the equations do not apply to this word, this method should return itself.
+		/// <para>Generally, the return type is the same as this type.</para>
 		/// </summary>
 		/// <param name="equations">this parameter should not be modified</param>
 		/// <returns></returns>
