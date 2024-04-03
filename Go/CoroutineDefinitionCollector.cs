@@ -111,6 +111,8 @@ namespace Go
 				foreach (var item in definitions)
 					dic.Add(item.Key, item.Value.CoroutineType);
 
+				// If this declaration declares a function, FunctionLitCollector can get its coroutine definition type.
+				// For other situations, the return value should be null.
 				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
 				if (def != null)
 				{
