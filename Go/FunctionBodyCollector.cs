@@ -14,14 +14,27 @@ namespace Go
 	{
 		protected static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(FunctionBodyCollector));
 
-		protected Dictionary<string, string> channelsInFunc = null;
+
+		protected LayeredDictionary<string, string> channelsInFunc = new LayeredDictionary<string, string>();
 		protected List<DataFlow> flow;
+		protected List<DataFlow> deferFlow;
+
 
 		public Dictionary<string, FuncInfo> definitions = new Dictionary<string, FuncInfo>();
 
+		public override bool VisitSourceFile([NotNull] GoParser.SourceFileContext context)
+		{
+			channelsInFunc.AddLayer();
+			bool b = base.VisitSourceFile(context);
+			channelsInFunc.RemoveLayer();
+			return b;
+		}
+
+
+
 		public override bool VisitExpression([NotNull] GoParser.ExpressionContext context)
 		{
-			if (channelsInFunc != null && context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
+			if (flow != null && context.unary_op?.Type == GoLang.Antlr.GoLexer.RECEIVE)
 			{
 				string variableName = context.expression(0).GetText();
 				string methodName = null;
@@ -72,6 +85,21 @@ namespace Go
 			}
 
 
+			return true;
+		}
+
+		public override bool VisitDeferStmt([NotNull] GoParser.DeferStmtContext context)
+		{
+			var exp = context.expression();
+			var pExp = exp.primaryExpr();
+			if (pExp != null)
+			{
+				var type = CheckPrimaryExpr(pExp);
+				if (type is PaperVariable vType)
+					deferFlow.Add(new DataFlow(Direction.Yielding, new InlineFunction(vType)));
+				else if (type is CoroutineDefinitionType dType)
+					deferFlow.Add(new DataFlow(Direction.Yielding, new InlineFunction(dType)));
+			}
 			return true;
 		}
 

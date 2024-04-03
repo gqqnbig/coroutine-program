@@ -23,7 +23,7 @@ namespace Go
 
 		public override bool VisitFunctionDecl([NotNull] GoParser.FunctionDeclContext context)
 		{
-			channelsInFunc = new Dictionary<string, string>();
+			channelsInFunc.AddLayer();
 			ParameterTypeVisitor v = new ParameterTypeVisitor();
 			v.Visit(context.signature().parameters());
 			foreach (var identifier in v.channelTypes.Keys)
@@ -41,9 +41,11 @@ namespace Go
 			// Gather return type before going into the body because the body may recursively call this method.
 
 			flow = new List<DataFlow>();
+			deferFlow = new List<DataFlow>();
 			VisitBlock(context.block());
 
 
+			flow.AddRange(deferFlow);
 			if (flow.Count > 0)
 			{
 				CoroutineDefinitionType coroutine = new CoroutineDefinitionType(flow);
@@ -59,7 +61,7 @@ namespace Go
 
 
 
-
+			channelsInFunc.RemoveLayer();
 			return true;
 		}
 
