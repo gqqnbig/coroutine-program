@@ -47,5 +47,13 @@ namespace Go.Tests
 			Assert.True(Program.CheckDeadlock(code));
 		}
 
+		[Fact]
+		public static void TestDefer()
+		{
+			string code = GoCompositionTests.GetEmbeddedFile("defer.go");
+
+			Assert.False(Program.CheckDeadlock(code));
+		}
+
 	}
 }
