@@ -185,5 +185,16 @@ namespace GeneratorCalculationTests
 			Assert.Equal((ConcreteType)"D", result.Flow[0].Type);
 		}
 
+		[Fact]
+		public void SelfCanceling()
+		{
+			var coroutines = new List<Generator>();
+			coroutines.Add(new Generator("", new CoroutineInstanceType(new DataFlow(Direction.Yielding, (ConcreteType)"A"), new DataFlow(Direction.Resuming, (ConcreteType)"A"))));
+
+
+			var result = new Solver().SolveWithBindings(coroutines);
+			Assert.Empty(result.Flow);
+		}
+
 	}
 }
