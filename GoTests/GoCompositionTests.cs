@@ -136,6 +136,16 @@ namespace Go.Tests
 		}
 
 
+		[Fact]
+		public static void TestRecMain()
+		{
+			// If the main goroutine exits, there will be no deadlock, whether or not other goroutines are locking or running.
+			string code = GetEmbeddedFile("rec-main.go");
+
+			Assert.False(Program.CheckDeadlock(code));
+		}
+
+
 		[Theory]
 		[InlineData("NoLiveGoroutines.go")]
 		//[InlineData("NoReceiver.go", Skip = "This case requires balanced yielding and receiving.")]
