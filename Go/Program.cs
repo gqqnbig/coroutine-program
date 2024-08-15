@@ -54,13 +54,23 @@ namespace Go
 		}
 
 
-		public static bool CheckDeadlock(string goCode)
+        /// <summary>
+        /// This function ignores external yields.
+        /// </summary>
+        /// <param name="goCode"></param>
+        /// <returns></returns>
+        public static bool CheckDeadlock(string goCode)
 		{
 			Dictionary<string, CoroutineDefinitionType> definitions = GetDefinitions(goCode);
 			return CheckDeadlock(definitions);
 		}
 
 
+		/// <summary>
+		/// This function ignores external yields.
+		/// </summary>
+		/// <param name="definitions"></param>
+		/// <returns></returns>
 		public static bool CheckDeadlock(Dictionary<string, CoroutineDefinitionType> definitions)
 		{
 			List<CoroutineInstanceType> instances = new List<CoroutineInstanceType>();
