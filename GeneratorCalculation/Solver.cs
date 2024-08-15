@@ -556,7 +556,7 @@ namespace GeneratorCalculation
 				var coroutine = pairs[(i + startIndex) % pairs.Count].Type;
 				if (coroutine.Flow.Count == 0 || coroutine.Flow[0].Direction == Direction.Yielding)
 				{
-					Console.WriteLine($"{pairs[i].Name}:\t{pairs[i].Type} -- Cannot receive {pendingType}");
+					Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} -- Cannot receive {pendingType}");
 					continue;
 				}
 
@@ -629,7 +629,7 @@ namespace GeneratorCalculation
 					}
 					else
 					{
-						Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{pairs[(i + startIndex) % pairs.Count].Type} -- Cannot receive {pendingType}");
+						Console.WriteLine($"{pairs[(i + startIndex) % pairs.Count].Name}:\t{coroutine} -- Cannot receive {pendingType}");
 					}
 				}
 			}
