@@ -12,14 +12,42 @@ namespace GeneratorCalculation
 	{
 		public Condition Condition { get; }
 
-		public PaperType Yield { get; }
+		public List<DataFlow> Flow { get; }
 
-		public PaperType Receive { get; }
+		//public PaperType Yield
+		//{
+		//	get
+		//	{
+		//		if (Flow[0].Direction == Direction.Yielding)
+		//			return Flow[0].Type;
+		//		else
+		//			throw new NotSupportedException();
+		//	}
+		//}
+
+		//public PaperType Receive
+		//{
+		//	get
+		//	{
+		//		if(flow
+		//	}
+		//}
 
 		public PaperVariable Source { get; }
 
 		public bool CanRestore { get; }
 
+		public CoroutineType(params DataFlow[] flow)
+		{
+			Flow = new List<DataFlow>(flow);
+		}
+
+		public CoroutineType(IEnumerable<DataFlow> flow, PaperVariable source, bool canRestore)
+		{
+			Flow = new List<DataFlow>(flow);
+			Source = source;
+			CanRestore = canRestore;
+		}
 
 		/// <summary>
 		/// 
@@ -30,8 +58,10 @@ namespace GeneratorCalculation
 		/// <param name="canRestore"></param>
 		public CoroutineType(PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
 		{
-			Receive = receive;
-			Yield = yield;
+			Flow = new List<DataFlow>();
+			Flow.Add(new DataFlow(Direction.Resuming, receive));
+			Flow.Add(new DataFlow(Direction.Yielding, yield));
+
 			Source = source;
 			CanRestore = canRestore;
 		}
@@ -39,8 +69,10 @@ namespace GeneratorCalculation
 		public CoroutineType(Condition condition, PaperType receive, PaperType yield, PaperVariable source = null, bool canRestore = false)
 		{
 			Condition = condition;
-			Receive = receive;
-			Yield = yield;
+
+			Flow = new List<DataFlow>();
+			Flow.Add(new DataFlow(Direction.Resuming, receive));
+			Flow.Add(new DataFlow(Direction.Yielding, yield));
 			Source = source;
 			CanRestore = canRestore;
 		}
@@ -51,15 +83,15 @@ namespace GeneratorCalculation
 			//Receive is like input, yield is like output.
 			//Yield cannot have variables that are unbound from Receive.
 
-			List<string> constants = new List<string>();
-			var inputVariables = Receive.GetVariables().Select(v => v.Name).ToList();
-			var outputVariables = Yield.GetVariables().Select(v => v.Name).ToList();
+			//List<string> constants = new List<string>();
+			//var inputVariables = Receive.GetVariables().Select(v => v.Name).ToList();
+			//var outputVariables = Yield.GetVariables().Select(v => v.Name).ToList();
 
-			if (outputVariables.Any(v => inputVariables.Contains(v) == false))
-			{
-				var culprits = outputVariables.Where(v => inputVariables.Contains(v) == false).ToList();
-				throw new FormatException($"{string.Join(", ", culprits)} are not bound by receive.");
-			}
+			//if (outputVariables.Any(v => inputVariables.Contains(v) == false))
+			//{
+			//	var culprits = outputVariables.Where(v => inputVariables.Contains(v) == false).ToList();
+			//	throw new FormatException($"{string.Join(", ", culprits)} are not bound by receive.");
+			//}
 
 
 			//Console.WriteLine("Yield variables: " + string.Join(", ", ));
