@@ -308,7 +308,7 @@ namespace GeneratorCalculation
 
 					if (yieldedType is CoroutineInstanceType)
 					{
-						pairs.Insert(i + 1, new Generator("", (CoroutineInstanceType)yieldedType));
+						pairs.Add(new Generator("", (CoroutineInstanceType)yieldedType));
 					}
 					else if (yieldedType is SequenceType ys)
 					{
