@@ -27,12 +27,10 @@ namespace Go
 
 
 
-		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 		//private readonly Dictionary<string, string> knownChannels;
 
-		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions, LayeredDictionary<string, string> knownChannels)
+		private FunctionLitCollector(LayeredDictionary<string, string> knownChannels)
 		{
-			this.knownDefinitions = knownDefinitions;
 			this.channelsInFunc = knownChannels;
 		}
 
