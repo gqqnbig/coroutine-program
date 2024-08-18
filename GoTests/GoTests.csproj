@@ -18,6 +18,7 @@
     <EmbeddedResource Include="basic.go" />
     <EmbeddedResource Include="basic3receive.go" />
     <EmbeddedResource Include="defer.go" />
+    <EmbeddedResource Include="defer2.go" />
     <EmbeddedResource Include="Examples\go-deadlock-bug-collection\cockroachdb#25456.go" />
     <EmbeddedResource Include="Examples\go-deadlock-bug-collection\grpc-go#1424.go" />
     <EmbeddedResource Include="Examples\go-deadlock-bug-collection\moby#33293.go" />
