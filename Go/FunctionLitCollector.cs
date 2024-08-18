@@ -13,7 +13,10 @@ namespace Go
 			ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions,
 			LayeredDictionary<string, string> knownChannels)
 		{
-			var c = new FunctionLitCollector(knownDefinitions, knownChannels);
+			var c = new FunctionLitCollector(knownChannels);
+			foreach (var d in knownDefinitions)
+				c.definitions[d.Key] = new FuncInfo() { CoroutineType = d.Value };
+
 			c.Visit(context);
 
 			if (c.flow != null && c.flow.Count > 0)
