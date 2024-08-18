@@ -50,8 +50,13 @@ namespace Go
 					channelsInFunc.Add(identifier, v.channelTypes[identifier]);
 				}
 				flow = new List<DataFlow>();
+				deferFlow = new List<DataFlow>();
 
-				return VisitBlock(context.block());
+				VisitBlock(context.block());
+
+
+				flow.AddRange(deferFlow);
+				return true;
 			}
 			finally
 			{
