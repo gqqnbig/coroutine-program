@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -10,6 +11,10 @@ using GoLang.Antlr;
 
 namespace Go
 {
+	/// <summary>
+	/// Know how to parse everything inside a function body, 
+	/// no matter whether the function itself is a literal or a function declaration.
+	/// </summary>
 	class FunctionBodyCollector : GoParserBaseVisitor<bool>
 	{
 		protected static readonly ILogger logger = ApplicationLogging.LoggerFactory.CreateLogger(nameof(FunctionBodyCollector));
@@ -101,6 +106,26 @@ namespace Go
 					deferFlow.Add(new DataFlow(Direction.Yielding, new InlineFunction(dType)));
 			}
 			return true;
+		}
+
+
+		public override bool VisitSendStmt([NotNull] GoParser.SendStmtContext context)
+		{
+			string channel = context.channel.GetText();
+			string type;
+			if (channelsInFunc.TryGetValue(channel, out type))
+			{
+				//Console.WriteLine($"Channel is {channel}:chan {type}");
+			}
+			else
+				throw new FormatException($"Channel {channel} is unknown.");
+
+			VisitExpression(context.expression(1));
+
+			//to title case
+			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
+			return true;
+			//return base.VisitSendStmt(context);
 		}
 
 		/// <summary>
