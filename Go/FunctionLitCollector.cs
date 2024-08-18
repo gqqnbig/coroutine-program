@@ -13,7 +13,10 @@ namespace Go
 			ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions,
 			LayeredDictionary<string, string> knownChannels)
 		{
-			var c = new FunctionLitCollector(knownDefinitions, knownChannels);
+			var c = new FunctionLitCollector(knownChannels);
+			foreach (var d in knownDefinitions)
+				c.definitions[d.Key] = new FuncInfo() { CoroutineType = d.Value };
+
 			c.Visit(context);
 
 			if (c.flow != null && c.flow.Count > 0)
@@ -27,12 +30,10 @@ namespace Go
 
 
 
-		ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions;
 		//private readonly Dictionary<string, string> knownChannels;
 
-		private FunctionLitCollector(ReadOnlyDictionary<string, CoroutineDefinitionType> knownDefinitions, LayeredDictionary<string, string> knownChannels)
+		private FunctionLitCollector(LayeredDictionary<string, string> knownChannels)
 		{
-			this.knownDefinitions = knownDefinitions;
 			this.channelsInFunc = knownChannels;
 		}
 
@@ -49,8 +50,13 @@ namespace Go
 					channelsInFunc.Add(identifier, v.channelTypes[identifier]);
 				}
 				flow = new List<DataFlow>();
+				deferFlow = new List<DataFlow>();
 
-				return VisitBlock(context.block());
+				VisitBlock(context.block());
+
+
+				flow.AddRange(deferFlow);
+				return true;
 			}
 			finally
 			{
