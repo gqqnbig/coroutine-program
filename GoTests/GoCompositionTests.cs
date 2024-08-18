@@ -94,6 +94,14 @@ namespace Go.Tests
 		}
 
 		[Fact]
+		public static void TestDefer2()
+		{
+			string code = GetEmbeddedFile("defer2.go");
+
+			Assert.False(Program.CheckDeadlock(code));
+		}
+
+		[Fact]
 		public static void TestOutOfOrder()
 		{
 			// disable External yield?
