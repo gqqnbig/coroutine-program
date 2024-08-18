@@ -107,15 +107,10 @@ namespace Go
 					//return true;
 				}
 
-
-				// If this statement defines an inline function, save the function to definitions.
-				var dic = new Dictionary<string, CoroutineDefinitionType>();
-				foreach (var item in definitions)
-					dic.Add(item.Key, item.Value.CoroutineType);
-
-				// If this declaration declares a function, FunctionLitCollector can get its coroutine definition type.
+				// If this declaration declares an inline function, FunctionLitCollector can get its coroutine definition type.
 				// For other situations, the return value should be null.
-				var def = FunctionLitCollector.Collect(context.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
+				var def = FunctionLitCollector.Collect(context.expressionList(), 
+					new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i=>i.Key,i=>i.Value.CoroutineType)), channelsInFunc);
 				if (def != null)
 				{
 					if (definitions.ContainsKey(variableName))
@@ -166,10 +161,7 @@ namespace Go
 
 
 					// If this statement defines an inline function, save the function to definitions.
-					var dic = new Dictionary<string, CoroutineDefinitionType>();
-					foreach (var item in definitions)
-						dic.Add(item.Key, item.Value.CoroutineType);
-					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(dic), channelsInFunc);
+					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i=>i.Key,i=>i.Value.CoroutineType)), channelsInFunc);
 					if (def != null)
 					{
 						definitions[variableName].CoroutineType = def;
