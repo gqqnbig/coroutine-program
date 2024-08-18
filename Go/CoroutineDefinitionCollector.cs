@@ -71,26 +71,6 @@ namespace Go
 			return false;
 		}
 
-
-		public override bool VisitSendStmt([NotNull] GoParser.SendStmtContext context)
-		{
-			string channel = context.channel.GetText();
-			string type;
-			if (channelsInFunc.TryGetValue(channel, out type))
-			{
-				//Console.WriteLine($"Channel is {channel}:chan {type}");
-			}
-			else
-				throw new FormatException();
-
-			VisitExpression(context.expression(1));
-
-			//to title case
-			flow.Add(new DataFlow(Direction.Yielding, new ConcreteType(char.ToUpper(type[0]) + type.Substring(1))));
-			return true;
-			//return base.VisitSendStmt(context);
-		}
-
 		public override bool VisitShortVarDecl([NotNull] GoParser.ShortVarDeclContext context)
 		{
 			var variableName = context.identifierList().GetText();
