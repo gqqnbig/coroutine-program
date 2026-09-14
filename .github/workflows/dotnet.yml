@@ -14,9 +14,9 @@ jobs:
               go build "$file"
             done
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 3.1.x
+          dotnet-version: '9.0.x'
       - name: Install dependencies
         run: dotnet restore GeneratorCalculation.sln
       - name: Build
