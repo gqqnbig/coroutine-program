@@ -156,7 +156,7 @@ namespace Go.Tests
 
 		[Theory]
 		[InlineData("NoLiveGoroutines.go")]
-		//[InlineData("NoReceiver.go", Skip = "This case requires balanced yielding and receiving.")]
+		[InlineData("NoReceiver.go" /*, Skip = "This case requires balanced yielding and receiving."*/)]
 		[InlineData("NoSender.go")]
 		public static void TestYumaInauraBlock(string fileName)
 		{
