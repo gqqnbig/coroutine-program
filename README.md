@@ -73,3 +73,23 @@ Composition result is []
 ```
 
 [The standard .NET logging config file](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/overview?tabs=command-line#configure-logging-without-code) is supported, which should be written in `appsettings.json`. A template is provided at `GeneratorCalculation\appsettings.json.template`.
+
+### Baseline Tools
+
+#### GoDDaR
+
+Consult https://github.com/JorgeGCoelho/GoDDaR for its installation steps. After the tool is installed, run GoDDaR on all tests files in the GoTest folder.
+
+For example, GoDDaR crashes with basic.go.
+
+```
+$ dune exec -- GoDDaR go ~/coroutine-program/GoTests/basic.go
+{"level":"warn","ts":1789480311.6275387,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: &t3.pfd [#0] is not a struct\t*internal/poll.FD\n\t-"}
+{"level":"warn","ts":1789480311.6275904,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: &t3.pfd [#0] is not a struct\t*internal/poll.FD\n\t-"}
+{"level":"warn","ts":1789480311.627614,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: &t3.pfd [#0] is not a struct\t*internal/poll.FD\n\t-"}
+{"level":"warn","ts":1789480311.6280894,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: *t61 is not a struct\t*os.file\n\t/usr/local/go/src/os/file_unix.go:235:6"}
+{"level":"warn","ts":1789480311.6284907,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: *t50 is not a struct\t*os.file\n\t/usr/local/go/src/os/file_unix.go:219:6"}
+{"level":"warn","ts":1789480311.6286674,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: *t42 is not a struct\t*os.file\n\t/usr/local/go/src/os/file_unix.go:233:18"}
+{"level":"warn","ts":1789480311.6327064,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: parameter t : *Type is not a struct\t*internal/abi.Type\n\t/usr/local/go/src/internal/abi/type.go:169:44"}
+Fatal error: exception Dlock.MiGo_to_CCS.Fail("Recursive call (main.sum#1)")
+```
