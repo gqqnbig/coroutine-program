@@ -104,6 +104,10 @@ namespace Go
 						Console.WriteLine("The program requires {0} to complete execution.", additional.Type);
 						return true;
 					}
+					else if (result.Flow.FirstOrDefault(f => f.Direction == Direction.Yielding) !=null)
+                    {
+                        return true;
+					}
 				}
 				catch (DeadLockException ex)
 				{
