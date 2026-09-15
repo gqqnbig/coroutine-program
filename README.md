@@ -82,7 +82,7 @@ Consult https://github.com/JorgeGCoelho/GoDDaR for its installation steps. After
 
 For example, GoDDaR crashes with basic.go.
 
-```
+```console
 $ dune exec -- GoDDaR go ~/coroutine-program/GoTests/basic.go
 {"level":"warn","ts":1789480311.6275387,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: &t3.pfd [#0] is not a struct\t*internal/poll.FD\n\t-"}
 {"level":"warn","ts":1789480311.6275904,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: &t3.pfd [#0] is not a struct\t*internal/poll.FD\n\t-"}
@@ -93,3 +93,29 @@ $ dune exec -- GoDDaR go ~/coroutine-program/GoTests/basic.go
 {"level":"warn","ts":1789480311.6327064,"caller":"migoinfer/instr.go:281","msg":"instr FieldAddr: parameter t : *Type is not a struct\t*internal/abi.Type\n\t/usr/local/go/src/internal/abi/type.go:169:44"}
 Fatal error: exception Dlock.MiGo_to_CCS.Fail("Recursive call (main.sum#1)")
 ```
+
+#### Gomela (ase21) 
+
+Consult https://github.com/nicolasdilley/gomela-ase21 for its installation steps. After the docker is installed, run gomela on all test files in the GoTest folder.
+
+```
+$ docker run -it -p 8000:8000 -v ~/coroutine-program/GoTests:/GoTests nicolasdilley/gomela-ase21
+root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# mkdir source
+root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# cp /GoTests/basic.go source
+root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# ./gomela fs ./source
+Verifying model : main++main13.pml
+there is  2  optionnal params.
+verifying :  /go/~/go/src/nicolasdilley/gomela-ase21/result2026-09-15--15:52:33/source/main++main13-copy.pml
+-------------------------------
+Result for source:main++main13.pml
+Number of states :  164
+Time to verify model :  1517  ms
+Send on close safety error : false.
+Close safety error : false.
+Negative counter safety error : false.
+Double unlock error : false.
+Model deadlock : false.
+-------------------------------
+root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# rm -rf source
+```
+
