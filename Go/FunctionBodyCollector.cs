@@ -82,6 +82,9 @@ namespace Go
 			var pExp = exp.primaryExpr();
 			if (pExp != null)
 			{
+				var arg = pExp.arguments();
+				if (arg != null)
+					VisitArguments(arg);
 				var type = CheckPrimaryExpr(pExp);
 				if (type is PaperVariable vType)
 					flow.Add(new DataFlow(Direction.Yielding, new StartFunction(vType)));
