@@ -29,6 +29,7 @@
     <EmbeddedResource Include="Examples\YumaInaura\SleepingReceiver.go" />
     <EmbeddedResource Include="Examples\YumaInaura\SleepingSender.go" />
     <EmbeddedResource Include="func.go" />
+    <EmbeddedResource Include="go-arguments.go" />
     <EmbeddedResource Include="inline-func-varOutside.go" />
     <EmbeddedResource Include="inline-func.go" />
     <EmbeddedResource Include="main-exit.go" />
