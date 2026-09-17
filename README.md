@@ -100,9 +100,9 @@ Consult https://github.com/nicolasdilley/gomela-ase21 for its installation steps
 
 ```
 $ docker run -it -p 8000:8000 -v ~/coroutine-program/GoTests:/GoTests nicolasdilley/gomela-ase21
-root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# mkdir source
-root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# cp /GoTests/basic.go source
-root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# ./gomela fs ./source
+$(docker):/go/~/go/src/nicolasdilley/gomela-ase21# mkdir source
+$(docker):/go/~/go/src/nicolasdilley/gomela-ase21# cp /GoTests/basic.go source
+$(docker):/go/~/go/src/nicolasdilley/gomela-ase21# ./gomela fs ./source
 Verifying model : main++main13.pml
 there is  2  optionnal params.
 verifying :  /go/~/go/src/nicolasdilley/gomela-ase21/result2026-09-15--15:52:33/source/main++main13-copy.pml
@@ -119,3 +119,38 @@ Model deadlock : false.
 root@6030fcbc1d31:/go/~/go/src/nicolasdilley/gomela-ase21# rm -rf source
 ```
 
+#### GoAT
+
+Consult https://github.com/staheri/goat for its installation steps. The docker image provided by https://github.com/fivosts/goat/tree/precompiled_container is the easiest setup.
+
+```console
+$ mkdir ~/GoTests
+cp  ~/coroutine-program/GoTests/basic.go ~/GoTests
+$ docker run -it -v ~/GoTests:~/GoTests fivosts/goat
+$(docker): go run . -path=~/GoTest # the interpreter mode avoids compilation
++--------------------+-----------------+--------+--------------------+
+| CONC USAGE         | COVREQ          | COVCOV | %                  |
++--------------------+-----------------+--------+--------------------+
+| basic.go:10(RANGE) | covered         |        |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:13(SEND)  | blocked (G2)    |        |                    |
+|                    | blocked (G3)    |        |                    |
+|                    | unblocking (G2) | *      |                    |
+|                    | unblocking (G3) | *      |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:18(GO)    | covered (G0)    | *      |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:23(GO)    | covered (G0)    | *      |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:24(GO)    | covered (G0)    | *      |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:25(RECV)  | blocked (G0)    | *      |                    |
+|                    | unblocking (G0) |        |                    |
++--------------------+-----------------+--------+--------------------+
+| basic.go:26(RECV)  | blocked (G0)    | *      |                    |
+|                    | unblocking (G0) |        |                    |
++--------------------+-----------------+--------+--------------------+
+| Total              | 7               | 12     | 0.5833333333333334 |
++--------------------+-----------------+--------+--------------------+
+ PASS
+```
