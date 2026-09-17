@@ -153,6 +153,15 @@ namespace Go.Tests
 			Assert.False(Program.CheckDeadlock(code));
 		}
 
+		[Fact]
+		public static void TestEvaluationOrder()
+		{
+			// If the main goroutine exits, there will be no deadlock, whether or not other goroutines are locking or running.
+			string code = GetEmbeddedFile("go-arguments.go");
+
+			Assert.True(Program.CheckDeadlock(code));
+		}
+
 
 		[Theory]
 		[InlineData("NoLiveGoroutines.go")]
