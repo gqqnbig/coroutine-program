@@ -423,6 +423,9 @@ namespace GeneratorCalculation
 					{
 						using (var solver = z3Ctx.MkSolver())
 						{
+							// Even if a problem is decidable,
+							// an algorithm to solve this problem may run for a long time before termination or does not terminate at all.
+							solver.Set("timeout", 5000);
 							solver.Add(functionBodies.Values.ToList());
 							List<int> matches = new List<int>();
 							for (int j = 0; j < pairs.Count; j++)
