@@ -121,7 +121,7 @@ namespace Go
 				//Console.WriteLine($"Channel is {channel}:chan {type}");
 			}
 			else
-				throw new FormatException($"Channel {channel} is unknown.");
+				throw new FormatException($"Channel {channel} is unknown."); // TODO: use gopls or the Language Server Protocol.
 
 			VisitExpression(context.expression(1));
 
