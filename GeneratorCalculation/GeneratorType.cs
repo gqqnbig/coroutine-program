@@ -493,7 +493,7 @@ namespace GeneratorCalculation
 
 		public override string ToString()
 		{
-			return "~>[" + string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)) + "]";
+			return "[[" + string.Join("; ", Flow.Select(f => (f.Direction == Direction.Yielding ? "+" : "-") + f.Type)) + "]]";
 		}
 
 		// override object.Equals
