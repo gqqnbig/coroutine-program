@@ -171,5 +171,52 @@ namespace Go
 
 			return base.VisitPrimaryExpr(context);
 		}
+
+
+		public override bool VisitVarDecl([NotNull] GoParser.VarDeclContext context)
+		{
+			//TODO: the var statement can appear outside a function, when channelsInFunc is null.
+			foreach (var spec in context.varSpec())
+			{
+				var variableName = spec.identifierList().GetText();
+				// In top 5 Go repositories, 1 out of 463 channel creation is assigned with comma.
+				// Therefore we choose not to analyze comma assignments.
+				if (variableName.Contains(","))
+					continue;
+
+				if (spec.type_() != null)
+				{
+					string t = ParameterTypeVisitor.GetChannelType(spec.type_());
+					if (t != null)
+					{
+						channelsInFunc.Add(variableName, t);
+						continue;
+					}
+				}
+
+				if (spec.expressionList() != null)
+				{
+
+					MakeChannelVisitor v = new MakeChannelVisitor(definitions);
+					v.Visit(spec.expressionList());
+					if (v.type != null)
+					{
+						//Console.WriteLine("Found {0}:chan {1}", variableName, v.type);
+						channelsInFunc.Add(variableName, v.type);
+						Visit(spec.expressionList());
+						continue;
+					}
+
+					// If this statement defines an inline function, save the function to definitions.
+					var def = FunctionLitCollector.Collect(spec.expressionList(), new ReadOnlyDictionary<string, CoroutineDefinitionType>(definitions.ToDictionary(i => i.Key, i => i.Value.CoroutineType)), channelsInFunc);
+					if (def != null)
+					{
+						definitions[variableName].CoroutineType = def;
+						continue;
+					}
+				}
+			}
+			return true;
+		}
 	}
 }
