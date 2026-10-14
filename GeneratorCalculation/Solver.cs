@@ -158,6 +158,34 @@ namespace GeneratorCalculation
 			return result;
 		}
 
+		void RemoveVoid(List<Generator> pairs, int index)
+		{
+			Generator gx = pairs[index];
+
+			if (gx.Type.Normalize() == ConcreteType.Void)
+			{
+				if (gx.IsInfinite)
+				{
+					logger.LogInformation($"{gx.Name} reached the simplest form. Reset to original.");
+					gx.Type = gx.OriginalType.Clone();
+					return;
+				}
+				else if (MainCoroutine != null && MainCoroutine.Equals(gx.Name))
+				{
+					logger.LogInformation($"The main coroutine {gx.Name} exits. Kill all remaining ones.");
+					pairs.Clear();
+					return;
+				}
+				else
+				{
+					logger.LogInformation($"{gx.Name} reached the simplest form. Remove from the list.");
+					pairs.RemoveAt(index);
+					return;
+				}
+			}
+
+		}
+
 		bool RemoveVoid(List<Generator> pairs)
 		{
 			bool isProcessed = false;
@@ -282,6 +310,8 @@ namespace GeneratorCalculation
 					coroutine.Flow.RemoveAt(0);
 					compositionOrder.Add(pairs[i].Type);
 					Console.WriteLine($"--> {coroutine}, yielded: {yieldedType}");
+					// Yielding is blocking.
+					// Until the yielded item is received or put to external yield, we can't remove the source coroutine if it's empty.
 
 					canWrap = true;
 					
@@ -319,6 +349,7 @@ namespace GeneratorCalculation
 							compositionOrder.Add(pairs[receiverIndex.Value].Type);
 
 							i = receiverIndex.Value;
+							RemoveVoid(pairs, i);
 						}
 						else
 						{
