@@ -548,12 +548,7 @@ namespace GeneratorCalculation
 						//}
 
 
-						if (solver.Model.NumConsts == 0)
-						{
-							Console.WriteLine(".");
-							pairs[(i + startIndex) % pairs.Count].Type = newGenerator;
-						}
-						else
+						if (solver.Model.NumConsts != 0)
 						{
 							Dictionary<PaperVariable, PaperWord> conditions = Z3Helper.GetAssignments(solver);
 							Console.Write(" on the conditions that ");
@@ -562,9 +557,8 @@ namespace GeneratorCalculation
 
 							try
 							{
-								var resultGenerator = newGenerator.ApplyEquation(conditions);
-								Console.WriteLine($"Therefore it becomes {resultGenerator}.");
-
+								newGenerator = newGenerator.ApplyEquation(conditions);
+								Console.Write($"Therefore it becomes {newGenerator}");
 								//if (resultGenerator.Yield == ConcreteType.Void)
 								//{
 								//	if (pairs[i].IsInfinite)
@@ -579,7 +573,6 @@ namespace GeneratorCalculation
 								//	}
 								//}
 								//else 
-								pairs[(i + startIndex) % pairs.Count].Type = resultGenerator;
 							}
 							catch (PaperSyntaxException e)
 							{
@@ -588,7 +581,11 @@ namespace GeneratorCalculation
 							}
 						}
 
-						return (i + startIndex) % pairs.Count;
+						Console.WriteLine(".");
+
+						int indexToCheck = (i + startIndex) % pairs.Count;
+						pairs[indexToCheck].Type = newGenerator;
+						return indexToCheck;
 
 						//Solve(pairs, constants);
 						//return;
