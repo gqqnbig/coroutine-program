@@ -16,7 +16,7 @@ func main() {
 
 	// Sender
 	time.Sleep(2000 * time.Millisecond)
-	messages <- "Message : Do you like go langage?"
+	messages <- "Message : Do you like go language?"
 
 	// Wait spawned goroutine process
 	time.Sleep(1000 * time.Millisecond)
