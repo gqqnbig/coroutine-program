@@ -350,17 +350,14 @@ namespace GeneratorCalculation
 			{
 				var pendingType = yieldsToOutside[i];
 
-				for (int j = 0; j < pairs.Count; j++)
+				Debug.Assert(pendingType is GeneratorType == false);
+
+
+				var receiverIndex = Receive(pendingType, pairs, 0);
+				if (receiverIndex != null)
 				{
-					Debug.Assert(pendingType is GeneratorType == false);
-
-
-					var receiverIndex = Receive(pendingType, pairs, 0);
-					if (receiverIndex != null)
-					{
-						yieldsToOutside.RemoveAt(i);
-						return true;
-					}
+					yieldsToOutside.RemoveAt(i);
+					return true;
 				}
 			}
 
