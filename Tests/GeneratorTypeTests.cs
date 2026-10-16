@@ -11,8 +11,8 @@ namespace GeneratorCalculation.Tests
 		[Fact()]
 		public void CheckTest()
 		{
-			GeneratorType g = new GeneratorType(new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"z"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")),
-				new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")));
+			CoroutineType g = new CoroutineType(new SequenceType(new ListType((PaperVariable)"x", (PaperVariable)"n"), new ListType((PaperVariable)"y", (PaperVariable)"m")),
+				new ListType(new SequenceType((PaperVariable)"x", (PaperVariable)"z"), new FunctionType("min", (PaperVariable)"n", (PaperVariable)"m")));
 
 
 			Assert.Throws<FormatException>(() => g.Check());
@@ -31,7 +31,7 @@ namespace GeneratorCalculation.Tests
 			Condition condition = Condition.NotEqual("b", "B");
 			CoroutineType g = new CoroutineType(condition, new SequenceType((PaperVariable)"a", (PaperVariable)"b"), (ConcreteType)"X");
 
-			GeneratorType ng;
+			CoroutineType ng;
 			var conditions = g.RunReceive((ConcreteType)"A", solver, out ng);
 			Assert.True(conditions != null, "The coroutine should have no problem in receiving A.");
 

@@ -35,7 +35,7 @@ namespace RequirementAnalysis
 		}
 
 
-		public static GeneratorType Compose(List<Generator> generators, Dictionary<string, string> inheritance, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
+		public static CoroutineType Compose(List<Generator> generators, Dictionary<string, string> inheritance, string[] interestedCoroutines = null, string[] lowPriorityCoroutines = null)
 		{
 			List<Generator> filtered;
 			if (interestedCoroutines != null)
@@ -49,7 +49,7 @@ namespace RequirementAnalysis
 
 			var coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
+			coroutines.Add(new Generator("", new CoroutineType(ConcreteType.Void, new TupleType(from b in bindings select b.Key))));
 			if (lowPriorityCoroutines != null)
 				coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines, g.Name) != -1));
 

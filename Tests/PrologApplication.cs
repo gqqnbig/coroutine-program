@@ -11,8 +11,8 @@ namespace GeneratorCalculationTests
 	{
 		static List<Generator> GetPrologKnowledgeBase()
 		{
-			var gNegate1 = new GeneratorType((ConcreteType)"Yes", (ConcreteType)"Negate");
-			var gNegate2 = new GeneratorType(ConcreteType.Void, (ConcreteType)"Yes");
+			var gNegate1 = new CoroutineType((ConcreteType)"Negate", (ConcreteType)"Yes");
+			var gNegate2 = new CoroutineType((ConcreteType)"Yes", ConcreteType.Void);
 
 			var femaleOtherCondition = new Z3Condition(
 				s =>
@@ -28,20 +28,20 @@ namespace GeneratorCalculationTests
 
 			var coroutines = new List<Generator>
 			{
-				new Generator("child1", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sue")))),
-				new Generator("child2", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sue")))),
-				new Generator("child3", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "George")))),
-				new Generator("child4", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "John", (ConcreteType) "Sam")))),
-				new Generator("child5", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "Jane", (ConcreteType) "Sam")))),
-				new Generator("child6", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Child", (ConcreteType) "Sue", (ConcreteType) "Gina")))),
-				new Generator("female1", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Female", (ConcreteType) "Sue")))),
-				new Generator("female2", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Female", (ConcreteType) "Jane")))),
-				new Generator("female3", new GeneratorType(ConcreteType.Void, new SequenceType(new TupleType((ConcreteType) "Female", (ConcreteType) "June")))),
-				new Generator("female-other", new GeneratorType(femaleOtherCondition,
+				new Generator("child1", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "John",(ConcreteType) "Sue")), ConcreteType.Void)),
+				new Generator("child2", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "Jane",(ConcreteType) "Sue")), ConcreteType.Void)),
+				new Generator("child3", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "Sue",(ConcreteType) "George")), ConcreteType.Void)),
+				new Generator("child4", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "John",(ConcreteType) "Sam")), ConcreteType.Void)),
+				new Generator("child5", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "Jane",(ConcreteType) "Sam")), ConcreteType.Void)),
+				new Generator("child6", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Child",(ConcreteType) "Sue",(ConcreteType) "Gina")), ConcreteType.Void)),
+				new Generator("female1", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Female",(ConcreteType) "Sue")), ConcreteType.Void)),
+				new Generator("female2", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Female",(ConcreteType) "Jane")), ConcreteType.Void)),
+				new Generator("female3", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Female",(ConcreteType) "June")), ConcreteType.Void)),
+				new Generator("female-other", new CoroutineType(femaleOtherCondition,
 					new SequenceType(new TupleType((ConcreteType) "Female", (PaperVariable) "x")),(ConcreteType)"No")),
-				new Generator("parent", new GeneratorType(new SequenceType(new TupleType((ConcreteType) "Child", (PaperVariable) "x", (PaperVariable) "y")), new SequenceType(new TupleType((ConcreteType) "Parent", (PaperVariable) "y", (PaperVariable) "x")))),
+				new Generator("parent", new CoroutineType(new SequenceType(new TupleType((ConcreteType) "Parent",(PaperVariable) "y",(PaperVariable) "x")), new SequenceType(new TupleType((ConcreteType) "Child",(PaperVariable) "x",(PaperVariable) "y")))),
 
-				new Generator("Negate", new GeneratorType(new SequenceType(gNegate1,gNegate2),(ConcreteType)"No")),
+				new Generator("Negate", new CoroutineType((ConcreteType) "No", new SequenceType(gNegate1, gNegate2))),
 			};
 			return coroutines;
 		}
@@ -52,8 +52,8 @@ namespace GeneratorCalculationTests
 		{
 			Solver solver = new Solver();
 			var coroutines = GetPrologKnowledgeBase();
-			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Yes"), (PaperVariable)"x")));
-			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sue", ConcreteType.Void)));
+			coroutines.Add(new Generator("query", new CoroutineType((PaperVariable)"x", new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Yes"))));
+			coroutines.Add(new Generator("starter", new CoroutineType(ConcreteType.Void, (ConcreteType)"Sue")));
 
 			try
 			{
@@ -71,8 +71,8 @@ namespace GeneratorCalculationTests
 		{
 			var coroutines = GetPrologKnowledgeBase();
 
-			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Yes"), (PaperVariable)"x")));
-			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sam", ConcreteType.Void)));
+			coroutines.Add(new Generator("query", new CoroutineType((PaperVariable)"x", new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Yes"))));
+			coroutines.Add(new Generator("starter", new CoroutineType(ConcreteType.Void, (ConcreteType)"Sam")));
 
 			try
 			{
@@ -92,8 +92,8 @@ namespace GeneratorCalculationTests
 		{
 			var coroutines = GetPrologKnowledgeBase();
 
-			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"), (PaperVariable)"x")));
-			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sam", ConcreteType.Void)));
+			coroutines.Add(new Generator("query", new CoroutineType((PaperVariable)"x", new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"))));
+			coroutines.Add(new Generator("starter", new CoroutineType(ConcreteType.Void, (ConcreteType)"Sam")));
 
 			try
 			{
@@ -112,8 +112,8 @@ namespace GeneratorCalculationTests
 		{
 			var coroutines = GetPrologKnowledgeBase();
 
-			coroutines.Add(new Generator("query", new GeneratorType(new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"), (PaperVariable)"x")));
-			coroutines.Add(new Generator("starter", new GeneratorType((ConcreteType)"Sue", ConcreteType.Void)));
+			coroutines.Add(new Generator("query", new CoroutineType((PaperVariable)"x", new SequenceType(new TupleType((ConcreteType)"Parent", (PaperVariable)"x", (ConcreteType)"John"), new TupleType((ConcreteType)"Female", (PaperVariable)"x"), (ConcreteType)"Negate", (ConcreteType)"Yes"))));
+			coroutines.Add(new Generator("starter", new CoroutineType(ConcreteType.Void, (ConcreteType)"Sue")));
 
 			try
 			{

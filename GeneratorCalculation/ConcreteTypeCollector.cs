@@ -45,7 +45,7 @@ namespace GeneratorCalculation
 			{
 				Visit(tt);
 			}
-			else if (t is GeneratorType gt)
+			else if (t is CoroutineType gt)
 			{
 				Visit(gt);
 			}
@@ -53,7 +53,7 @@ namespace GeneratorCalculation
 				throw new NotImplementedException();
 		}
 
-		public void Visit(GeneratorType type)
+		public void Visit(CoroutineType type)
 		{
 			Visit(type.Receive);
 			Visit(type.Yield);

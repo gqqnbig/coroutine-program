@@ -46,7 +46,7 @@ namespace RequirementAnalysis.Tests
 
 			var coroutines = new List<Generator>();
 
-			coroutines.Add(new Generator("", new GeneratorType(new TupleType(from b in bindings select b.Key), ConcreteType.Void)));
+			coroutines.Add(new Generator("", new CoroutineType(ConcreteType.Void, new TupleType(from b in bindings select b.Key))));
 			//coroutines.AddRange(generators.Where(g => Array.IndexOf(lowPriorityCoroutines2111, g.Name) != -1));
 
 
